@@ -40,6 +40,8 @@ syn = { version = "*", features = ["full", "extra-traits"] }
 quote = "*"
 proc-macro2 = "*"
 
+# thin-vec = { version = "0.2.10" }
+
 [features]
 dev = [ "backtrace" ]
 

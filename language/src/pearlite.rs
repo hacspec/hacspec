@@ -7,7 +7,7 @@ use rustc_ast::{
     ast::{self, AttrVec, Attribute, Expr, ExprKind, Path, PathSegment, Ty},
     node_id::NodeId,
     ptr::P,
-    token::{Delimiter, LitKind as TokenLitKind, TokenKind},
+    token::{Delimiter, Lit, LitKind as TokenLitKind, TokenKind},
     tokenstream::{TokenStream, TokenTree},
 };
 use rustc_session::Session;
@@ -70,49 +70,20 @@ pub(crate) fn translate_pearlite_unquantified(
     }
 }
 
-fn translate_pearlite_lit<'a>(l: syn::Lit, span: Span) -> rustc_ast::ast::Lit {
+fn translate_pearlite_lit<'a>(l: syn::Lit, span: Span) -> Lit {
     match l.clone() {
         syn::Lit::Int(lit) => {
-            rustc_ast::ast::Lit {
-                token: rustc_ast::token::Lit {
-                    kind: rustc_ast::token::LitKind::Integer,
-                    symbol: rustc_span::symbol::Symbol::intern(lit.base10_digits()), // .value()
-                    suffix: Some(rustc_span::symbol::Symbol::intern(lit.suffix())), // None, // rustc_span::symbol::Symbol::intern(lit.suffix())
-                },
-                kind: rustc_ast::ast::LitKind::Int(
-                    lit.base10_parse().unwrap(),
-                    match lit.suffix() {
-                        "isize" => rustc_ast::ast::LitIntType::Signed(rustc_ast::ast::IntTy::Isize),
-                        "i8" => rustc_ast::ast::LitIntType::Signed(rustc_ast::ast::IntTy::I8),
-                        "i16" => rustc_ast::ast::LitIntType::Signed(rustc_ast::ast::IntTy::I16),
-                        "i32" => rustc_ast::ast::LitIntType::Signed(rustc_ast::ast::IntTy::I32),
-                        "i64" => rustc_ast::ast::LitIntType::Signed(rustc_ast::ast::IntTy::I64),
-                        "i128" => rustc_ast::ast::LitIntType::Signed(rustc_ast::ast::IntTy::I128),
-                        "usize" => {
-                            rustc_ast::ast::LitIntType::Unsigned(rustc_ast::ast::UintTy::Usize)
-                        }
-                        "u8" => rustc_ast::ast::LitIntType::Unsigned(rustc_ast::ast::UintTy::U8),
-                        "u16" => rustc_ast::ast::LitIntType::Unsigned(rustc_ast::ast::UintTy::U16),
-                        "u32" => rustc_ast::ast::LitIntType::Unsigned(rustc_ast::ast::UintTy::U32),
-                        "u64" => rustc_ast::ast::LitIntType::Unsigned(rustc_ast::ast::UintTy::U64),
-                        "u128" => {
-                            rustc_ast::ast::LitIntType::Unsigned(rustc_ast::ast::UintTy::U128)
-                        }
-                        _ => rustc_ast::ast::LitIntType::Unsuffixed,
-                    },
-                ),
-                span,
+            Lit {
+                kind: rustc_ast::token::LitKind::Integer,
+                symbol: rustc_span::symbol::Symbol::intern(lit.base10_digits()), // .value()
+                suffix: Some(rustc_span::symbol::Symbol::intern(lit.suffix())), // None, // rustc_span::symbol::Symbol::intern(lit.suffix())
             }
         }
         syn::Lit::Bool(lit) => {
-            rustc_ast::ast::Lit {
-                token: rustc_ast::token::Lit {
-                    kind: rustc_ast::token::LitKind::Bool,
-                    symbol: rustc_span::symbol::Symbol::intern(format!("{}", lit.value()).as_str()),
-                    suffix: None, // rustc_span::symbol::Symbol::intern(lit.suffix())
-                },
-                kind: rustc_ast::ast::LitKind::Bool(lit.value()),
-                span,
+            Lit {
+                kind: rustc_ast::token::LitKind::Bool,
+                symbol: rustc_span::symbol::Symbol::intern(format!("{}", lit.value()).as_str()),
+                suffix: None, // rustc_span::symbol::Symbol::intern(lit.suffix())
             }
         }
         _ => panic!("TODO: Implement pearlite literals"),
@@ -277,21 +248,24 @@ pub(crate) fn translate_pearlite(
             args,
             ..
         }) => {
-            let mut arg_expr = vec![P(
+            let mut arg_expr = args.into_iter()
+                    .map(|x| P(translate_pearlite_unquantified(sess, x, span).unwrap())).collect();
+            let mut receiver_expr = P(
                 translate_pearlite_unquantified(sess, *receiver, span).unwrap()
-            )];
-            arg_expr.extend(
-                args.into_iter()
-                    .map(|x| P(translate_pearlite_unquantified(sess, x, span).unwrap())),
             );
             ExprKind::MethodCall(
-                PathSegment {
-                    ident: translate_pearlite_ident(method, span),
-                    id: NodeId::MAX,
-                    args: None,
-                },
-                arg_expr,
-                span,
+                Box::new(
+                    ast::MethodCall {
+                        seg: PathSegment {
+                            ident: translate_pearlite_ident(method, span),
+                            id: NodeId::MAX,
+                            args: None,
+                        },
+                        receiver: receiver_expr,
+                        args: arg_expr,
+                        span,
+                    }
+                ),
             )
         }
         pearlite_syn::term::Term::Paren(pearlite_syn::term::TermParen { expr, .. }) => {
@@ -506,7 +480,7 @@ fn binop_text(op: rustc_ast::token::BinOpToken) -> String {
 
 fn tokentree_text(x: TokenTree) -> String {
     match x {
-        TokenTree::Token(tok) => match tok.kind {
+        TokenTree::Token(tok, ..) => match tok.kind {
             TokenKind::Eq => "=".to_string(),
             TokenKind::Lt => "<".to_string(),
             TokenKind::Le => "<=".to_string(),
