@@ -172,6 +172,13 @@ pub(crate) fn translate_pearlite(
     let kind = match t {
         // pearlite_syn::term::Term::Array(_) => RcDoc::as_string("TODOArray"),
         pearlite_syn::term::Term::Binary(pearlite_syn::term::TermBinary { left, op, right }) => {
+            if translate_pearlite_binop(op) == ast::BinOpKind::Eq {
+                return Quantified::Eq(
+                    Box::new(translate_pearlite(sess, *left, span)),
+                    Box::new(translate_pearlite(sess, *right, span)),
+                )
+            }
+            
             ExprKind::Binary(
                 rustc_span::source_map::Spanned {
                     node: translate_pearlite_binop(op),
@@ -551,6 +558,102 @@ pub(crate) fn attribute_ensures(attr: &Attribute) -> Option<String> {
             Some(textify)
         }
         _ => None,
+    }
+}
+
+
+fn resolve_quantified_identifiers(
+    ids: Vec<(Ident, Spanned<BaseTyp>)>,
+    name_context: &crate::name_resolution::NameContext,
+) -> (Vec<(Ident, Spanned<BaseTyp>)>, crate::name_resolution::NameContext) {
+    let new_ids: Vec<(Ident, Spanned<BaseTyp>)> = ids
+        .iter()
+        .map(|(x, ty)| {
+            let new_x = match x {
+                Ident::Unresolved(s) => crate::name_resolution::to_fresh_ident(s, false),
+                _ => panic!("should not happen"),
+            };
+
+            (new_x, ty.clone())
+        })
+        .collect();
+
+    let new_context = ids
+        .iter()
+        .zip(new_ids.clone().iter())
+        .fold(name_context.clone(), |ctx, ((x, _), (new_x, _))| {
+            crate::name_resolution::add_name(x, &new_x.clone(), ctx)
+        });
+
+    (new_ids, new_context)
+}
+
+pub(crate) fn resolve_quantified_expression(
+    sess: &Session,
+    qe: Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>>,
+    name_context: &crate::name_resolution::NameContext,
+    top_level_ctx: &TopLevelContext,
+) -> crate::name_resolution::ResolutionResult<Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>>> {
+    match qe {
+        Quantified::Unquantified(e) => Ok(Quantified::Unquantified(crate::name_resolution::resolve_expression(
+            sess,
+            e,
+            name_context,
+            top_level_ctx,
+        )?)),
+        Quantified::Forall(ids, qe2) => {
+            let (new_ids, new_context) = resolve_quantified_identifiers(ids, name_context);
+            let qe2_resolved =
+                resolve_quantified_expression(sess, *qe2, &new_context, top_level_ctx)?;
+
+            Ok(Quantified::Forall(new_ids, Box::new(qe2_resolved)))
+        }
+        Quantified::Exists(ids, qe2) => {
+            let (new_ids, new_context) = resolve_quantified_identifiers(ids, name_context);
+            Ok(Quantified::Exists(
+                new_ids,
+                Box::new(resolve_quantified_expression(
+                    sess,
+                    *qe2,
+                    &new_context,
+                    top_level_ctx,
+                )?),
+            ))
+        }
+        Quantified::Implication(a, b) => Ok(Quantified::Implication(
+            Box::new(resolve_quantified_expression(
+                sess,
+                *a,
+                name_context,
+                top_level_ctx,
+            )?),
+            Box::new(resolve_quantified_expression(
+                sess,
+                *b,
+                name_context,
+                top_level_ctx,
+            )?),
+        )),
+        Quantified::Eq(a, b) => Ok(Quantified::Eq(
+            Box::new(resolve_quantified_expression(
+                sess,
+                *a,
+                name_context,
+                top_level_ctx,
+            )?),
+            Box::new(resolve_quantified_expression(
+                sess,
+                *b,
+                name_context,
+                top_level_ctx,
+            )?),
+        )),
+        Quantified::Not(x) => Ok(Quantified::Not(Box::new(resolve_quantified_expression(
+            sess,
+            *x,
+            name_context,
+            top_level_ctx,
+        )?))),
     }
 }
 

@@ -1182,7 +1182,7 @@ fn translate_item<'a>(
                         .append(translate_ident(Ident::Local(LocalIdent {
                             id: NodeId::MAX.as_usize(),
                             name: "result".to_string(),
-                            mutable: true,
+                            mutable: false,
                         })))
                         .append(RcDoc::space())
                         .append(RcDoc::intersperse(
@@ -1232,7 +1232,7 @@ fn translate_item<'a>(
                                 .append(translate_ident(Ident::Local(LocalIdent {
                                     id: NodeId::MAX.as_usize(),
                                     name: "result".to_string(),
-                                    mutable: true,
+                                    mutable: false,
                                 })))
                                 .append(RcDoc::space())
                                 .append(RcDoc::as_string("->"))
