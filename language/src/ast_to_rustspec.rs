@@ -2356,9 +2356,6 @@ fn attribute_cfg_token_ident(
 fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
     let attr_name = attr.name_or_empty().to_ident_string();
     match attr_name.as_str() {
-        "quickcheck" | "proof" | "test" | "requires" | "ensures" | "creusot" => {
-            Some(vec![attr_name])
-        }
         "derive" => {
             let inner = get_delimited_tree(attr.clone())?;
             Some(inner.trees().fold(Vec::new(), |mut a, x| match x {
@@ -2408,7 +2405,9 @@ fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
                 _ => None,
             }
         }
-        _ => None,
+        _ => {
+            Some(vec![attr_name])
+        }
     }
 }
 

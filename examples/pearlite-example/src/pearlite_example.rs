@@ -7,7 +7,7 @@ use hacspec_lib::*;
 use creusot_contracts::{ensures, requires};
 
 #[requires(x == y)]
-#[ensures(result == true)]
+#[ensures(!(result == false))]
 pub fn ensure_something (x : u8, y : u8) -> bool {
     x == y
 }

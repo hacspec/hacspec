@@ -348,9 +348,17 @@ pub(crate) fn translate_pearlite(
         //             ))
         //         }
         //         pearlite_syn::term::Term::Type(ty) => RcDoc::as_string("TODOType"),
-        //         pearlite_syn::term::Term::Unary(pearlite_syn::term::TermUnary { op, expr }) => {
+        pearlite_syn::term::Term::Unary(pearlite_syn::term::TermUnary { op, expr }) => {
+            if let syn::UnOp::Not(_) = op {
+                return Quantified::Not(
+                    Box::new(translate_pearlite(sess, *expr, span)),
+                )
+            }
+            else {
+                panic!("translate_pearlite_todo unary: {:#?} {:#?}\n", op, expr);
+            }
         //             RcDoc::as_string("TODOUnary").append(translate_pearlite(*expr, top_ctx, idents.clone()))
-        //         }
+        }
         //         pearlite_syn::term::Term::Final(pearlite_syn::term::TermFinal { term, .. }) => {
         //             RcDoc::as_string("TODOFinal").append(translate_pearlite(*term, top_ctx, idents.clone()))
         //         }
