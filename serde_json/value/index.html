@@ -7,7 +7,7 @@
                         </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
     <h1 class="fqn"><span class="in-band">Module <a href="../index.html">serde_json</a>::<wbr><a class="mod" href="#">value</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../../src/serde_json/value/mod.rs.html#1-987">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The Value enum, a loosely typed way of representing any valid JSON value.</p>
 <h2 id="constructing-json"><a href="#constructing-json">Constructing JSON</a></h2>
-<p>Serde JSON provides a <a href="https://docs.serde.rs/serde_json/macro.json.html"><code>json!</code> macro</a> to build <code>serde_json::Value</code>
+<p>Serde JSON provides a <a href="../macro.json.html"><code>json!</code> macro</a> to build <code>serde_json::Value</code>
 objects with very natural JSON syntax.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">serde_json::json</span>;
@@ -47,9 +47,9 @@ be represented as JSON.</p>
     ]
 });</code></pre></div>
 <p>A string of JSON data can be parsed into a <code>serde_json::Value</code> by the
-<a href="https://docs.serde.rs/serde_json/de/fn.from_str.html"><code>serde_json::from_str</code></a> function. There is also
-<a href="https://docs.serde.rs/serde_json/de/fn.from_slice.html"><code>from_slice</code></a> for parsing from a byte slice <code>&amp;[u8]</code> and
-<a href="https://docs.serde.rs/serde_json/de/fn.from_reader.html"><code>from_reader</code></a> for parsing from any <code>io::Read</code> like a File or
+<a href="../fn.from_str.html"><code>serde_json::from_str</code></a> function. There is also
+<a href="../fn.from_slice.html"><code>from_slice</code></a> for parsing from a byte slice <code>&amp;[u8]</code> and
+<a href="../fn.from_reader.html"><code>from_reader</code></a> for parsing from any <code>io::Read</code> like a File or
 a TCP stream.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">serde_json</span>::{<span class="ident">json</span>, <span class="ident">Value</span>, <span class="ident">Error</span>};
