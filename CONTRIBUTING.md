@@ -47,6 +47,10 @@ While the prerequisites above must be satisfied prior to having your pull reques
 
 Use `rustfmt` on everything.
 
+### Rustdoc
+
+Use `rustdoc`. See an example [here](https://github.com/cryspen/hpke-spec)
+
 ## Reviews 👀
 
 As a reviewer always keep in mind the following principles
