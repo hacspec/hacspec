@@ -26,6 +26,7 @@ Definition suite_string_v : int_byte_t :=
 Definition vrf_mgf1
   (n_2644 : rsa_int_t)
   (alpha_2645 : byte_seq)
+  
   : byte_seq_result_t :=
   bind (i2osp (rsa_int_from_literal (@cast _ uint128 _ (byte_size_v))) (
       @repr WORDSIZE32 4)) (fun mgf_salt1_2646 => bind (i2osp (n_2644) (
@@ -37,7 +38,11 @@ Definition vrf_mgf1
       bind (mgf1 (mgf_string_2649) ((@cast _ uint32 _ (byte_size_v)) - (
             usize 1))) (fun mgf_2650 => @Ok seq uint8 error_t (mgf_2650)))).
 
-Definition prove (sk_2651 : sk_t) (alpha_2652 : byte_seq) : byte_seq_result_t :=
+Definition prove
+  (sk_2651 : sk_t)
+  (alpha_2652 : byte_seq)
+  
+  : byte_seq_result_t :=
   let '(n_2653, d_2654) :=
     (sk_2651) in 
   bind (vrf_mgf1 (n_2653) (alpha_2652)) (fun em_2655 =>
@@ -46,7 +51,7 @@ Definition prove (sk_2651 : sk_t) (alpha_2652 : byte_seq) : byte_seq_result_t :=
     bind (rsasp1 (sk_2651) (m_2656)) (fun s_2657 => i2osp (s_2657) (
         byte_size_v))).
 
-Definition proof_to_hash (pi_string_2658 : byte_seq) : byte_seq_result_t :=
+Definition proof_to_hash (pi_string_2658 : byte_seq)  : byte_seq_result_t :=
   let hash_string_2659 : seq uint8 :=
     array_concat (suite_string_v) (array_concat (two_v) (pi_string_2658)) in 
   @Ok seq uint8 error_t (array_slice (sha256 (hash_string_2659)) (usize 0) (
@@ -56,6 +61,7 @@ Definition verify
   (pk_2660 : pk_t)
   (alpha_2661 : byte_seq)
   (pi_string_2662 : byte_seq)
+  
   : byte_seq_result_t :=
   let '(n_2663, e_2664) :=
     (pk_2660) in 

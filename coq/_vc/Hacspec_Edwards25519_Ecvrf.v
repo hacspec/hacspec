@@ -123,6 +123,7 @@ Definition h2c_suite_id_string_v : dst_t :=
 Definition ecvrf_encode_to_curve_try_and_increment
   (encode_to_curve_salt_2457 : byte_seq)
   (alpha_2458 : byte_seq)
+  
   : ed_point_result_t :=
   let h_2459 : (option ed_point_t) :=
     @None ed_point_t in 
@@ -153,6 +154,7 @@ Definition ecvrf_encode_to_curve_try_and_increment
 Definition ecvrf_encode_to_curve_h2c_suite
   (encode_to_curve_salt_2465 : byte_seq)
   (alpha_2466 : byte_seq)
+  
   : ed_point_result_t :=
   let string_to_be_hashed_2467 : seq uint8 :=
     seq_concat (encode_to_curve_salt_2465) (alpha_2466) in 
@@ -171,6 +173,7 @@ Definition ecvrf_encode_to_curve_h2c_suite
 Definition ecvrf_nonce_generation
   (sk_2471 : secret_key_t)
   (h_string_2472 : byte_seq)
+  
   : scalar_t :=
   let hashed_sk_string_2473 : sha512_digest_t :=
     sha512 (array_to_le_bytes (sk_2471)) in 
@@ -190,6 +193,7 @@ Definition ecvrf_challenge_generation
   (p3_2480 : ed_point_t)
   (p4_2481 : ed_point_t)
   (p5_2482 : ed_point_t)
+  
   : scalar_t :=
   let string_2483 : seq uint8 :=
     seq_concat (seq_concat (seq_concat (seq_concat (seq_concat (seq_concat (
@@ -203,7 +207,7 @@ Definition ecvrf_challenge_generation
         default : uint8) (usize 16)) in 
   nat_mod_from_byte_seq_le (truncated_c_string_2485) : scalar_t.
 
-Definition ecvrf_decode_proof (pi_2486 : byte_seq) : proof_result_t :=
+Definition ecvrf_decode_proof (pi_2486 : byte_seq)  : proof_result_t :=
   let gamma_string_2487 : seq uint8 :=
     seq_slice (pi_2486) (usize 0) (pt_len_v) in 
   let c_string_2488 : seq uint8 :=
@@ -233,6 +237,7 @@ Definition ecvrf_decode_proof (pi_2486 : byte_seq) : proof_result_t :=
 
 Definition ecvrf_validate_key
   (y_2495 : public_key_t)
+  
   : (result unit errorec_t) :=
   bind (option_ok_or (decompress (y_2495)) (InvalidPublicKey)) (fun y_2496 =>
     let y_prime_2497 : (
@@ -248,6 +253,7 @@ Definition ecvrf_validate_key
 Definition ecvrf_prove
   (sk_2498 : secret_key_t)
   (alpha_2499 : byte_seq)
+  
   : byte_seq_result_t :=
   bind (option_ok_or (decompress (base_v)) (FailedDecompression)) (fun b_2500 =>
     let '(x_2501, _) :=
@@ -302,7 +308,7 @@ Definition ecvrf_prove
                 s_2513)) (usize 0) (q_len_v))) (usize 0) (((c_len_v) + (
               q_len_v)) + (pt_len_v))))).
 
-Definition ecvrf_proof_to_hash (pi_2514 : byte_seq) : byte_seq_result_t :=
+Definition ecvrf_proof_to_hash (pi_2514 : byte_seq)  : byte_seq_result_t :=
   bind (ecvrf_decode_proof (pi_2514)) (fun '(gamma_2515, _, _) =>
     @Ok byte_seq errorec_t (array_slice (sha512 (seq_concat (seq_concat (
               array_concat (suite_string_v) (array_to_seq (three_v))) (encode (
@@ -314,6 +320,7 @@ Definition ecvrf_verify
   (alpha_2517 : byte_seq)
   (pi_2518 : byte_seq)
   (validate_key_2519 : bool)
+  
   : byte_seq_result_t :=
   bind (option_ok_or (decompress (base_v)) (FailedDecompression)) (fun b_2520 =>
     bind (option_ok_or (decompress (pk_2516)) (InvalidPublicKey)) (fun y_2521 =>
