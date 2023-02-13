@@ -828,13 +828,13 @@ pub fn retrieve_external_data(
     }
     for item_id in tcx.hir().items() {
         let item = tcx.hir().item(item_id);
-        let item_def_id = item.def_id.to_def_id();
+        let item_owner_id = item.owner_id.to_def_id();
 
         match &item.kind {
             ItemKind::Fn(_, _, _) | ItemKind::Const(_, _) => process_fn_id(
                 sess,
                 tcx,
-                &item_def_id,
+                &item_owner_id,
                 &LOCAL_CRATE,
                 &mut extern_funcs,
                 &mut extern_consts,

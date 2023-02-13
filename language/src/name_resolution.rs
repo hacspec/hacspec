@@ -10,6 +10,8 @@ use crate::HacspecErrorEmitter;
 use rustc_span::DUMMY_SP;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use rustc_ast::node_id::NodeId;
+
 pub static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 fn fresh_hacspec_id() -> usize {
@@ -138,7 +140,7 @@ pub enum FnValue {
     ExternalNotInHacspec(String),
 }
 
-fn resolve_expression(
+pub(crate) fn resolve_expression(
     sess: &Session,
     (e, e_span): Spanned<Expression>,
     name_context: &NameContext,
@@ -545,6 +547,41 @@ fn resolve_item(
                     (new_sig_acc, name_context)
                 },
             );
+
+            sig.requires = sig.requires
+                .iter()
+                .map(|x| {
+                    crate::pearlite::resolve_quantified_expression(
+                        sess,
+                        x.clone(),
+                        &name_context.clone(),
+                        &top_level_ctx,
+                    )
+                        .unwrap()
+                })
+                .collect();
+            let ensures_context = add_name(
+                &Ident::Unresolved("result".to_string()),
+                &Ident::Local(LocalIdent {
+                    id: NodeId::MAX.as_usize(),
+                    name: "result".to_string(),
+                    mutable: false,
+                }),
+                name_context.clone(),
+            );
+            sig.ensures = sig.ensures
+                .iter()
+                .map(|x| {
+                    crate::pearlite::resolve_quantified_expression(
+                        sess,
+                        x.clone(),
+                        &ensures_context.clone(),
+                        &top_level_ctx,
+                    )
+                        .unwrap()
+                })
+                .collect();
+            
             sig.args = new_sig_args;
             let new_b = resolve_block(sess, (b, b_span), &name_context, top_level_ctx)?;
             sig.function_dependencies = new_b.clone().0.function_dependencies;

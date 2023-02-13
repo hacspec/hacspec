@@ -29,8 +29,11 @@ mod rustspec_to_coq_ssprove_state;
 
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
+
 mod typechecker;
 mod util;
+
+mod pearlite;
 
 use glob::Pattern;
 use heck::TitleCase;
@@ -53,6 +56,9 @@ use std::fs::File;
 use std::path::Path;
 use std::process::Command;
 use util::APP_USAGE;
+
+use lazy_static::__Deref;
+use std::ops::DerefMut;
 
 #[derive(Clone, PartialEq)]
 enum VersionControlArg {
@@ -282,7 +288,7 @@ fn handle_crate<'tcx>(
     /////////////////////////////////
 
     let external_data = |imported_crates: &Vec<rustspec::Spanned<String>>| {
-        queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
+        queries.global_ctxt().unwrap().enter(|tcx| {
             hir_to_rustspec::retrieve_external_data(&compiler.session(), &tcx, imported_crates)
         })
     };
@@ -654,6 +660,7 @@ impl Callbacks for HacspecCallbacks {
             String::from("feature"),
             Some(String::from("\"hacspec_attributes\"")),
         ));
+        config.opts.pretty = None;
     }
 
     fn after_analysis<'tcx>(
@@ -662,7 +669,7 @@ impl Callbacks for HacspecCallbacks {
         queries: &'tcx Queries<'tcx>,
     ) -> Compilation {
         log::debug!(" --- hacspec after_analysis callback");
-        let krate: rustc_ast::ast::Crate = queries.parse().unwrap().take();
+
         let crate_origin_file = compiler
             .build_output_filenames(compiler.session(), &[])
             .with_extension("")
@@ -671,15 +678,18 @@ impl Callbacks for HacspecCallbacks {
             .to_string();
 
         let mut analysis_crates = HashMap::new();
-        analysis_crates.insert(crate_origin_file.clone(), krate);
+        compiler.enter(|queries| {
+            let krate : rustc_ast::ast::Crate = queries.parse().unwrap().steal();; // TODO: this is probably incorrect!
+            analysis_crates.insert(crate_origin_file.clone(), krate);
+        });
 
         // Find module location using hir
-        queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
+        queries.global_ctxt().unwrap().enter(|tcx| {
             for item_id in tcx.hir().items() {
                 let item = tcx.hir().item(item_id);
 
                 if let rustc_hir::ItemKind::Mod(_m) = &item.kind {
-                    let (module, mod_span, _hir_id) = &tcx.hir().get_module(item.def_id);
+                    let (module, mod_span, _hir_id) = &tcx.hir().get_module(item.owner_id.def_id);
 
                     // locate the file from a module using the span
                     let sm: &rustc_span::source_map::SourceMap =

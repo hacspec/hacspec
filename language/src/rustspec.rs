@@ -578,11 +578,23 @@ pub struct Block {
 }
 
 #[derive(Clone, Debug, Serialize)]
+pub enum Quantified<I, T> {
+    Unquantified(T),
+    Forall(Vec<I>, Box<Quantified<I, T>>),
+    Exists(Vec<I>, Box<Quantified<I, T>>),
+    Implication(Box<Quantified<I, T>>, Box<Quantified<I, T>>),
+    Eq(Box<Quantified<I, T>>, Box<Quantified<I, T>>),
+    Not(Box<Quantified<I, T>>),
+}
+
+#[derive(Clone, Debug, Serialize)]
 pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,
     pub mutable_vars: ScopeMutableVars,
     pub function_dependencies: FunctionDependencies,
+    pub ensures: Vec<Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>>>,
+    pub requires: Vec<Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
