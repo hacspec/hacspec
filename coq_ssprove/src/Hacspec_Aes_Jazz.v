@@ -609,12 +609,12 @@ Fail Next Obligation.
 
 Notation "'key_list_t'" := (seq int128) : hacspec_scope.
 
-Definition key_66_loc : ChoiceEqualityLocation :=
-  (int128 ; 68%nat).
-Definition rkeys_65_loc : ChoiceEqualityLocation :=
-  (key_list_t ; 69%nat).
 Definition temp2_67_loc : ChoiceEqualityLocation :=
-  (int128 ; 70%nat).
+  (int128 ; 68%nat).
+Definition key_66_loc : ChoiceEqualityLocation :=
+  (int128 ; 69%nat).
+Definition rkeys_65_loc : ChoiceEqualityLocation :=
+  (key_list_t ; 70%nat).
 Notation "'keys_expand_inp'" :=(
   int128 : choice_type) (in custom pack_type at level 2).
 Notation "'keys_expand_inp'" :=(int128 : ChoiceEquality) (at level 2).

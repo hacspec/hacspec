@@ -33,6 +33,6 @@ members = [
     "bip-340",
     "rsa-fdh-vrf",
     "coverage_test",
-    "pearlite-example"
-    "xor"
+    "pearlite-example",
+    "xor",
 ]
