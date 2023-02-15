@@ -2,8 +2,8 @@ opam-version: "2.0"
 name: "coq-hacspec-ssprove"
 version: "dev"
 synopsis: "Hacspec coq library"
-maintainer: "anonymous"
-authors: ["anonymous"]
+maintainer: "Lasse Letager Hansen <letager@cs.au.dk>"
+authors: ["Lasse Letager Hansen <letager@cs.au.dk>"]
 homepage: "https://github.com/hacspec/hacspec"
 bug-reports: "https://github.com/hacspec/hacspec/issues"
 depends: [

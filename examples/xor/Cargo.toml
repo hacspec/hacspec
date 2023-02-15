@@ -1,7 +1,7 @@
 [package]
 name = "hacspec-xor"
 version = "0.1.0"
-authors = []
+authors = ["Lasse Letager Hanse <letager@cs.au.dk>"]
 edition = "2018"
 
 [lib]
