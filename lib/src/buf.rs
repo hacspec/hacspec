@@ -2,7 +2,12 @@
 //!
 //! A buffer for operating on hacspec bytes.
 
-use std::collections::VecDeque;
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std as alloc;
+
+use alloc::collections::VecDeque;
 
 use super::seq::*;
 use crate::prelude::*;
