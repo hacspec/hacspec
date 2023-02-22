@@ -4,8 +4,9 @@
 
 _This is the successor of https://github.com/HACS-workshop/hacspec._
 
-For a quick intro, you can look at the [presentation slides](./presentation_slides.pdf). An in-depth
-[technical report](https://hal.inria.fr/hal-03176482) is also available.
+For a quick intro, you can look at the [presentation slides](./presentation_slides.pdf). 
+More information is available in the [book](https://hacspec.github.io/book/index.html).
+Also, see the Publications below.
 
 ## Crates
 
@@ -92,6 +93,9 @@ cargo +nightly-2021-11-14 hacspec -o <coq-name>.v <crate-name>
 
 * [📕 Tech report](https://hal.inria.fr/hal-03176482)
 * [📕 Original hacspec paper](https://www.franziskuskiefer.de/publications/hacspec-ssr18-paper.pdf)
+
+### Secondary literature, using hacspec:
+* [📕 Last yard](https://eprint.iacr.org/2023/185)
 
 # Repository Structure
 
