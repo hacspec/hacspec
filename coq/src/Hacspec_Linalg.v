@@ -36,6 +36,7 @@ Definition new_
   (rows_881 : dim_type_t)
   (cols_882 : dim_type_t)
   (seq_883 : seq scalar_t)
+  
   : mat_res_t :=
   (if (((seq_len (seq_883)) >.? (usize 0)) && (((rows_881) * (cols_882)) =.? (
           seq_len (seq_883)))):bool then (@Ok matrix_t int8 ((
@@ -47,6 +48,7 @@ Definition repeat
   (n_884 : dim_type_t)
   (m_885 : dim_type_t)
   (scalar_886 : scalar_t)
+  
   : matrix_t :=
   let ret_887 : seq int128 :=
     seq_new_ (default : scalar_t) ((n_884) * (m_885)) in 
@@ -58,13 +60,13 @@ Definition repeat
     ret_887 in 
   ((n_884, m_885), ret_887).
 
-Definition zeros (n_889 : dim_type_t) (m_890 : dim_type_t) : matrix_t :=
+Definition zeros (n_889 : dim_type_t) (m_890 : dim_type_t)  : matrix_t :=
   repeat (n_889) (m_890) (pub_int128_zero ).
 
-Definition ones (n_891 : dim_type_t) (m_892 : dim_type_t) : matrix_t :=
+Definition ones (n_891 : dim_type_t) (m_892 : dim_type_t)  : matrix_t :=
   repeat (n_891) (m_892) (pub_int128_one ).
 
-Definition identity (n_893 : dim_type_t) (m_894 : dim_type_t) : matrix_t :=
+Definition identity (n_893 : dim_type_t) (m_894 : dim_type_t)  : matrix_t :=
   let ret_895 : seq int128 :=
     seq_new_ (default : scalar_t) ((n_893) * (m_894)) in 
   let ret_895 :=
@@ -81,6 +83,7 @@ Definition index
   (m_898 : matrix_t)
   (i_899 : dim_type_t)
   (j_900 : dim_type_t)
+  
   : scal_res_t :=
   let '(dim_901, seq_902) :=
     m_898 in 
@@ -92,7 +95,7 @@ Definition index
       @Err scalar_t int8 (index_out_of_bounds_v)) else (@Ok scalar_t int8 (
         seq_index (seq_902) (index_905)))).
 
-Definition transpose (matrix_906 : matrix_t) : matrix_t :=
+Definition transpose (matrix_906 : matrix_t)  : matrix_t :=
   let '(dim_907, seq_908) :=
     matrix_906 in 
   let '(rows_909, cols_910) :=
@@ -120,6 +123,7 @@ Definition slice
   (matrix_916 : matrix_t)
   (start_917 : dims_t)
   (len_918 : dims_t)
+  
   : mat_res_t :=
   let '(dim_919, seq_920) :=
     matrix_916 in 
@@ -158,7 +162,7 @@ Definition slice
       (ret_928, res_929)) else ((ret_928, res_929)) in 
   res_929.
 
-Definition scale (matrix_934 : matrix_t) (scalar_935 : scalar_t) : matrix_t :=
+Definition scale (matrix_934 : matrix_t) (scalar_935 : scalar_t)  : matrix_t :=
   let '(dim_936, seq_937) :=
     matrix_934 in 
   let ret_938 : seq int128 :=
@@ -175,6 +179,7 @@ Definition scale (matrix_934 : matrix_t) (scalar_935 : scalar_t) : matrix_t :=
 Definition add
   (matrix_1_940 : matrix_t)
   (matrix_2_941 : matrix_t)
+  
   : mat_res_t :=
   let '(m1_dim_942, m1_s_943) :=
     matrix_1_940 in 
@@ -200,6 +205,7 @@ Definition add
 Definition sub
   (matrix_1_949 : matrix_t)
   (matrix_2_950 : matrix_t)
+  
   : mat_res_t :=
   let '(m1_dim_951, m1_s_952) :=
     matrix_1_949 in 
@@ -225,6 +231,7 @@ Definition sub
 Definition component_mul
   (matrix_1_958 : matrix_t)
   (matrix_2_959 : matrix_t)
+  
   : mat_res_t :=
   let '(m1_dim_960, m1_s_961) :=
     matrix_1_958 in 
@@ -250,6 +257,7 @@ Definition component_mul
 Definition mul
   (matrix_1_967 : matrix_t)
   (matrix_2_968 : matrix_t)
+  
   : mat_res_t :=
   let '(dim_1_969, seq_1_970) :=
     matrix_1_967 in 
