@@ -94,9 +94,10 @@ impl Seq<U8> {
         Self::from_public_slice(&b)
     }
 
+    #[inline(always)]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
-    pub fn as_slice(&self) -> Vec<u8> {
-        self.to_native()
+    pub fn as_slice(&self) -> &[U8] {
+        self.b.as_slice()
     }
 }
 
@@ -149,6 +150,12 @@ impl U16Trait for U16 {
         Bytes::from_seq(&U16_to_be_bytes(self))
     }
 }
+#[cfg(feature = "release")]
+impl U16Trait for U16 {
+    fn into_bytes(self) -> Bytes {
+        Bytes::from_native(u16::to_be_bytes(self.0).to_vec())
+    }
+}
 
 pub trait U32Trait {
     fn into_bytes(self) -> Bytes;
@@ -169,6 +176,12 @@ impl U32Trait for u32 {
 impl U32Trait for U32 {
     fn into_bytes(self) -> Bytes {
         Bytes::from_seq(&U32_to_be_bytes(self))
+    }
+}
+#[cfg(feature = "release")]
+impl U32Trait for U32 {
+    fn into_bytes(self) -> Bytes {
+        Bytes::from_native(u32::to_be_bytes(self.0).to_vec())
     }
 }
 
