@@ -1,0 +1,16 @@
+[package]
+name = "hacspec-aes-jazz"
+version = "0.1.0"
+authors = ["Lasse Letager Hanse <letager@cs.au.dk>"]
+edition = "2018"
+
+[lib]
+path = "src/aes_jazz.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+
+[dev-dependencies]
+hacspec-dev = { path = "../../utils/dev" }
+criterion = "0.4"
+rand = "0.8"

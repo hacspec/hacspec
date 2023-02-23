@@ -24,8 +24,7 @@ Import ListNotations.
 
 (*****************************************************)
 (*   Implementation of all Hacspec library functions *)
-(* for ChoiceEquality types. Should be enough to get *)
-(* pure functions working.                           *)
+(* for ChoiceEquality types.                         *)
 (*****************************************************)
 
 (*** Integers *)
@@ -133,7 +132,7 @@ End IntType.
 
 Axiom secret : forall {WS : wsize},  (T (@int WS)) -> (T (@int WS)).
 
-Infix "%%" := int_modi (at level 40, left associativity) : Z_scope.
+Infix ".%%" := int_modi (at level 40, left associativity) : Z_scope.
 Infix ".+" := int_add (at level 77) : hacspec_scope.
 Infix ".-" := int_sub (at level 77) : hacspec_scope.
 Notation "-" := int_opp (at level 77) : hacspec_scope.
@@ -315,7 +314,6 @@ Definition pub_i128 (n : uint_size) : int128 := repr (unsigned n).
 
 (**** Operations *)
 
-(* Should maybe use size of s instead? *)
 Definition uint8_rotate_left (u: int8) (s: int8) : int8 := rol u s.
 
 Definition uint8_rotate_right (u: int8) (s: int8) : int8 := ror u s.
@@ -344,12 +342,10 @@ Definition uint128_rotate_left (u: int128) (s: int128) : int128 :=
 Definition uint128_rotate_right (u: int128) (s: int128) : int128 :=
   ror u s.
 
-(* should use size u instead of u? *)
 Definition usize_shift_right (u: uint_size) (s: int32) : uint_size :=
-  (ror u s).
+  wshr u (@repr U32 (from_uint_size s)).
 Infix "usize_shift_right" := (usize_shift_right) (at level 77) : hacspec_scope.
 
-(* should use size u instead of u? *)
 Definition usize_shift_left (u: uint_size) (s: int32) : uint_size :=
   (rol u s).
 Infix "usize_shift_left" := (usize_shift_left) (at level 77) : hacspec_scope.
@@ -827,7 +823,7 @@ Proof.
       unfold wrepr.
       f_equal.
       rewrite urepr_word.
-      Set Printing Coercions.
+
       replace (toword one)%Z with 1%Z by reflexivity.
       unfold urepr.
       unfold eqtype.val.
@@ -872,7 +868,7 @@ Qed.
 (* folds and natural number folds compute the same thing *)
 Lemma foldi_to_foldi_nat :
   forall {acc: Type}
-         (lo: uint_size) (* {lo <= hi} *)
+         (lo: uint_size)
          (hi: uint_size) (* {lo <= hi} *)
          (f: (uint_size) -> acc -> acc) (* {i < hi} *)
          (init: acc),
@@ -1019,18 +1015,130 @@ Proof.
   apply foldi_nat_split ; lia.
 Qed.
 
+(*** Default *)
+
+(* Default instances for common types *)
+Global Instance nat_default : Default nat := {
+    default := 0%nat
+  }.
+Global Instance N_default : Default N := {
+    default := 0%N
+  }.
+Global Instance Z_default : Default Z := {
+    default := 0%Z
+  }.
+Global Instance uint_size_default : Default uint_size := {
+    default := zero
+  }.
+Global Instance int_size_default : Default int_size := {
+    default := zero
+  }.
+Global Instance int_default {WS : wsize} : Default (@int WS) := {
+    default := repr 0
+  }.
+Global Instance uint8_default : Default uint8 := _.
+
+Global Instance prod_default {A B : ChoiceEquality} `{Default A} `{Default B} : Default (A '× B) := {
+    default := (default, default)
+  }.
+
+(*** Path / Sorted util *)
+
+Lemma path_sorted_tl :
+  forall {T : ordType} {A} {e} {fmval : list (T * A)},
+  is_true (path.sorted e (seq.unzip1 fmval)) ->
+  is_true (path.sorted e (seq.unzip1 (tl fmval))).
+Proof.
+  intros.
+  destruct fmval.
+  - easy.
+  - cbn.
+    cbn in H.
+    destruct (seq.unzip1 fmval).
+    + reflexivity.
+    + cbn in H.
+      now rewrite LocationUtility.is_true_split_and in H.
+Qed.
+
+Corollary path_path_tl :
+  forall {T : ordType} {A} {e} {x : T} {fmval : list (T * A)},
+    is_true (path.path e x (seq.unzip1 fmval)) ->
+    is_true (path.sorted e (seq.unzip1 (fmval))).
+Proof.
+  intros.
+  destruct fmval. reflexivity.
+  apply (path_sorted_tl (fmval := (x, snd p) :: p :: fmval)).
+  apply H.
+Qed.
+
+Lemma path_sorted_remove :
+  forall {A : ordType} {B} {e} (x y : A * B) (l : list (A * B)),
+    ssrbool.transitive e ->
+  is_true
+    (path.sorted e
+        (seq.unzip1
+           (x :: y :: l))) ->
+  is_true
+    (path.sorted e
+        (seq.unzip1
+           (x :: l))).
+Proof.
+  intros.
+  cbn.
+  induction l.
+  reflexivity.
+  cbn.
+  cbn in *.
+  rewrite !LocationUtility.is_true_split_and in H0.
+  destruct H0 as [? []].
+  rewrite H0 in IHl.
+
+  rewrite !LocationUtility.is_true_split_and.
+  split.
+  - eapply H.
+    apply H0.
+    apply H1.
+  - apply H2.
+Qed.
+
+Corollary path_path_remove :
+  forall {A : ordType} {B} {e} (x : A) (y : A * B) (l : list (A * B)),
+    ssrbool.transitive (T:=A) e ->
+  is_true (path.path e (x) (seq.unzip1 (y :: l))) ->
+  is_true (path.path e (x) (seq.unzip1 l)).
+Proof.
+  intros.
+  apply (path_sorted_remove (x, snd y) y l H).
+  apply H0.
+Qed.
+
+Lemma path_sorted_rev_last :
+  forall {A : ordType} {B} {e} (a0 : A * B) (l : list (A * B)),
+  is_true (path.sorted e (seq.unzip1 (seq.rev (a0 :: l)))) ->
+  is_true (path.sorted e (seq.unzip1 (seq.rev l))).
+Proof.
+  intros.
+
+  unfold seq.unzip1 ; rewrite seq.map_rev ; fold (seq.unzip1 l).
+  rewrite path.rev_sorted.
+  apply (path_sorted_tl (fmval := (a0 :: l))).
+  rewrite <- path.rev_sorted.
+  unfold seq.unzip1 ; rewrite <- seq.map_rev ; fold (seq.unzip1 (seq.rev (a0 :: l))).
+  assumption.
+Qed.
+
 (*** Seq *)
 
 Definition nseq_choice (A: ChoiceEquality) (len : nat) : choice_type :=
   match len with
-  | O => chUnit (* A *)
+  | O => chUnit
   | S n => chMap ('fin (S n)) (ct A)
   end.
 
 Definition nseq_type (A: ChoiceEquality) (len : nat) : Type :=
   match len with
   | 0%nat => unit
-  | S n => fmap.FMap.fmap_type (ordinal_ordType len) (T _)
+  | S n => { fmap ('I_len) -> T A }
   end.
 
 #[global] Program Instance nseq (A: ChoiceEquality) (len : nat) : ChoiceEquality :=
@@ -1058,27 +1166,482 @@ Definition public_byte_seq := seq int8.
 Definition byte_seq := seq int8.
 Definition list_len := length.
 
-Definition seq_index {A: ChoiceEquality} `{Default (T A)} (s: T (seq A)) (i : uint_size) : T A :=
-  match getm s (from_uint_size i) with
+Definition seq_index_nat {A: ChoiceEquality} `{Default (T A)} (s: T (seq A)) (i : nat) : T A :=
+  match getm s i with
   | Some a => a
   | None => default
   end.
 
-Definition seq_len {A: ChoiceEquality} (s: T (seq A)) : T (uint_size) := usize (length s).
+Definition seq_index {A: ChoiceEquality} `{Default (T A)} (s: T (seq A)) (i : uint_size) : T A :=
+  seq_index_nat s (from_uint_size i).
 
-Definition seq_to_list (A: ChoiceEquality) (s : T (seq A)) : list (T A).
-Proof.
-  apply @FMap.fmval in s ; fold chElement in s.
-  induction s.
-  - apply [].
-  - cbn in *.
-    destruct a as [_ s0].
-    apply (s0 :: IHs).
-Defined.
+Definition seq_len_nat {A: ChoiceEquality} (s: T (seq A)) : nat :=
+  match (FMap.fmval s) with
+  | [] => 0
+  | (x :: xs) => S (fst (seq.last x xs))
+  end.
+
+Definition seq_len {A: ChoiceEquality} (s: T (seq A)) : T (uint_size) :=
+  usize (seq_len_nat s).
+
+Definition seq_to_list (A: ChoiceEquality) `{Default (T A)} (s : T (seq A)) : list (T A) :=
+  seq.map (fun n => seq_index_nat s n) (seq.iota 0 (seq_len_nat s)).
 
 Definition seq_from_list (A : ChoiceEquality) (l : list (T A)) : T (seq A) :=
   fmap_of_seq l.
 
+Lemma seq_from_list_cat : forall A l a, seq_from_list A (l ++ [a]) = setm (seq_from_list A l) (seq.size l) a.
+Proof.
+  clear ; intros.
+  unfold seq_from_list.
+  apply eq_fmap.
+
+  intros i.
+  rewrite fmap_of_seqE.
+  rewrite setmE.
+
+  destruct eqtype.eq_op eqn:i_size_l.
+  - apply (ssrbool.elimT eqtype.eqP) in i_size_l.
+    subst.
+
+    rewrite (seq.nth_map a).
+    2:{
+      rewrite seq.size_cat.
+      now rewrite ssrnat.addn1.
+    }
+    rewrite seq.nth_cat.
+    rewrite ssrnat.ltnn.
+    rewrite ssrnat.subnn.
+    reflexivity.
+  - rewrite fmap_of_seqE.
+    destruct (ssrnat.leq (seq.size (l ++ [a])) i) eqn:i_in_l.
+    + rewrite seq.nth_default.
+      2:{
+        rewrite seq.size_map.
+        apply i_in_l.
+      }
+      rewrite seq.nth_default.
+      2:{
+        rewrite seq.size_map.
+        eapply ssrnat.leq_trans.
+        apply ssrnat.leqnSn.
+        rewrite seq.size_cat in i_in_l.
+        rewrite ssrnat.addn1 in i_in_l.
+        apply i_in_l.
+      }
+      reflexivity.
+    + assert (is_true (ssrnat.leq (S i) (seq.size l))).
+      {
+        rewrite ssrnat.leqNgt.
+        rewrite ssrnat.ltnS.
+        rewrite ssrnat.leq_eqVlt.
+        rewrite Bool.negb_orb.
+        rewrite eqtype.eq_sym.
+        setoid_rewrite i_size_l.
+        rewrite seq.size_cat in i_in_l.
+        rewrite ssrnat.addn1 in i_in_l.
+        rewrite i_in_l.
+        reflexivity.
+      }
+
+      rewrite <- (@seq.nth_take (seq.size l) (option A) None i H (seq.map (fun x : A => Some x) (l ++ [a]))).
+      rewrite <- seq.map_take.
+      rewrite seq.take_size_cat ; [ | reflexivity ].
+      reflexivity.
+Qed.
+
+Lemma sorted_last_leq :
+  forall {A : ordType }{B} (a0 : A * B) (l : list (A * B)),
+    is_true (path.sorted Ord.lt (seq.unzip1 (a0 :: l))) ->
+    is_true (fst a0 <= (fst (seq.last a0 l)))%ord.
+Proof.
+  intros ? ? a0 fmval i.
+
+  generalize dependent a0.
+  induction fmval ; intros.
+  - apply Ord.leqxx.
+  - simpl.
+    specialize (IHfmval a0 (path_sorted_remove (e := Ord.lt) _ _ _ (@Ord.lt_trans _) i)).
+    erewrite Ord.leq_trans.
+    reflexivity.
+    apply IHfmval.
+    destruct fmval.
+    + simpl.
+      simpl in i.
+      rewrite Bool.andb_true_r in i.
+      unfold Ord.lt in i.
+      rewrite LocationUtility.is_true_split_and in i.
+      apply i.
+    + simpl.
+      apply Ord.leqxx.
+Qed.
+
+Corollary sorted_last_nat_lt :
+   forall {B} (a0 : nat * B) (l : list (nat * B)),
+    is_true (path.sorted Ord.lt (seq.unzip1 (a0 :: l))) ->
+    is_true (fst a0 < S (fst (seq.last a0 l)))%ord.
+Proof.
+  intros.
+  pose (sorted_last_leq a0 l H).
+  rewrite Ord.lt_neqAle.
+  rewrite (Ord.leq_trans i) ; [ | easy ].
+
+  destruct (eqtype.eq_op _ _) eqn:p_eq_last.
+  - apply (ssrbool.elimT eqtype.eqP) in p_eq_last.
+    setoid_rewrite p_eq_last in i.
+    cbn in i.
+    rewrite <- ssrnat.subnE in i.
+    rewrite ssrnat.subSnn in i.
+    discriminate.
+  - easy.
+Qed.
+
+Theorem ord_lt_nleq_and_neq :
+   forall {A : ordType} {a b : A},
+     is_true (a < b)%ord -> (b < a)%ord = false /\ (eqtype.eq_op b a) = false.
+Proof.
+  intros.
+
+  rewrite Ord.ltNge in H.
+  rewrite Ord.leq_eqVlt in H.
+  rewrite Bool.negb_orb in H.
+  rewrite LocationUtility.is_true_split_and in H.
+  destruct H.
+  apply ssrbool.negbTE in H.
+  apply ssrbool.negbTE in H0.
+  rewrite H , H0 ; clear H H0.
+  easy.
+Qed.
+
+Corollary sorted_last_is_last :
+   forall {B} (a0 : nat * B) (l : list (nat * B)),
+    is_true (path.sorted Ord.lt (seq.unzip1 (a0 :: l))) ->
+        (S (fst (seq.last a0 l)) < fst a0)%ord = false /\
+          (@eqtype.eq_op nat_ordType (S (fst (seq.last a0 l))) (fst a0) = false).
+Proof.
+  intros.
+
+  pose (i0 := sorted_last_nat_lt a0 l H).
+  destruct (ord_lt_nleq_and_neq i0).
+  rewrite H0 , H1 ; clear H0 H1.
+  easy.
+Qed.
+
+Theorem ord_leq_lt_trans :
+  forall {A : ordType} {a b c : A}, is_true (a <= b)%ord -> is_true (b < c)%ord -> is_true (a < c)%ord.
+Proof.
+  intros.
+  pose proof (Ord.leq_trans H (Ord.ltW H0)).
+  rewrite Ord.leq_eqVlt in H1.
+  rewrite LocationUtility.is_true_split_or in H1.
+  destruct H1.
+  - apply (ssrbool.elimT eqtype.eqP) in H1.
+    subst.
+    rewrite Ord.leq_eqVlt in H.
+    rewrite LocationUtility.is_true_split_or in H.
+    destruct H.
+    + apply (ssrbool.elimT eqtype.eqP) in H.
+      subst.
+      now rewrite Ord.ltxx in H0.
+    + pose proof (Ord.lt_trans H H0).
+      now rewrite Ord.ltxx in H1.
+  - apply H1.
+Qed.
+
+Theorem ord_lt_leq_trans :
+  forall {A : ordType} {a b c : A}, is_true (a < b)%ord -> is_true (b <= c)%ord -> is_true (a < c)%ord.
+Proof.
+  intros.
+  pose proof (Ord.leq_trans (Ord.ltW H) H0).
+  rewrite Ord.leq_eqVlt in H1.
+  rewrite LocationUtility.is_true_split_or in H1.
+  destruct H1.
+  - apply (ssrbool.elimT eqtype.eqP) in H1.
+    subst.
+    rewrite Ord.leq_eqVlt in H0.
+    rewrite LocationUtility.is_true_split_or in H0.
+    destruct H0.
+    + apply (ssrbool.elimT eqtype.eqP) in H0.
+      subst.
+      now rewrite Ord.ltxx in H.
+    + pose proof (Ord.lt_trans H H0).
+      now rewrite Ord.ltxx in H1.
+  - apply H1.
+Qed.
+
+Theorem ord_lt_is_leq :
+  forall {a b : nat}, is_true (a < b)%ord -> is_true (S a <= b)%ord.
+Proof.
+  intros.
+  generalize dependent a.
+  induction b ; intros.
+  - destruct a ; easy.
+  - destruct a ; [ easy | ].
+    cbn.
+    cbn in IHb.
+    apply IHb.
+    apply H.
+Qed.
+
+Theorem seq_len_nat_setm : forall {A} (l : seq A) a,
+    forall x, is_true (seq_len_nat l <= x)%ord ->
+    seq_len_nat (setm l x a) = S x.
+Proof.
+  intros.
+  destruct l.
+  destruct fmval.
+  -     reflexivity.
+  - unfold seq_len_nat.
+    simpl.
+    destruct (ord_lt_nleq_and_neq (ord_lt_leq_trans (sorted_last_nat_lt p fmval i) H)).
+    setoid_rewrite H0.
+    setoid_rewrite H1.
+    clear H0 H1.
+
+    generalize dependent p.
+    induction fmval ; intros.
+    * reflexivity.
+    * simpl.
+
+      destruct (ord_lt_nleq_and_neq (ord_lt_leq_trans (sorted_last_nat_lt a0 fmval (path_sorted_tl i)) H)).
+      setoid_rewrite H0.
+      setoid_rewrite H1.
+      clear H0 H1.
+      simpl.
+
+      rewrite (IHfmval a0 (path_sorted_tl i)).
+      reflexivity.
+      apply H.
+Qed.
+
+Corollary seq_len_nat_setm_len : forall {A} (l : seq A) a,
+    seq_len_nat (setm l (seq_len_nat l) a) = S (seq_len_nat l).
+Proof.
+  intros.
+  apply seq_len_nat_setm.
+  easy.
+Qed.
+
+Theorem seq_from_list_size : forall A l,
+    seq.size l = seq_len_nat (seq_from_list A l).
+Proof.
+  intros.
+  rewrite <- (rev_involutive l).
+  induction (rev l).
+  - reflexivity.
+  - simpl.
+    rewrite seq_from_list_cat.
+    rewrite seq.size_cat.
+    rewrite IHl0 ; clear IHl0.
+    rewrite ssrnat.addn1.
+
+    now erewrite (seq_len_nat_setm (seq_from_list A (rev l0))).
+Qed.
+
+
+Lemma destruct_fmap_last :
+  forall {A : ordType} {B} (a0 : A * B) (l : list (A * B)) i,
+    (FMap.FMap (fmval:=seq.rev (a0 :: l)) i = setm (FMap.FMap (fmval:=seq.rev l) (path_sorted_rev_last a0 l i)) (fst a0) (snd a0)).
+Proof.
+  intros.
+  apply eq_fmap.
+  intros v.
+  rewrite setmE.
+
+  destruct (eqtype.eq_op v (fst a0)) eqn:v_eq_a0.
+  - apply (ssrbool.elimT eqtype.eqP) in v_eq_a0.
+    subst.
+
+    generalize dependent l.
+    intros l.
+    rewrite seq.rev_cons.
+    intros.
+    unfold getm ; simpl.
+
+    induction (seq.rev l).
+    + simpl. now rewrite eqtype.eq_refl.
+    + simpl.
+      rewrite IHl0 ; clear IHl0.
+      * simpl in i.
+        unfold seq.unzip1 in i.
+        rewrite seq.map_rcons in i.
+        rewrite path.rcons_path in i.
+        rewrite LocationUtility.is_true_split_and in i.
+        destruct i.
+        pose (H1 := sorted_last_leq a l0 H).
+        rewrite seq.last_map in H0.
+        epose (ord_leq_lt_trans H1 H0).
+        rewrite Ord.lt_neqAle in i.
+        rewrite LocationUtility.is_true_split_and in i.
+        destruct i.
+        apply ssrbool.negbTE in H2.
+        rewrite eqtype.eq_sym.
+        rewrite H2.
+        reflexivity.
+
+        destruct l0.
+        -- reflexivity.
+        -- simpl.
+           simpl in i.
+           rewrite LocationUtility.is_true_split_and in i.
+           apply i.
+      * unfold getm.
+        simpl.
+        unfold seq.rev at 1.
+        simpl.
+        rewrite seq.catrevE.
+        induction (seq.rev l) ; simpl.
+        -- now rewrite v_eq_a0.
+        -- now rewrite IHl0.
+Qed.
+
+Lemma seq_to_list_setm : forall {A : ChoiceEquality} `{Default (T A)} (l : seq A) a,
+  seq_to_list A (setm l (seq_len_nat l) a) = seq_to_list A l ++ [a].
+Proof.
+  intros.
+
+  unfold seq_to_list.
+  rewrite seq_len_nat_setm.
+  rewrite <- ssrnat.addn1.
+  rewrite seq.iotaD.
+  rewrite ssrnat.add0n.
+  simpl.
+  rewrite seq.map_cat.
+  simpl.
+  unfold seq_index_nat.
+  rewrite setmE.
+  rewrite eqtype.eq_refl.
+
+  set (seq.map _ _).
+  set (seq.map _ _).
+
+  assert (l0 = l1) ; subst l0 l1.
+  {
+    set (seq_len_nat l) at 1.
+    assert (seq_len_nat l <= n)%nat by reflexivity.
+    generalize dependent n.
+    induction (seq_len_nat l) ; intros.
+    - reflexivity.
+    - rewrite <- ssrnat.addn1.
+      rewrite seq.iotaD.
+      rewrite <- ssrnat.addn1.
+      rewrite seq.iotaD.
+      rewrite !ssrnat.add0n.
+      rewrite !ssrnat.addn0.
+      simpl.
+      rewrite seq.map_cat.
+      rewrite seq.map_cat.
+
+      f_equal.
+      {
+        setoid_rewrite IHn.
+        reflexivity.
+        lia.
+      }
+      {
+        simpl.
+        rewrite setmE.
+        replace (eqtype.eq_op _ _) with false.
+        2:{
+          clear -H0.
+          cbn.
+          generalize dependent n0.
+          induction n ; intros.
+          - destruct n0 ; easy.
+          - destruct n0 ; [ easy | ].
+            simpl.
+            specialize (IHn n0).
+            rewrite IHn.
+            reflexivity.
+            lia.
+        }
+        reflexivity.
+      }
+  }
+
+  now rewrite H0.
+  easy.
+Qed.
+
+Definition seq_from_list_id : forall {A : ChoiceEquality} `{Default (T A)} (t : list A),
+    seq_to_list  A (seq_from_list A t) = t.
+Proof.
+  intros.
+  rewrite <- (seq.revK t).
+  induction (seq.rev t).
+  - reflexivity.
+  - simpl.
+    rewrite seq.rev_cons.
+    set (h := seq.rev l) at 1 ; rewrite <- IHl ; subst h. clear IHl.
+    rewrite <- !seq.cats1.
+    rewrite seq_from_list_cat.
+    rewrite seq_from_list_size.
+    rewrite seq_to_list_setm.
+    reflexivity.
+Qed.
+
+Definition seq_to_list_size :
+  forall {A : ChoiceEquality} `{Default (T A)} (t : seq A),
+    seq.size (seq_to_list A t) = seq_len_nat t.
+Proof.
+  intros.
+  destruct t.
+  generalize dependent fmval.
+  intros fmval.
+  rewrite <- (seq.revK fmval).
+  intros.
+
+  induction (seq.rev fmval).
+  - reflexivity.
+  - rewrite destruct_fmap_last.
+
+    intros.
+
+    unfold seq_to_list in *.
+    rewrite seq_len_nat_setm.
+
+    rewrite <- ssrnat.addn1.
+    rewrite seq.iotaD.
+    rewrite ssrnat.add0n.
+    simpl.
+    rewrite seq.map_cat.
+    simpl.
+
+    rewrite ssrnat.addn1.
+
+    unfold seq_index_nat.
+
+    rewrite setmE.
+    rewrite eqtype.eq_refl.
+
+    rewrite seq.size_cat.
+    rewrite seq.size_map.
+    rewrite seq.size_iota.
+    simpl.
+    rewrite ssrnat.addn1.
+    reflexivity.
+
+    unfold seq_len_nat.
+    simpl.
+
+    clear -i.
+
+    rewrite seq.rev_cons in i.
+    rewrite <- seq.cats1 in i.
+
+    set seq.rev in i ; unfold Ord.sort, nat_ordType in l0 ; subst l0.
+    destruct (seq.rev _).
+    + easy.
+    + generalize dependent p.
+      induction l0 ; intros.
+      * simpl.
+        simpl in i.
+        rewrite Bool.andb_true_r in i.
+        now apply ord_lt_is_leq.
+      * simpl.
+        apply IHl0.
+        apply (path_sorted_tl i).
+Qed.
 
 Definition seq_new_ {A: ChoiceEquality} (init : A) (len: nat) : seq A :=
   fmap_of_seq (repeat init len).
@@ -1089,18 +1652,6 @@ Definition seq_new {A: ChoiceEquality} `{Default A} (len: nat) : seq A :=
 Definition seq_create {A: ChoiceEquality} `{Default A} (len: nat) : seq A :=
   seq_new len.
 
-Fixpoint list_iter (n : nat) (k : nat) `{(n <= k)%nat} : list { x : nat | (x < k)%nat }.
-  destruct n.
-  - apply [].
-  - apply app.
-    + assert (H0: (n <= k)%nat) by lia.
-      apply (list_iter n k H0).
-    + apply cons.
-      * assert (H1: (n < k)%nat) by lia.
-        apply (@exist nat (fun x => (x < k)%nat) n H1).
-      * apply nil.
-Defined.
-
 Definition repr_Z_succ : forall WS z, @repr WS (Z.succ z) = (repr z .+ one).
 Proof.
   intros.
@@ -1108,59 +1659,71 @@ Proof.
   now rewrite add_repr.
 Qed.
 
-Definition array_from_list
-           (A: ChoiceEquality)
-           (l: list (T A))
-  : T (nseq A (length l)).
+Lemma lt_succ_diag_r_sub : forall x k, (x - k < S x)%nat.
 Proof.
-  destruct l as [ | x xs ].
-  - apply tt.
-  - pose (l := x :: xs).
-    pose proof (seq.foldr (fun (x : (T A) * { x : nat | (x < length l)%nat }) y =>
-                             setm
-                               (S := (T A))
-                               y
-                               (fintype.Ordinal (n := length l) (m := proj1_sig (snd x)) (ssrbool.introT ssrnat.ltP (proj2_sig (snd x))))
-                               (fst x))
-                          emptym
-                          (seq.zip l (@list_iter (length l) (length l) (le_n (length l))))).
-    rewrite <- ChoiceEq.
-    hnf.
-    rewrite ChoiceEq.
-    apply X.
-Defined.
+  intros.
+  generalize dependent x.
+  induction k ; intros.
+  - rewrite Nat.sub_0_r.
+    apply Nat.lt_succ_diag_r.
+  - destruct x.
+    + apply Nat.lt_succ_diag_r.
+    + cbn.
+      apply Nat.lt_lt_succ_r.
+      apply (IHk x).
+Qed.
+
+Equations array_from_list_helper {A: ChoiceEquality} (x : A) (xs: list (T A)) (k : nat) : T (nseq A (S k)) :=
+    array_from_list_helper x [] k := setm emptym (Ordinal (ssrbool.introT ssrnat.ltP (lt_succ_diag_r_sub k O))) x ;
+  array_from_list_helper x (y :: ys) k := setm (array_from_list_helper y ys k) (Ordinal (ssrbool.introT ssrnat.ltP (lt_succ_diag_r_sub k (length (y :: ys))))) x.
+
+Definition array_from_list {A: ChoiceEquality} (l: list (T A))
+  : T (nseq A (length l)) :=
+  match l with
+    [] => tt
+  | (x :: xs) => array_from_list_helper x xs (length xs)
+  end.
+
+Definition array_from_list' {A: ChoiceEquality} `{Default (T A)}  (l: list (T A)) (k : nat)
+  : T (nseq A k) :=
+  match k with
+  | O => (tt : nseq A O)
+  | S k' =>
+      match rev (seq.drop (length l - S k') (rev l)) ++ (repeat default (S k' - length l)) with
+        [] => emptym
+      | (x :: xs) => array_from_list_helper x xs k'
+      end
+  end.
 
 (**** Array manipulation *)
 
+Definition array_new_ {A: ChoiceEquality} (init:T A) (len: nat) : T (nseq A len) :=
+  match len with
+    O => (tt : nseq A 0)
+  | (S n') => array_from_list_helper init (repeat init n') n'
+  end.
 
-Definition array_new_ {A: ChoiceEquality} (init:T A) (len: nat) : T (nseq A len).
-  unfold T.
-  unfold nseq.
-  rewrite <- (repeat_length init (len)).
-  intros.
-  apply (@array_from_list A (repeat init len)).
-Defined.
+Equations array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) : T A :=
+  array_index (len := 0) s i := default ;
+  array_index (len := (S n)) s i with le_lt_dec (S n) (Z.to_nat (unsigned i)) := {
+    | right a with (@getm _ _ s (fintype.Ordinal (n := S n) (m := Z.to_nat (unsigned i)) ((ssrbool.introT ssrnat.ltP a)))) => {
+      | Some f => f
+      | None => default
+      }
+    | left b => default
+    }.
 
+Equations array_upd {A: ChoiceEquality} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) (new_v: T A) : T (nseq A len) :=
+  array_upd s i new_v with len :=
+    {
+      array_upd s i new_v n with lt_dec (Z.to_nat (unsigned i)) n := {
+        array_upd s i new_v O (left l)  => ltac:(apply Nat.ltb_lt in l ; discriminate) ;
+        array_upd s i new_v (S n) (left l)  => (setm s (fintype.Ordinal (n := S n) (m := Z.to_nat (unsigned i)) (ssrbool.introT ssrnat.ltP l)) new_v) ;
+        array_upd s i new_v n (right _) => s
+      }
+    }.
 
-Definition array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) : T A.
-Proof.
-  destruct (Z.to_nat (unsigned i) <? len)%nat eqn:H1.
-  (* If i < len, index normally *)
-  - apply Nat.ltb_lt in H1.
-    destruct len. { lia. }
-    rewrite <- ChoiceEq in s.
-    cbn in s.
-    rewrite -> ChoiceEq in s.
-    destruct (@getm _ _ s (fintype.Ordinal (n := S len) (m := Z.to_nat (unsigned i)) (ssrbool.introT ssrnat.ltP H1))) as [f | ].
-    + exact f.
-    + exact default.
-
-  (* otherwise return default element *)
-  - exact default.
-Defined.
-
-
-Definition array_upd {A: ChoiceEquality} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) (new_v: T A) : T (nseq A len).
+Definition array_upd2 {A: ChoiceEquality} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) (new_v: T A) : T (nseq A len).
 Proof.
   destruct (Z.to_nat (unsigned i) <? len)%nat eqn:v.
   (* If i < len, update normally *)
@@ -1177,8 +1740,6 @@ Proof.
   - exact s.
 Defined.
 
-(* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v. *)
-
 (* substitutes a sequence (nseq) into an array (nseq), given index interval  *)
 Definition update_sub {A : ChoiceEquality} {len slen} `{Default (T A)} (v : T (nseq A len)) (i : nat) (n : nat) (sub : T (nseq A slen)) : T (nseq A len) :=
   let fix rec x acc :=
@@ -1188,9 +1749,6 @@ Definition update_sub {A : ChoiceEquality} {len slen} `{Default (T A)} (v : T (n
     end in
   rec (n - i + 1)%nat v.
 
-(* Sanity check *)
-(* Compute (to_list (update_sub [1;2;3;4;5] 0 4 (of_list [9;8;7;6;12]))). *)
-
 Definition array_from_seq
            {a: ChoiceEquality}
            `{Default (T a)}
@@ -1198,33 +1756,510 @@ Definition array_from_seq
            (input: seq_type a)
   : T (nseq a out_len) :=
   let out := array_new_ default out_len in
-  update_sub out 0 (out_len - 1) (@array_from_list a (@seq_to_list a input)).
-
-(* Global Coercion array_from_seq : seq_type >-> nseq_type. *)
+  update_sub out 0 (out_len - 1) (@array_from_list a (@seq_to_list a _ input)).
 
 Definition slice {A} (l : list A) (i j : nat) : list A :=
   if (j <=? i)%nat then [] else firstn (j-i+1) (skipn i l).
 
-Fixpoint array_to_list_helper {A : ChoiceEquality} {n} (f : T (nseq A (S n))) (i : nat) `{(i < S (S n))%nat} : list (T A).
-  destruct i as [ | i' ].
-  - exact [].
-  - refine match getm f (fintype.Ordinal (m := i') _) with
-           | None => []
-           | Some a => array_to_list_helper A n f i' _ ++ [a]
-           end.
-    + apply (ssrbool.introT ssrnat.ltP).
-      lia.
+Definition lower_ordinal n (x : 'I_(S n)) (H: is_true (ord0 < x)%ord) : 'I_n.
+Proof.
+  destruct x.
+  apply (Ordinal (m := Nat.pred m)).
+  apply ssrnat.ltnSE.
+  rewrite (Nat.lt_succ_pred 0).
+  - apply i.
+  - destruct m.
+    + discriminate.
     + lia.
 Defined.
 
-Definition array_to_list {A : ChoiceEquality} {n} (f : T (nseq A n)) : list (T A).
-  destruct n.
-  - apply [].
-  - refine (array_to_list_helper f (S n) (H := _)).
-    lia.
+Equations lower_fval {A : ChoiceEquality} `{H_default : Default A} {n} (a : list ('I_(S(S n)) * A)) (H : forall x, In x a -> is_true (ord0 < fst x)%ord ) : list ('I_(S n) * A) :=
+  lower_fval [] H := [] ;
+  lower_fval (x :: xs) H :=
+    (lower_ordinal (S n) (fst x) (H x (or_introl eq_refl)) , snd x)
+      :: lower_fval xs (fun y H0 => H y (in_cons x y xs H0)).
+
+Lemma lower_keeps_value : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H, (seq.map snd a = seq.map snd (lower_fval a H)).
+Proof.
+  intros.
+  destruct a.
+  simpl in *.
+  induction fmval.
+  - cbn.
+    reflexivity.
+  - destruct a.
+    rewrite seq.map_cons.
+    erewrite IHfmval.
+    rewrite lower_fval_equation_2 ; simpl.
+    f_equal.
+    apply (path_sorted_tl i).
+Qed.
+
+Lemma lower_is_sorted : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H, is_true (path.sorted Ord.lt (seq.unzip1 (lower_fval a H))).
+Proof.
+  intros.
+  destruct a.
+  simpl.
+  induction fmval.
+  - reflexivity.
+  - destruct a.
+    simpl.
+    intros.
+    rewrite lower_fval_equation_2 ; simpl.
+    destruct fmval.
+    + reflexivity.
+    + pose proof i.
+      rewrite lower_fval_equation_2 ; simpl.
+      simpl in H0 |- *.
+      rewrite LocationUtility.is_true_split_and in H0 |- *.
+
+      destruct H0.
+      split ; [ | ].
+      destruct p.
+      simpl.
+      destruct s, s0.
+
+      pose proof (H (Ordinal (n:=S (S n)) (m:=m) i0, t) (or_introl eq_refl)).
+      pose proof (H (Ordinal (n:=S (S n)) (m:=m0) i1, t0)
+          (in_cons (Ordinal (n:=S (S n)) (m:=m) i0, t)
+             (Ordinal (n:=S (S n)) (m:=m0) i1, t0)
+             ((Ordinal (n:=S (S n)) (m:=m0) i1, t0) :: fmval)
+             (or_introl eq_refl))).
+
+      unfold Ord.lt in H0 |- *.
+      unfold Ord.leq in H0 |- *.
+      cbn.
+
+      clear -H0 H2 H3.
+      rewrite LocationUtility.is_true_split_and in H0 |- *.
+      destruct H0.
+      cbn in H , H0.
+      destruct m, m0 ; easy.
+
+      specialize (IHfmval (path_sorted_tl i) ( fun x H2 => H x (in_cons _ _ _  H2))).
+      rewrite lower_fval_equation_2 in IHfmval ; simpl in IHfmval.
+      simpl.
+      apply IHfmval.
+Qed.
+
+Lemma ord_ext : forall {n} m0 m1 {H1 H2}, m0 = m1 <-> Ordinal (n := S n) (m := m0) H1 = Ordinal (n := S n) (m := m1) H2.
+Proof.
+  intros.
+  rewrite <- (inord_val (Ordinal H1)).
+  rewrite <- (inord_val (Ordinal H2)).
+  split. intros. subst. reflexivity.
+  intros. cbn in H.
+  unfold inord in H.
+  unfold eqtype.insubd in H.
+  unfold eqtype.insub in H.
+  destruct ssrbool.idP in H.
+  destruct ssrbool.idP in H.
+  cbn in H.
+  inversion H.
+  reflexivity.
+  contradiction.
+  contradiction.
+Qed.
+
+Lemma lower_fval_ext : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a b : {fmap 'I_(S(S n)) -> A}) H1 H2, a = b <-> lower_fval a H1 = lower_fval b H2.
+Proof.
+  intros.
+  split.
+  - intros.
+    subst.
+    destruct b.
+    simpl.
+    induction fmval.
+    + reflexivity.
+    + simpl.
+      destruct a, s.
+      rewrite !lower_fval_equation_2.
+      f_equal.
+      * f_equal.
+        apply ord_ext. reflexivity.
+      * apply IHfmval.
+        apply (path_sorted_tl i).
+  - intros.
+    apply eq_fmap.
+    intros i.
+
+    destruct a.
+    destruct b.
+    cbn in H.
+    cbn.
+
+    f_equal.
+
+    generalize dependent fmval0.
+    induction fmval as [ | p ] ; intros ; destruct fmval0 as [ | p0 ] ; try rewrite !lower_fval_equation_2 in H ; try rewrite !lower_fval_equation_1 in H ; try easy.
+
+    inversion H.
+    epose (H1 p (or_introl eq_refl)).
+    epose (H2 p0 (or_introl eq_refl)).
+
+    destruct p.
+    destruct p0.
+    cbn in H4.
+    subst.
+    destruct s.
+    destruct s0.
+    apply ord_ext in H3.
+    f_equal.
+    {
+      f_equal.
+      apply ord_ext.
+      destruct m, m0 ; try discriminate.
+      cbn in H3.
+      now rewrite H3.
+    }
+    {
+      eapply IHfmval.
+      apply H5.
+
+      Unshelve.
+      apply (path_sorted_tl i0).
+      apply (path_sorted_tl i1).
+    }
+Qed.
+
+
+Lemma gt_smallest_sorted : forall {A} {n} {p : 'I_n * A} {fmval}, is_true (path.sorted Ord.lt (seq.unzip1 (p :: fmval))) -> (forall x, In x fmval -> is_true (fst p < fst x)%ord).
+  intros.
+  induction fmval.
+  - contradiction.
+  - cbn in H.
+    rewrite LocationUtility.is_true_split_and in H.
+    destruct H.
+    destruct H0.
+    + subst.
+      apply H.
+    + apply IHfmval.
+      cbn.
+      eapply path.path_le.
+      apply (@Ord.lt_trans _).
+      apply H.
+      apply H1.
+      apply H0.
+Qed.
+
+Corollary tl_gt_0_sorted : forall {A} {n} {p : 'I_(S n) * A} {fmval}, is_true (path.sorted Ord.lt (seq.unzip1 (p :: fmval))) -> (forall x, In x fmval -> is_true (ord0 < fst x)%ord).
+  intros.
+  induction fmval ; [ easy | ].
+  pose proof H.
+  simpl in H1.
+  rewrite LocationUtility.is_true_split_and in H1.
+  destruct H1.
+  destruct H0.
+  - subst.
+    destruct p, o.
+    destruct m.
+    + apply H1.
+    + eapply Ord.lt_trans. 2: apply (gt_smallest_sorted H) ; now left.
+      easy.
+  - refine (IHfmval _ H0).
+    cbn.
+    eapply path.path_le.
+    apply Ord.lt_trans.
+    apply H1.
+    apply H2.
+Qed.
+
+Lemma in_nseq_tl_gt_zero {A} {n} {m'} {i3} {k} fmval (i :
+  is_true (path.path Ord.lt (fst (@Ordinal _ (S m') i3, k)) (seq.unzip1 fmval))) :
+  (forall x : 'I_(S (S n)) * T A,
+   In x ((@Ordinal _ (S m') i3, k) :: fmval) ->
+   is_true (ord0 < fst x)%ord).
+Proof.
+  intros.
+  destruct H.
+  - subst. reflexivity.
+  - eapply tl_gt_0_sorted.
+    apply i.
+    apply H.
+Qed.
+
+Equations tl_fmap {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) : {fmap 'I_(S n) -> A} :=
+  tl_fmap (@FMap.FMap _ _ [] i) := emptym ;
+  tl_fmap (@FMap.FMap _ _ ((@Ordinal _ 0 i3, k) :: fmval) i) := mkfmap (T:=ordinal_ordType (S n)) (lower_fval fmval (gt_smallest_sorted i)) ;
+  tl_fmap (@FMap.FMap _ _ ((@Ordinal _ (S m') i3, k) :: fmval) i) := mkfmap (T:=ordinal_ordType (S n)) (lower_fval ((Ordinal (n:=S (S n)) (m:=S m') i3, k) :: fmval) (in_nseq_tl_gt_zero fmval i)).
+
+Definition nseq_hd {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : A :=
+  match a with
+  | @FMap.FMap _ _ [] _ => default
+  | @FMap.FMap _ _ (p :: _) _ =>
+      match nat_of_ord (fst p) with
+      | O => snd p
+      | S _ => default
+      end
+  end.
+
+Definition nseq_tl {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : T (nseq A n).
+Proof. destruct n ; [exact tt | apply (tl_fmap a) ]. Defined.
+
+Definition split_nseq {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : A * T (nseq A n) := (nseq_hd a, nseq_tl a).
+
+
+Lemma lower_fval_smaller_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) : (length (FMap.fmval a) <= S (length (FMap.fmval (tl_fmap a))))%nat.
+Proof.
+  destruct a.
+  induction fmval.
+  - cbn ; lia.
+  - simpl.
+    simpl in IHfmval.
+    destruct a, s. destruct m.
+    + apply Nat.eq_le_incl.
+      f_equal.
+      rewrite tl_fmap_equation_2.
+      rewrite mkfmapK ; [ | apply (lower_is_sorted (@FMap.FMap _ _ fmval (path_sorted_tl i)))].
+      epose (lower_keeps_value (FMap.FMap (T:=ordinal_ordType (S (S n))) (fmval:=fmval) (path_sorted_tl i))).
+      simpl in e.
+      rewrite <- (map_length snd).
+      rewrite <- (map_length snd).
+      assert (forall {A B} (f : A -> B) (l : list A), seq.map f l = map f l).
+      {
+        clear ; intros.
+        induction l.
+        - reflexivity.
+        - cbn.
+          f_equal.
+      }
+      setoid_rewrite <- H.
+      erewrite e.
+      reflexivity.
+    + rewrite tl_fmap_equation_3.
+      apply le_n_S.
+      eapply le_trans ; [ apply (IHfmval (path_sorted_tl i)) | ].
+      apply Nat.eq_le_incl.
+      rewrite mkfmapK ; [ | apply (lower_is_sorted (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m) i0, t) :: fmval) i)) ].
+      simpl.
+      f_equal.
+      f_equal.
+      clear.
+
+      induction fmval.
+      * reflexivity.
+      * destruct a, s.
+        destruct m0 ; [ discriminate | ].
+        rewrite tl_fmap_equation_3.
+        rewrite mkfmapK ; [ | ].
+
+        erewrite (proj1 (lower_fval_ext (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m0) i1, t0) :: fmval) (path_sorted_tl i)) _ _ _) eq_refl).
+        reflexivity.
+        apply (lower_is_sorted (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m0) i1, t0) :: fmval) (path_sorted_tl i))).
+Qed.
+
+
+Lemma ord_gt : (forall {A : ordType} {x y : A}, ((x < y)%ord = false) -> eqtype.eq_op x y = false -> is_true (y < x)%ord).
+Proof.
+  clear ; intros.
+  rewrite Ord.ltNge in H.
+  apply ssrbool.negbFE in H.
+  rewrite Ord.leq_eqVlt in H.
+  rewrite LocationUtility.is_true_split_or in H.
+
+  rewrite eqtype.eq_sym in H0.
+  cbn in H.
+  cbn in H0.
+  rewrite H0 in H.
+  destruct H ; [ discriminate | ].
+  apply H.
+Qed.
+
+Lemma path_path_setm_move_lowerbound :
+  forall {A : ordType} B v (y z : A * B) (l : list (A * B)),
+  is_true (fst y < fst z)%ord ->
+  is_true
+    (path.sorted Ord.lt (seq.unzip1 (y :: l))) ->
+  is_true
+    (path.sorted Ord.lt (seq.unzip1 ((setm_def l (fst z) v)))) ->
+  is_true
+    (path.sorted Ord.lt (seq.unzip1 (y :: (setm_def l (fst z) v)))).
+Proof.
+  intros.
+  generalize dependent y.
+  destruct l ; intros.
+  - cbn.
+    now rewrite H.
+  - cbn.
+    cbn in H1.
+    pose proof (path_sorted_tl H1).
+    cbn in H1.
+    set (fst z < fst p)%ord in *.
+    destruct b eqn:b_lt ; subst b ; cbn in H1.
+    + cbn.
+      rewrite H.
+      rewrite b_lt.
+      cbn.
+      rewrite H2.
+      reflexivity.
+    + destruct eqtype.eq_op eqn:b_eq ; cbn in H1.
+      * cbn.
+        rewrite H.
+        cbn.
+        rewrite H1.
+        reflexivity.
+      * pose proof (ord_gt b_lt b_eq).
+        clear b_lt b_eq.
+        cbn.
+        rewrite H1.
+
+        cbn in H0.
+        rewrite LocationUtility.is_true_split_and in H0.
+        destruct H0.
+        rewrite H0.
+        reflexivity.
+Qed.
+
+Lemma setm_def_cons :
+  forall (A : ordType) B (a : A * B) s (k : A) v,
+  setm_def (a :: s) k v = ((if (fst a < k)%ord
+                           then a
+                           else (k, v)
+   ) :: if (k < fst a)%ord
+       then a :: s
+       else
+         if eqtype.eq_op k (fst a)
+         then s
+         else setm_def (T:=A) s k v).
+Proof.
+  intros.
+  cbn.
+  destruct (k < fst a)%ord eqn:k_lt_a.
+  - unfold Ord.lt in k_lt_a.
+    apply (ssrbool.rwP ssrbool.andP) in k_lt_a.
+    destruct k_lt_a.
+    rewrite Ord.leqNgt in H.
+    apply ssrbool.negbTE in H.
+    rewrite H.
+    reflexivity.
+  - destruct eqtype.eq_op eqn:k_eq_a.
+    + unfold Ord.lt.
+      rewrite eqtype.eq_sym in k_eq_a.
+      rewrite k_eq_a.
+      cbn.
+      rewrite Bool.andb_false_r.
+      reflexivity.
+    + rewrite Ord.ltNge in k_lt_a.
+      apply ssrbool.negbFE in k_lt_a.
+      unfold Ord.lt.
+      rewrite k_lt_a.
+      rewrite eqtype.eq_sym in k_eq_a.
+      rewrite k_eq_a.
+      reflexivity.
+Qed.
+
+Lemma setm_cons :
+  forall (A : ordType) B (a : A * B) s (k : A) v H,
+    setm (FMap.FMap (fmval:=(a :: s)) H) k v =
+      setm (setm (FMap.FMap (fmval:=s) (path_sorted_tl H)) (fst a) (snd a)) k v.
+Proof.
+  intros.
+  apply eq_fmap.
+  intros t.
+  rewrite !setmE.
+  reflexivity.
+Qed.
+
+Lemma array_is_max_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : (length (FMap.fmval a) <= S n)%nat.
+Proof.
+  induction n.
+  - destruct a.
+    cbn.
+    destruct fmval.
+    + cbn. lia.
+    + destruct fmval.
+      * cbn. lia.
+      * cbn in i.
+        destruct p , p0.
+        destruct s , s0.
+        cbn in i.
+        destruct m , m0 ; discriminate.
+  - cbn in *.
+    specialize (IHn (tl_fmap a)).
+    apply le_n_S in IHn.
+    refine (le_trans (length (FMap.fmval a)) _ (S (S n)) _ IHn).
+    apply lower_fval_smaller_length.
+Qed.
+
+
+Definition nth_nseq {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) (i : nat) (H : (i <= n)%nat) : A.
+Proof.
+  generalize dependent i.
+  induction n ; intros.
+  - apply (nseq_hd a).
+  - destruct i.
+    + apply (nseq_hd a).
+    + apply (IHn (nseq_tl a) i).
+      apply le_S_n.
+      apply H.
 Defined.
 
-Definition array_to_seq {A : ChoiceEquality} {n} (f : nseq_type A n) : seq_type _ :=
+Equations array_to_list {A : ChoiceEquality} `{H_default : Default A} {n} (f : T (nseq A n)) : list (T A) :=
+  array_to_list (n:=O%nat) f := [] ;
+  array_to_list (n:=S _%nat) f := nseq_hd f :: array_to_list (nseq_tl f).
+
+Lemma nseq_hd_ord0 :
+  forall A H_default n (a : nseq A (S n)) (x : A),
+    @nseq_hd A H_default (n) (setm a ord0 x) = x.
+Proof.
+  intros.
+  cbn.
+  destruct a.
+  destruct fmval.
+  + reflexivity.
+  + cbn.
+    destruct negb eqn:O_p.
+    * reflexivity.
+    * apply ssrbool.negbFE in O_p.
+      rewrite O_p.
+      reflexivity.
+Qed.
+
+Lemma nseq_tl_ord0 :
+  forall A H_default n (a : nseq A (S n)) (x : A),
+    @nseq_tl A H_default n (setm a ord0 x) = nseq_tl a.
+Proof.
+  intros.
+  destruct n.
+  + reflexivity.
+  + destruct a.
+    induction fmval as [ | p ].
+    * reflexivity.
+    * destruct p, s.
+      unfold setm.
+      unfold fmap.
+      unfold ord0.
+      cbn.
+      destruct m.
+
+      -- cbn.
+         rewrite !tl_fmap_equation_2.
+         now erewrite (proj1 (lower_fval_ext (@FMap.FMap _ _ fmval (path_sorted_tl i)) _ _ _) eq_refl).
+      -- cbn.
+         rewrite tl_fmap_equation_2.
+         rewrite tl_fmap_equation_3.
+         f_equal.
+         now erewrite (proj1 (lower_fval_ext (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m) i0, t) :: fmval) i) _ _ _) eq_refl).
+Qed.
+
+Lemma array_to_list_ord0 :
+  forall A H_default n (a : nseq A (S n)) (x : A),
+    @array_to_list A H_default (S n) (setm a ord0 x) = x :: array_to_list (nseq_tl a).
+Proof.
+  intros.
+  rewrite array_to_list_equation_2.
+  f_equal.
+  - apply nseq_hd_ord0.
+  - f_equal.
+    apply nseq_tl_ord0.
+Qed.
+
+Lemma split_nseq_correct {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : nseq_hd a :: array_to_list (nseq_tl a) = array_to_list a.
+Proof.
+  reflexivity.
+Qed.
+
+Definition array_to_seq {A : ChoiceEquality} `{H_default : Default A} {n} (f : nseq_type A n) : seq_type _ :=
   seq_from_list _ (array_to_list f).
 
 Definition positive_slice {A : ChoiceEquality} `{Hd: Default (T A)} {n} `{H: Positive n} (l : T (nseq A n)) (i j : nat) `{H1: (i < j)%nat} `{(j - i < length (array_to_list l) - i)%nat} : Positive (length (slice (array_to_list l) i j)).
@@ -1252,9 +2287,9 @@ Proof.
   - reflexivity.
 Qed.
 
-Definition lseq_slice {A : ChoiceEquality} {n} (l : T (nseq A n)) (i j : nat) :
+Definition lseq_slice {A : ChoiceEquality} `{H_default : Default A} {n} (l : T (nseq A n)) (i j : nat) :
   T (@nseq A (length (slice (array_to_list l) (i) (j)))) :=
-  array_from_list _ (slice (array_to_list l) (i) (j)).
+  array_from_list (slice (array_to_list l) (i) (j)).
 
 Definition seq_sub {a : ChoiceEquality} `{Default (T (a))} (s : (T (seq a))) (start n : nat) :=
   lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) start (start + n)%nat.
@@ -1305,7 +2340,7 @@ Proof.
   destruct start_fin as [start fin].
   refine (update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) _).
 
-  apply (@lseq_slice a ((from_uint_size fin) - (from_uint_size start)) (array_from_seq ((from_uint_size fin) - (from_uint_size start)) input) (from_uint_size start) (from_uint_size fin)).
+  apply (@lseq_slice a _ ((from_uint_size fin) - (from_uint_size start)) (array_from_seq ((from_uint_size fin) - (from_uint_size start)) input) (from_uint_size start) (from_uint_size fin)).
 Defined.
 
 Definition array_slice_range
@@ -1360,9 +2395,28 @@ Definition seq_slice_range
   : (T (seq a)) :=
   seq_slice input (fst start_fin) (snd start_fin).
 
+
+
+Equations seq_update_sub {A : ChoiceEquality} `{Default (T A)} (v : T (seq A)) (i : nat) (n : nat) (sub : T (seq A)) : T (seq A) :=
+  seq_update_sub v i 0 sub := v ;
+  seq_update_sub v i (S n) sub :=
+      seq_update_sub (setm v (i+n)%nat match getm sub n with
+                                           | Some y => y
+                                           | None => default
+                                           end) i n sub.
+
 (* updating a subsequence in a sequence *)
 Definition seq_update
            {a: ChoiceEquality}
+           `{Default (T (a))}
+           (s: (T (seq a)))
+           (start: uint_size)
+           (input: (T (seq a)))
+  : (T (seq a)) :=
+  seq_update_sub s (from_uint_size start) (from_uint_size (seq_len input)) input.
+
+Definition old_seq_update
+  {a: ChoiceEquality}
            `{Default (T (a))}
            (s: (T (seq a)))
            (start: uint_size)
@@ -1402,6 +2456,7 @@ Definition seq_update_slice
 
 Definition seq_concat
            {a : ChoiceEquality}
+           `{Default a}
            (s1 :(T (seq a)))
            (s2: (T (seq a)))
   : (T (seq a)) :=
@@ -1409,19 +2464,32 @@ Definition seq_concat
 
 Definition seq_concat_owned
            {a : ChoiceEquality}
+           `{Default a}
            (s1 :(T (seq a)))
            (s2: (T (seq a)))
   : (T (seq a)) := seq_concat s1 s2.
 
 Definition seq_push
            {a : ChoiceEquality}
+           `{Default a}
            (s1 :(T (seq a)))
            (s2: (T (a)))
   : (T (seq a)) :=
-  seq_from_list _ ((seq_to_list _ s1) ++ [s2]).
+  setm s1 (seq_len_nat s1) s2.
+
+Theorem seq_push_list_app : forall {A : ChoiceEquality} `{Default A} (t : seq A) (s : A),
+    (seq_to_list A (Hacspec_Lib_Pre.seq_push t s) = seq_to_list A t ++ [s]).
+Proof.
+  intros.
+
+  unfold seq_push.
+  rewrite seq_to_list_setm.
+  reflexivity.
+Qed.
 
 Definition seq_push_owned
            {a : ChoiceEquality}
+           `{Default a}
            (s1 :(T (seq a)))
            (s2: (T (a)))
   : (T (seq a)) := seq_push s1 s2.
@@ -1492,7 +2560,6 @@ Definition seq_set_chunk
 Definition seq_num_exact_chunks {a} (l : (T (seq a))) (chunk_size : (T (uint_size))) : (T (uint_size)) :=
   (repr (Z.of_nat (length l))) ./ chunk_size.
 
-(* Until #84 is fixed this returns an empty sequence if not enough *)
 Definition seq_get_exact_chunk {a : ChoiceEquality} `{Default (T (a))} (l : (T (seq a))) (chunk_size chunk_num: (T (uint_size))) : (T (seq a)) :=
   let '(len, chunk) := seq_get_chunk l chunk_size chunk_num in
   if eqtype.eq_op len chunk_size then emptym else chunk.
@@ -1509,8 +2576,6 @@ Definition seq_get_remainder_chunk {a : ChoiceEquality} `{Default a} (l : seq a)
   if eqtype.eq_op len chunk_size
   then emptym
   else chunk.
-
-Check @fmap.FMap.FMap _ _ [].
 
 Fixpoint list_xor_ {WS} (x y : list (@int WS)) : list (@int WS) :=
   match x, y with
@@ -1529,7 +2594,7 @@ Fixpoint list_truncate {a} (x : list a) (n : nat) : list a :=
   | [], _ => []
   | (x :: xs), S n' => x :: (list_truncate xs n')
   end.
-Definition seq_truncate {a} (x : seq a) (n : nat) : seq a :=
+Definition seq_truncate {a : ChoiceEquality} `{Default a} (x : seq a) (n : nat) : seq a :=
   seq_from_list _ (list_truncate (seq_to_list _ x) n).
 
 (**** Numeric operations *)
@@ -1577,94 +2642,6 @@ Infix "array_eq" := (array_eq_ eq) (at level 33) : hacspec_scope.
 Infix "array_neq" := (fun s1 s2 => negb (array_eq_ eq s1 s2)) (at level 33) : hacspec_scope.
 
 
-(**** Integers to arrays *)
-Axiom uint32_to_le_bytes : int32 -> nseq int8 4.
-(* Definition uint32_to_le_bytes (x: uint32) : nseq uint8 4 :=
-  LBSeq.uint_to_bytes_le x. *)
-
-Axiom uint32_to_be_bytes : int32 -> nseq int8 4.
-(* Definition uint32_to_be_bytes (x: uint32) : nseq uint8 4 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom uint32_from_le_bytes : nseq int8 4 -> int32.
-(* Definition uint32_from_le_bytes (s: nseq uint8 4) : uint32 :=
-  LBSeq.uint_from_bytes_le s *)
-
-Axiom uint32_from_be_bytes : nseq int8 4 -> int32.
-(* Definition uint32_from_be_bytes (s: nseq uint8 4) : uint32 :=
-  LBSeq.uint_from_bytes_be s *)
-
-Axiom uint64_to_le_bytes : int64 -> nseq int8 8.
-(* Definition uint64_to_le_bytes (x: uint64) : nseq uint8 8 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom uint64_to_be_bytes : int64 -> nseq int8 8.
-(* Definition uint64_to_be_bytes (x: uint64) : nseq uint8 8 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom uint64_from_le_bytes : nseq int8 8 -> int64.
-(* Definition uint64_from_le_bytes (s: nseq uint8 8) : uint64 :=
-  LBSeq.uint_from_bytes_le s *)
-
-Axiom uint64_from_be_bytes : nseq int8 8 -> int64.
-(* Definition uint64_from_be_bytes (s: nseq uint8 8) : uint64 :=
-  LBSeq.uint_from_bytes_be s *)
-
-Axiom uint128_to_le_bytes : int128 -> nseq int8 16.
-(* Definition uint128_to_le_bytes (x: uint128) : nseq uint8 16 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom uint128_to_be_bytes : int128 -> nseq int8 16.
-(* Definition uint128_to_be_bytes (x: uint128) : nseq uint8 16 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom uint128_from_le_bytes : nseq int8 16 -> int128.
-(* Definition uint128_from_le_bytes (input: nseq uint8 16) : uint128 :=
-  LBSeq.uint_from_bytes_le input *)
-
-Axiom uint128_from_be_bytes : nseq int8 16 -> int128.
-(* Definition uint128_from_be_bytes (s: nseq uint8 16) : uint128 :=
-  LBSeq.uint_from_bytes_be s *)
-
-Axiom u32_to_le_bytes : int32 -> nseq int8 4.
-(* Definition u32_to_le_bytes (x: pub_uint32) : nseq pub_uint8 4 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom u32_to_be_bytes : int32 -> nseq int8 4.
-(* Definition u32_to_be_bytes (x: pub_uint32) : nseq pub_uint8 4 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom u32_from_le_bytes : nseq int8 4 -> int32.
-(* Definition u32_from_le_bytes (s: nseq pub_uint8 4) : pub_uint32 :=
-  LBSeq.uint_from_bytes_le s *)
-
-Axiom u32_from_be_bytes : nseq int8 4 -> int32.
-(* Definition u32_from_be_bytes (s: nseq pub_uint8 4) : pub_uint32 :=
-  LBSeq.uint_from_bytes_be s *)
-
-Axiom u64_to_le_bytes : int64 -> nseq int8 8.
-(* Definition u64_to_le_bytes (x: int64) : nseq int8 8 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom u64_from_le_bytes : nseq int8 8 -> int64.
-(* Definition u64_from_le_bytes (s: nseq int8 8) : int64 :=
-  LBSeq.uint_from_bytes_le s *)
-
-Axiom u128_to_le_bytes : int128 -> nseq int8 16.
-(* Definition u128_to_le_bytes (x: int128) : nseq int8 16 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom u128_to_be_bytes : int128 -> nseq int8 16.
-(* Definition u128_to_be_bytes (x: int128) : nseq int8 16 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom u128_from_le_bytes : nseq int8 16 -> int128.
-(* Definition u128_from_le_bytes (input: nseq int8 16) : int128 :=
-  LBSeq.uint_from_bytes_le input *)
-
-Axiom u128_from_be_bytes : nseq int8 16 -> int128.
-(* Definition u128_from_be_bytes (s: nseq int8 16) : pub_uint128 :=
-  LBSeq.uint_from_bytes_be s *)
 
 
 (*** Nats *)
@@ -1675,7 +2652,6 @@ Definition nat_mod_type {p : Z} : Type := 'I_(S (Init.Nat.pred (Z.to_nat p))).
 #[global] Instance nat_mod (p : Z) : ChoiceEquality :=
   {| ct :=  nat_mod_choice ; T :=  @nat_mod_type p ; ChoiceEq := eq_refl |}.
 Definition mk_natmod {p} (z : Z) : nat_mod p := @zmodp.inZp (Init.Nat.pred (Z.to_nat p)) (Z.to_nat z).
-
 
 Definition nat_mod_equal {p} (a b : nat_mod p) : bool :=
   @eqtype.eq_op (ordinal_eqType (S (Init.Nat.pred (Z.to_nat p)))) a b.
@@ -1688,8 +2664,9 @@ Definition nat_mod_one {p} : nat_mod p := zmodp.Zp1.
 Definition nat_mod_two {p} : nat_mod p := zmodp.inZp 2.
 
 
-(* convenience coercions from nat_mod to Z and N *)
-(* Coercion Z.of_N : N >-> Z. *)
+Global Instance nat_mod_default {p : Z} : Default (nat_mod p) := {
+    default := nat_mod_zero
+  }.
 
 Definition nat_mod_add {n : Z} (a : nat_mod n) (b : nat_mod n) : nat_mod n := zmodp.Zp_add a b.
 
@@ -1703,8 +2680,6 @@ Infix "-%" := nat_mod_sub (at level 33) : hacspec_scope.
 
 Definition nat_mod_div {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := zmodp.Zp_mul a (zmodp.Zp_inv b).
 Infix "/%" := nat_mod_div (at level 33) : hacspec_scope.
-
-(* A % B = (a * B + r) *)
 
 Definition nat_mod_neg {n : Z} (a:nat_mod n) : nat_mod n := zmodp.Zp_opp a.
 
@@ -1725,7 +2700,6 @@ Definition nat_mod_pow_self {p} a n := @nat_mod_pow_felem p a n.
 
 Close Scope nat_scope.
 
-(* We assume x < m *)
 Definition nat_mod_from_secret_literal {m : Z} (x:int128) : nat_mod m := @zmodp.inZp (Init.Nat.pred (Z.to_nat m)) (Z.to_nat (unsigned x)).
 
 Definition nat_mod_from_literal (m : Z) (x:int128) : nat_mod m := nat_mod_from_secret_literal x.
@@ -1747,22 +2721,13 @@ Definition nat_mod_get_bit {p} (a : nat_mod p) n :=
   then @nat_mod_one p
   else @nat_mod_zero p.
 
-(*
-Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_mod n) : lseq pub_uint8 len =
-  Definition n' := n % (pow2 (8 * len)) in
-  Lib.ByteSequence.nat_mod_to_bytes_le len n'*)
-
-(* Definition nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
-  Definition n' := n % (pow2 (8 * len)) in
-  Lib.ByteSequence.nat_to_bytes_be len n' *)
-
 Axiom array_declassify_eq : forall  {A l}, nseq A l -> nseq A l -> bool_ChoiceEquality.
-Axiom array_to_le_uint32s : forall {A l}, nseq A l -> seq uint32.  (* (l/4) *)
-Axiom array_to_be_uint32s : forall {l}, nseq uint8 l -> seq uint32.  (* (l/4) *)
-Axiom array_to_le_uint64s : forall {A l}, nseq A l -> seq uint64.  (* (l/8) *)
-Axiom array_to_be_uint64s : forall {l}, nseq uint8 l -> seq uint64.  (* (l/8) *)
-Axiom array_to_le_uint128s : forall {A l}, nseq A l -> seq uint128.  (* (l/16) *)
-Axiom array_to_be_uint128s : forall {l}, nseq uint8 l -> seq uint128.  (* (l/16) *)
+Axiom array_to_le_uint32s : forall {A l}, nseq A l -> seq uint32.
+Axiom array_to_be_uint32s : forall {l}, nseq uint8 l -> seq uint32.
+Axiom array_to_le_uint64s : forall {A l}, nseq A l -> seq uint64.
+Axiom array_to_be_uint64s : forall {l}, nseq uint8 l -> seq uint64.
+Axiom array_to_le_uint128s : forall {A l}, nseq A l -> seq uint128.
+Axiom array_to_be_uint128s : forall {l}, nseq uint8 l -> seq uint128.
 Axiom array_to_le_bytes : forall {A l}, nseq A l -> seq uint8.
 Axiom array_to_be_bytes : forall {A l}, nseq A l -> seq uint8.
 Axiom nat_mod_from_byte_seq_le : forall  {A n}, seq A -> nat_mod n.
@@ -1842,19 +2807,12 @@ End Casting.
 
 
 Global Arguments pair {_ _} & _ _.
-(* Global Arguments id {_} & _. *)
+
 Section Coercions.
   (* First, in order to have automatic coercions for tuples, we add bidirectionality hints: *)
 
-  (* Integer coercions *)
-  (* We have nat >-> N >-> Z >-> int/int32 *)
-  (* and uint >-> Z *)
-  (* and N >-> nat *)
-
   Global Coercion N.to_nat : N >-> nat.
   Global Coercion Z.of_N : N >-> Z.
-
-  (* Global Coercion repr : Z >-> int_type. *)
 
   Definition Z_to_int `{WS : wsize} (n : Z) : @int_type WS := repr n.
   Global Coercion  Z_to_int : Z >-> int_type.
@@ -1892,8 +2850,6 @@ Section Coercions.
   Definition int128_to_nat (n : int128_type) : nat := unsigned n.
   Global Coercion int128_to_nat : int128_type >-> nat.
 
-  (* coercions int8 >-> int16 >-> ... int128 *)
-
   Definition int8_to_int16 (n : int8_type) : int16_type := repr n.
   Global Coercion int8_to_int16 : int8_type >-> int16_type.
 
@@ -1915,10 +2871,7 @@ Section Coercions.
   Definition uint_size_to_int64 (n : uint_size_type) : int64_type := repr n.
   Global Coercion uint_size_to_int64 : uint_size_type >-> int64_type.
 
-
-  (* coercions into nat_mod *)
   Definition Z_in_nat_mod {m : Z} (x:Z) : @nat_mod_type m := @mk_natmod m x.
-  (* Global Coercion Z_in_nat_mod : Z >-> nat_mod_type. *)
 
   Definition int_in_nat_mod {m : Z} `{WS : wsize} (x:@int_type WS) : @nat_mod_type m := mk_natmod (unsigned x).
   Global Coercion int_in_nat_mod : int_type >-> nat_mod_type.
@@ -2019,11 +2972,6 @@ Global Instance string_eqdec : EqDec String.string := {
     eqb_leibniz := String.eqb_eq ;
   }.
 
-(* Global Instance unit_eqdec : EqDec unit := { *)
-(*   eqb := fun _ _ => true ; *)
-(*   eqb_leibniz := fun 'tt 'tt => (conj (fun _ => eq_refl) (fun _ => eq_refl)) ; *)
-(* }. *)
-
 Fixpoint list_eqdec {A} `{EqDec A} (l1 l2 : list A) : bool :=
   match l1, l2 with
   | x::xs, y::ys => if eqb x y then list_eqdec xs ys else false
@@ -2088,35 +3036,120 @@ Fixpoint nat_be_range_to_position_ (z : list bool) (val : Z) : Z :=
 Definition nat_be_range_to_position (k : nat) (z : list bool) (n : Z) : Z :=
   (nat_be_range_to_position_ z 0 * 2^(k * n)).
 
-Definition nat_be_range (k : nat) (z : Z) (n : nat) : Z :=
-  nat_be_range_to_position_ (nat_be_range_at_position k z (n * k)) 0. (* * 2^(k * n) *)
+Definition nat_be_range' (k : nat) (z : Z) (n : nat) : Z :=
+  nat_be_range_to_position_ (nat_be_range_at_position k z (n * k)) 0.
 
-Compute nat_be_range 4 0 300.
+Definition nat_be_range (k : nat) (z : Z) (n : nat) :=
+  ((z / 2 ^ (n * k)%Z) mod 2 ^ k)%Z.
 
-Definition u64_to_be_bytes' : int64 -> nseq int8 8 :=
-  fun k => array_from_list (int8) [@nat_to_int U8 (nat_be_range 4 k 7) ;
-                                   @nat_to_int U8(nat_be_range 4 k 6) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 5) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 4) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 3) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 2) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 1) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 0)].
+Definition to_be_bytes' {WS} : Z -> list Z :=
+  (fun (k : Z) =>
+     (map
+        (fun i : nat => nat_be_range 8 k i)
+        (seq.iota 0 (nat_of_wsize WS / 8)))).
 
+Definition to_be_bytes'' {WS} : Z -> list Z :=
+  (fun (k : Z) =>
+     (map
+        (fun i : nat => nat_be_range' 8 k i)
+        (seq.iota 0 (nat_of_wsize WS / 8)))).
 
+Definition to_be_bytes {WS} : @int WS -> nseq int8 (WS / 8) :=
+  (fun (k : T int) =>
+     eq_rect
+       (seq.size (seq.iota 0 (nat_of_wsize WS / 8)))
+       (fun n : nat => T (nseq uint8 n))
+       (eq_rect _ (fun n : nat => T (nseq uint8 n))
+                (array_from_list
+                                 (map
+                                    (fun i : nat => repr (nat_be_range 8 (toword k) i))
+                                    (seq.iota 0 (nat_of_wsize WS / 8))))
+                (length (seq.iota 0 (nat_of_wsize WS / 8)))
+                (map_length
+                   (fun i : nat =>
+                      repr (nat_be_range 8 (toword k) i))
+                   (seq.iota 0 (nat_of_wsize WS / 8))))
+       (nat_of_wsize WS / 8)%nat
+       (seq.size_iota 0 (nat_of_wsize WS / 8))).
 
-Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat_ChoiceEquality '× int64) : nat_ChoiceEquality '× int64 :=
+Definition from_be_bytes_fold_fun {WS} (i : int8) (s : nat_ChoiceEquality '× @int WS) : nat_ChoiceEquality '× @int WS :=
   let (n,v) := s in
-  (S n, v .+ (@repr U64 ((int8_to_nat i) * 2 ^ (4 * n)))).
+  (S n, v .+ (@repr WS ((int8_to_nat i) * 2 ^ (8 * n)))).
 
-Definition u64_from_be_bytes' : nseq int8 8 -> int64 :=
-   (fun v => snd (List.fold_right u64_from_be_bytes_fold_fun (0%nat, @repr U64 0) (array_to_list v))).
+Definition from_be_bytes {WS : wsize} : nseq int8 (WS / 8) -> @int WS :=
+   (fun v => snd (List.fold_right from_be_bytes_fold_fun (0%nat, @repr WS 0) (array_to_list v))).
 
-Definition u64_to_be_bytes : int64 -> nseq int8 8 := u64_to_be_bytes'.
-Definition u64_from_be_bytes : nseq int8 8 -> int64 := u64_from_be_bytes'.
+Definition to_le_bytes' {WS} : Z -> list Z :=
+  (fun (k : Z) =>
+     (map
+        (fun i : nat => nat_be_range 8 k i)
+        (rev (seq.iota 0 (nat_of_wsize WS / 8))))).
 
-(* Definition nat_mod_to_byte_seq_be : forall {n : Z}, nat_mod n -> seq int8 := *)
-(*   fun k => VectorDef.of_list . *)
+Definition to_le_bytes'' {WS} : Z -> list Z :=
+  (fun (k : Z) =>
+     (map
+        (fun i : nat => nat_be_range' 8 k i)
+        (rev (seq.iota 0 (nat_of_wsize WS / 8))))).
+
+Definition to_le_bytes {WS} : @int WS -> nseq int8 (WS / 8) :=
+  fun (k : T int) =>
+   eq_rect (seq.size (seq.iota 0 (nat_of_wsize WS / 8))) (fun n : nat => T (nseq uint8 n))
+     (eq_rect (length (rev (seq.iota 0 (nat_of_wsize WS / 8))))
+     (fun n : nat => T (nseq uint8 n)) (eq_rect
+     (length
+        (map
+           (fun i : nat =>
+            repr (nat_be_range 8 (toword k) i))
+           (rev (seq.iota 0 (nat_of_wsize WS / 8)))))
+     (fun n : nat => T (nseq uint8 n)) (array_from_list
+     (map
+        (fun i : nat =>
+         repr (nat_be_range 8 (toword k) i))
+        (rev (seq.iota 0 (nat_of_wsize WS / 8)))))
+     (length (rev (seq.iota 0 (nat_of_wsize WS / 8))))
+     (map_length
+        (fun i : nat =>
+         repr (nat_be_range 8 (toword k) i))
+        (rev (seq.iota 0 (nat_of_wsize WS / 8))))) (length (seq.iota 0 (nat_of_wsize WS / 8)))
+     (rev_length (seq.iota 0 (nat_of_wsize WS / 8)))) (nat_of_wsize WS / 8)%nat (seq.size_iota 0 (nat_of_wsize WS / 8)).
+
+Definition from_le_bytes_fold_fun {WS} (i : int8) (s : nat_ChoiceEquality '× @int WS) : nat_ChoiceEquality '× @int WS :=
+  let (n,v) := s in
+  (Nat.pred n, v .+ (@repr WS ((int8_to_nat i) * 2 ^ (8 * n)))).
+
+Definition from_le_bytes {WS : wsize} : nseq int8 (WS / 8) -> @int WS :=
+   (fun v => snd (List.fold_right from_be_bytes_fold_fun (((WS / 8) - 1)%nat, @repr WS 0) (array_to_list v))).
+
+(**** Integers to arrays *)
+Definition uint32_to_le_bytes : int32 -> nseq int8 4 := @to_le_bytes U32.
+Definition uint32_to_be_bytes : int32 -> nseq int8 4 := @to_be_bytes U32.
+Definition uint32_from_le_bytes : nseq int8 4 -> int32 := @from_le_bytes U32.
+Definition uint32_from_be_bytes : nseq int8 4 -> int32 := @from_be_bytes U32.
+
+Definition uint64_to_le_bytes : int64 -> nseq int8 8 := @to_le_bytes U64.
+Definition uint64_to_be_bytes : int64 -> nseq int8 8 := @to_be_bytes U64.
+Definition uint64_from_le_bytes : nseq int8 8 -> int64 := @from_le_bytes U64.
+Definition uint64_from_be_bytes : nseq int8 8 -> int64 := @from_be_bytes U64.
+
+Definition uint128_to_le_bytes : int128 -> nseq int8 16 := @to_le_bytes U128.
+Definition uint128_to_be_bytes : int128 -> nseq int8 16 := @to_be_bytes U128.
+Definition uint128_from_le_bytes : nseq int8 16 -> int128 := @from_le_bytes U128.
+Definition uint128_from_be_bytes : nseq int8 16 -> int128 := @from_be_bytes U128.
+
+Definition u32_to_be_bytes : int32 -> nseq int8 4 := @to_be_bytes U32.
+Definition u32_from_be_bytes : nseq int8 4 -> int32 := @from_be_bytes U32.
+Definition u32_to_le_bytes : int32 -> nseq int8 4 := @to_le_bytes U32.
+Definition u32_from_le_bytes : nseq int8 4 -> int32 := @from_le_bytes U32.
+
+Definition u64_to_be_bytes : int64 -> nseq int8 8 := @to_be_bytes U64.
+Definition u64_from_be_bytes : nseq int8 8 -> int64 := @from_be_bytes U64.
+Definition u64_to_le_bytes : int64 -> nseq int8 8 := @to_le_bytes U64.
+Definition u64_from_le_bytes : nseq int8 8 -> int64 := @from_le_bytes U64.
+
+Definition u128_to_be_bytes : int128 -> nseq int8 16 := @to_be_bytes U128.
+Definition u128_from_be_bytes : nseq int8 16 -> int128 := @from_be_bytes U128.
+Definition u128_to_le_bytes : int128 -> nseq int8 16 := @to_le_bytes U128.
+Definition u128_from_le_bytes : nseq int8 16 -> int128 := @from_le_bytes U128.
 
 (*** Result *)
 
@@ -2152,8 +3185,6 @@ Next Obligation.
   reflexivity.
 Qed.
 
-(*** TODO: implement or replace *)
-
 (*** Monad / Bind *)
 
 Module ChoiceEqualityMonad.
@@ -2161,11 +3192,6 @@ Module ChoiceEqualityMonad.
     {
       bind {A B : ChoiceEquality} (x : M A) (f : A -> M B) : M B ;
       ret {A : ChoiceEquality} (x : A) : M A ;
-
-      (* bind_ret : forall {A B : ChoiceEquality} (x : A) (f : A -> M B), bind (ret x) f = f x ; *)
-      (* ret_bind : forall {A : ChoiceEquality} (x : M A) , bind x ret = x ; *)
-      (* bind_cong : forall {A B C : ChoiceEquality} (x : M A) (f : A -> M B) (g : B -> M C), *)
-      (*   bind (bind x f) g = bind x (fun x => bind (f x) g) ; *)
     }.
 
   Class CEMonad2 (M : ChoiceEquality -> ChoiceEquality) : Type :=
@@ -2203,7 +3229,6 @@ Module ChoiceEqualityMonad.
   Definition bind_prod `{CEMonad} `{CEMonad} `{@CEMonad_prod M M0}
              {A B} (x : M (M0 A)) (f : A -> M (M0 B))
     : M (M0 B) :=
-    (* bind x (fun y => @prod M M0 _ B (bind y (fun y => ret (f y)))). *)
     (@bind (fun x => M (M0 x)) (ComposeProd _) A B x f).
 
 
@@ -2234,21 +3259,14 @@ Module ChoiceEqualityMonad.
     Definition result_ret {C A : ChoiceEquality} (a : A) : result C A := Ok a.
 
     Global Instance result_monad {C : ChoiceEquality} : CEMonad (result C) :=
-      {|  (* (@result_bind C) (@result_ret C) *)
+      {|
         bind := (@result_bind C) ;
         ret := (@result_ret C) ;
       |}.
 
     Arguments result_monad {_} &.
 
-
-
-    (* Existing Instance result_monad. *)
-
-
   End ResultMonad.
-
-
 
   Definition option_bind {A B} (r : option A) (f : A -> option B) : option B :=
     match r with
@@ -2295,32 +3313,3 @@ Notation "'foldibnd' s 'to' e 'M(' v ')' 'for' z '>>' f" :=
   (Hacspec_Lib_Pre.foldi s e (ChoiceEqualityMonad.ret z) (fun x y => ChoiceEqualityMonad.bind (M := v) y (f x))) (at level 50) : hacspec_scope.
 
 Axiom nat_mod_from_byte_seq_be : forall  {A n}, seq A -> nat_mod n.
-
-(*** Default *)
-
-(* Default instances for common types *)
-Global Instance nat_default : Default nat := {
-    default := 0%nat
-  }.
-Global Instance N_default : Default N := {
-    default := 0%N
-  }.
-Global Instance Z_default : Default Z := {
-    default := 0%Z
-  }.
-Global Instance uint_size_default : Default uint_size := {
-    default := zero
-  }.
-Global Instance int_size_default : Default int_size := {
-    default := zero
-  }.
-Global Instance int_default {WS : wsize} : Default (@int WS) := {
-    default := repr 0
-  }.
-Global Instance uint8_default : Default uint8 := _.
-Global Instance nat_mod_default {p : Z} : Default (nat_mod p) := {
-    default := nat_mod_zero
-  }.
-Global Instance prod_default {A B : ChoiceEquality} `{Default A} `{Default B} : Default (A '× B) := {
-    default := (default, default)
-  }.

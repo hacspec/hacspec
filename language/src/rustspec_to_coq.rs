@@ -132,7 +132,6 @@ pub fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
                 .append(translate_base_typ(tau))
                 .group()
         }
-        // todo?
         BaseTyp::Enum(_cases, _type_args) => {
             unimplemented!()
         }
@@ -242,7 +241,7 @@ pub(crate) fn translate_func_name<'a>(
                     }),
                     vec![],
                 ),
-                _ => (name, vec![], None, vec![]), // TODO: is None correct?
+                _ => (name, vec![], None, vec![]),
             }
         }
         Some((prefix, _)) => {
@@ -495,7 +494,6 @@ pub(crate) fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelConte
                 .append(make_paren(translate_expression(e2, top_ctx)))
                 .group()
         }
-        //todo
         Expression::MatchWith(arg, arms) => RcDoc::as_string("match")
             .append(RcDoc::space())
             .append(translate_expression(arg.0, top_ctx))
@@ -519,7 +517,6 @@ pub(crate) fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelConte
         Expression::FieldAccessor(e1, field) => {
             unimplemented!()
         }
-        //todo
         Expression::EnumInject(enum_name, case_name, payload) => {
             translate_enum_case_name(enum_name.clone(), case_name.0.clone(), true).append(
                 match payload {
@@ -594,7 +591,7 @@ pub(crate) fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelConte
                     },
                 )))
                 .append(if total_args == 0 {
-                    RcDoc::space() //.append(RcDoc::as_string("()"))
+                    RcDoc::space()
                 } else {
                     RcDoc::nil()
                 })
@@ -797,7 +794,6 @@ fn translate_statements<'a>(
             }
         }
         Statement::Reassignment((x, _), _x_typ, (e1, _), _carrier, question_mark) =>
-        //TODO: not yet handled
         {
             if question_mark.is_some() {
                 RcDoc::as_string("bind")
@@ -928,14 +924,7 @@ fn translate_statements<'a>(
                 });
             if either_blocks_contains_question_mark {
                 let block1 = make_paren(translate_block(b1.clone(), true, top_ctx));
-                // RcDoc::as_string("let f a :=")
-                //     .append(RcDoc::line()) // softline
-                //     .append(translate_statements(statements.clone(), top_ctx))
-                //     .append(RcDoc::line()) // softline
-                //     .append(RcDoc::as_string("in"))
-                //     .append(RcDoc::line())
-                // .append(
-                RcDoc::as_string("ifbnd") // )
+                RcDoc::as_string("ifbnd")
                     .append(RcDoc::space())
                     .append(translate_expression(cond.clone(), top_ctx))
                     .append(RcDoc::space())
@@ -952,8 +941,6 @@ fn translate_statements<'a>(
                     .append(match b2 {
                         None => RcDoc::as_string("else")
                             .append(RcDoc::space())
-                            // .append("f")
-                            // .append(RcDoc::space())
                             .append(make_paren(translate_statements(
                                 [(mutated_info.stmt.clone(), DUMMY_SP.into())].iter(),
                                 top_ctx,
@@ -993,7 +980,6 @@ fn translate_statements<'a>(
         }
         Statement::ForLoop(x, (e1, _), (e2, _), (mut b, _)) => {
             let mutated_info = b.mutated.clone().unwrap();
-            // TODO: handle question_mark
             let b_question_mark = *b.contains_question_mark.as_ref().unwrap();
             b.stmts.push(add_ok_if_result(
                 mutated_info.stmt.clone(),
@@ -1062,7 +1048,7 @@ fn translate_statements<'a>(
                                 RcDoc::as_string("_")
                             } else {
                                 mut_tuple("'".to_string()).clone()
-                            }) // TODO: Issue here with patterns (eg. 'tt)
+                            })
                             .append(RcDoc::space())
                             .append(RcDoc::as_string("=>"))
                             .append(RcDoc::softline())
@@ -1881,7 +1867,6 @@ pub fn translate_and_write_to_file(
     };
     let width = 80;
     let mut w = Vec::new();
-    // let module_name = path.file_stem().unwrap().to_str().unwrap();
     let export_quick_check = p
         .items
         .iter()
