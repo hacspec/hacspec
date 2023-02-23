@@ -99,28 +99,28 @@ bindGen arbitrary (fun x0 : fp6_t =>
 Instance gen_fp12_t : Gen (fp12_t) := Build_Gen fp12_t g_fp12_t.
 
 
-Definition fp2fromfp (n_1405 : fp_t) : fp2_t :=
+Definition fp2fromfp (n_1405 : fp_t)  : fp2_t :=
   (n_1405, nat_mod_zero ).
 
-Definition fp2zero  : fp2_t :=
+Definition fp2zero   : fp2_t :=
   fp2fromfp (nat_mod_zero ).
 
-Definition fp2neg (n_1406 : fp2_t) : fp2_t :=
+Definition fp2neg (n_1406 : fp2_t)  : fp2_t :=
   let '(n1_1407, n2_1408) :=
     n_1406 in 
   ((nat_mod_zero ) -% (n1_1407), (nat_mod_zero ) -% (n2_1408)).
 
-Definition fp2add (n_1409 : fp2_t) (m_1410 : fp2_t) : fp2_t :=
+Definition fp2add (n_1409 : fp2_t) (m_1410 : fp2_t)  : fp2_t :=
   let '(n1_1411, n2_1412) :=
     n_1409 in 
   let '(m1_1413, m2_1414) :=
     m_1410 in 
   ((n1_1411) +% (m1_1413), (n2_1412) +% (m2_1414)).
 
-Definition fp2sub (n_1415 : fp2_t) (m_1416 : fp2_t) : fp2_t :=
+Definition fp2sub (n_1415 : fp2_t) (m_1416 : fp2_t)  : fp2_t :=
   fp2add (n_1415) (fp2neg (m_1416)).
 
-Definition fp2mul (n_1417 : fp2_t) (m_1418 : fp2_t) : fp2_t :=
+Definition fp2mul (n_1417 : fp2_t) (m_1418 : fp2_t)  : fp2_t :=
   let '(n1_1419, n2_1420) :=
     n_1417 in 
   let '(m1_1421, m2_1422) :=
@@ -131,7 +131,7 @@ Definition fp2mul (n_1417 : fp2_t) (m_1418 : fp2_t) : fp2_t :=
     ((n1_1419) *% (m2_1422)) +% ((n2_1420) *% (m1_1421)) in 
   (x1_1423, x2_1424).
 
-Definition fp2inv (n_1425 : fp2_t) : fp2_t :=
+Definition fp2inv (n_1425 : fp2_t)  : fp2_t :=
   let '(n1_1426, n2_1427) :=
     n_1425 in 
   let t0_1428 : fp_t :=
@@ -144,18 +144,18 @@ Definition fp2inv (n_1425 : fp2_t) : fp2_t :=
     (nat_mod_zero ) -% ((n2_1427) *% (t1_1429)) in 
   (x1_1430, x2_1431).
 
-Definition fp2conjugate (n_1432 : fp2_t) : fp2_t :=
+Definition fp2conjugate (n_1432 : fp2_t)  : fp2_t :=
   let '(n1_1433, n2_1434) :=
     n_1432 in 
   (n1_1433, (nat_mod_zero ) -% (n2_1434)).
 
-Definition fp6fromfp2 (n_1435 : fp2_t) : fp6_t :=
+Definition fp6fromfp2 (n_1435 : fp2_t)  : fp6_t :=
   (n_1435, fp2zero , fp2zero ).
 
-Definition fp6zero  : fp6_t :=
+Definition fp6zero   : fp6_t :=
   fp6fromfp2 (fp2zero ).
 
-Definition fp6neg (n_1436 : fp6_t) : fp6_t :=
+Definition fp6neg (n_1436 : fp6_t)  : fp6_t :=
   let '(n1_1437, n2_1438, n3_1439) :=
     n_1436 in 
   (
@@ -164,7 +164,7 @@ Definition fp6neg (n_1436 : fp6_t) : fp6_t :=
     fp2sub (fp2zero ) (n3_1439)
   ).
 
-Definition fp6add (n_1440 : fp6_t) (m_1441 : fp6_t) : fp6_t :=
+Definition fp6add (n_1440 : fp6_t) (m_1441 : fp6_t)  : fp6_t :=
   let '(n1_1442, n2_1443, n3_1444) :=
     n_1440 in 
   let '(m1_1445, m2_1446, m3_1447) :=
@@ -175,10 +175,10 @@ Definition fp6add (n_1440 : fp6_t) (m_1441 : fp6_t) : fp6_t :=
     fp2add (n3_1444) (m3_1447)
   ).
 
-Definition fp6sub (n_1448 : fp6_t) (m_1449 : fp6_t) : fp6_t :=
+Definition fp6sub (n_1448 : fp6_t) (m_1449 : fp6_t)  : fp6_t :=
   fp6add (n_1448) (fp6neg (m_1449)).
 
-Definition fp6mul (n_1450 : fp6_t) (m_1451 : fp6_t) : fp6_t :=
+Definition fp6mul (n_1450 : fp6_t) (m_1451 : fp6_t)  : fp6_t :=
   let '(n1_1452, n2_1453, n3_1454) :=
     n_1450 in 
   let '(m1_1455, m2_1456, m3_1457) :=
@@ -211,7 +211,7 @@ Definition fp6mul (n_1450 : fp6_t) (m_1451 : fp6_t) : fp6_t :=
     fp2add (t5_1469) (t2_1460) in 
   (x_1464, y_1467, z_1470).
 
-Definition fp6inv (n_1471 : fp6_t) : fp6_t :=
+Definition fp6inv (n_1471 : fp6_t)  : fp6_t :=
   let '(n1_1472, n2_1473, n3_1474) :=
     n_1471 in 
   let eps_1475 : (fp_t '× fp_t) :=
@@ -250,25 +250,25 @@ Definition fp6inv (n_1471 : fp6_t) : fp6_t :=
     fp2mul (z0_1484) (t0_1488) in 
   (x_1489, y_1490, z_1491).
 
-Definition fp12fromfp6 (n_1492 : fp6_t) : fp12_t :=
+Definition fp12fromfp6 (n_1492 : fp6_t)  : fp12_t :=
   (n_1492, fp6zero ).
 
-Definition fp12neg (n_1493 : fp12_t) : fp12_t :=
+Definition fp12neg (n_1493 : fp12_t)  : fp12_t :=
   let '(n1_1494, n2_1495) :=
     n_1493 in 
   (fp6sub (fp6zero ) (n1_1494), fp6sub (fp6zero ) (n2_1495)).
 
-Definition fp12add (n_1496 : fp12_t) (m_1497 : fp12_t) : fp12_t :=
+Definition fp12add (n_1496 : fp12_t) (m_1497 : fp12_t)  : fp12_t :=
   let '(n1_1498, n2_1499) :=
     n_1496 in 
   let '(m1_1500, m2_1501) :=
     m_1497 in 
   (fp6add (n1_1498) (m1_1500), fp6add (n2_1499) (m2_1501)).
 
-Definition fp12sub (n_1502 : fp12_t) (m_1503 : fp12_t) : fp12_t :=
+Definition fp12sub (n_1502 : fp12_t) (m_1503 : fp12_t)  : fp12_t :=
   fp12add (n_1502) (fp12neg (m_1503)).
 
-Definition fp12mul (n_1504 : fp12_t) (m_1505 : fp12_t) : fp12_t :=
+Definition fp12mul (n_1504 : fp12_t) (m_1505 : fp12_t)  : fp12_t :=
   let '(n1_1506, n2_1507) :=
     n_1504 in 
   let '(m1_1508, m2_1509) :=
@@ -287,7 +287,7 @@ Definition fp12mul (n_1504 : fp12_t) (m_1505 : fp12_t) : fp12_t :=
     fp6sub (fp6sub (y_1514) (t1_1511)) (t2_1512) in 
   (x_1513, y_1515).
 
-Definition fp12inv (n_1516 : fp12_t) : fp12_t :=
+Definition fp12inv (n_1516 : fp12_t)  : fp12_t :=
   let '(n1_1517, n2_1518) :=
     n_1516 in 
   let gamma_1519 : (fp2_t '× fp2_t '× fp2_t) :=
@@ -306,7 +306,7 @@ Definition fp12inv (n_1516 : fp12_t) : fp12_t :=
     fp6neg (fp6mul (n2_1518) (t2_1523)) in 
   (x_1524, y_1525).
 
-Definition fp12exp (n_1526 : fp12_t) (k_1527 : scalar_t) : fp12_t :=
+Definition fp12exp (n_1526 : fp12_t) (k_1527 : scalar_t)  : fp12_t :=
   let c_1528 : (fp6_t '× fp6_t) :=
     fp12fromfp6 (fp6fromfp2 (fp2fromfp (nat_mod_one ))) in 
   let c_1528 :=
@@ -322,15 +322,15 @@ Definition fp12exp (n_1526 : fp12_t) (k_1527 : scalar_t) : fp12_t :=
     c_1528 in 
   c_1528.
 
-Definition fp12conjugate (n_1530 : fp12_t) : fp12_t :=
+Definition fp12conjugate (n_1530 : fp12_t)  : fp12_t :=
   let '(n1_1531, n2_1532) :=
     n_1530 in 
   (n1_1531, fp6neg (n2_1532)).
 
-Definition fp12zero  : fp12_t :=
+Definition fp12zero   : fp12_t :=
   fp12fromfp6 (fp6zero ).
 
-Definition g1add_a (p_1533 : g1_t) (q_1534 : g1_t) : g1_t :=
+Definition g1add_a (p_1533 : g1_t) (q_1534 : g1_t)  : g1_t :=
   let '(x1_1535, y1_1536, _) :=
     p_1533 in 
   let '(x2_1537, y2_1538, _) :=
@@ -348,7 +348,7 @@ Definition g1add_a (p_1533 : g1_t) (q_1534 : g1_t) : g1_t :=
     ((xovery_1541) *% ((x1_1535) -% (x3_1542))) -% (y1_1536) in 
   (x3_1542, y3_1543, false).
 
-Definition g1double_a (p_1544 : g1_t) : g1_t :=
+Definition g1double_a (p_1544 : g1_t)  : g1_t :=
   let '(x1_1545, y1_1546, _) :=
     p_1544 in 
   let x12_1547 : fp_t :=
@@ -365,13 +365,13 @@ Definition g1double_a (p_1544 : g1_t) : g1_t :=
     ((xovery_1548) *% ((x1_1545) -% (x3_1549))) -% (y1_1546) in 
   (x3_1549, y3_1550, false).
 
-Definition g1double (p_1551 : g1_t) : g1_t :=
+Definition g1double (p_1551 : g1_t)  : g1_t :=
   let '(x1_1552, y1_1553, inf1_1554) :=
     p_1551 in 
   (if (((y1_1553) !=.? (nat_mod_zero )) && (negb (inf1_1554))):bool then (
       g1double_a (p_1551)) else ((nat_mod_zero , nat_mod_zero , true))).
 
-Definition g1add (p_1555 : g1_t) (q_1556 : g1_t) : g1_t :=
+Definition g1add (p_1555 : g1_t) (q_1556 : g1_t)  : g1_t :=
   let '(x1_1557, y1_1558, inf1_1559) :=
     p_1555 in 
   let '(x2_1560, y2_1561, inf2_1562) :=
@@ -383,7 +383,7 @@ Definition g1add (p_1555 : g1_t) (q_1556 : g1_t) : g1_t :=
                           y2_1561))))):bool then (g1add_a (p_1555) (
                     q_1556)) else ((nat_mod_zero , nat_mod_zero , true))))))))).
 
-Definition g1mul (m_1563 : scalar_t) (p_1564 : g1_t) : g1_t :=
+Definition g1mul (m_1563 : scalar_t) (p_1564 : g1_t)  : g1_t :=
   let t_1565 : (fp_t '× fp_t '× bool) :=
     (nat_mod_zero , nat_mod_zero , true) in 
   let t_1565 :=
@@ -399,12 +399,12 @@ Definition g1mul (m_1563 : scalar_t) (p_1564 : g1_t) : g1_t :=
     t_1565 in 
   t_1565.
 
-Definition g1neg (p_1567 : g1_t) : g1_t :=
+Definition g1neg (p_1567 : g1_t)  : g1_t :=
   let '(x_1568, y_1569, inf_1570) :=
     p_1567 in 
   (x_1568, (nat_mod_zero ) -% (y_1569), inf_1570).
 
-Definition g2add_a (p_1571 : g2_t) (q_1572 : g2_t) : g2_t :=
+Definition g2add_a (p_1571 : g2_t) (q_1572 : g2_t)  : g2_t :=
   let '(x1_1573, y1_1574, _) :=
     p_1571 in 
   let '(x2_1575, y2_1576, _) :=
@@ -429,7 +429,7 @@ Definition g2add_a (p_1571 : g2_t) (q_1572 : g2_t) : g2_t :=
     fp2sub (t2_1584) (y1_1574) in 
   (x3_1582, y3_1585, false).
 
-Definition g2double_a (p_1586 : g2_t) : g2_t :=
+Definition g2double_a (p_1586 : g2_t)  : g2_t :=
   let '(x1_1587, y1_1588, _) :=
     p_1586 in 
   let x12_1589 : (fp_t '× fp_t) :=
@@ -456,13 +456,13 @@ Definition g2double_a (p_1586 : g2_t) : g2_t :=
     fp2sub (t2_1597) (y1_1588) in 
   (x3_1595, y3_1598, false).
 
-Definition g2double (p_1599 : g2_t) : g2_t :=
+Definition g2double (p_1599 : g2_t)  : g2_t :=
   let '(x1_1600, y1_1601, inf1_1602) :=
     p_1599 in 
   (if (((y1_1601) !=.? (fp2zero )) && (negb (inf1_1602))):bool then (
       g2double_a (p_1599)) else ((fp2zero , fp2zero , true))).
 
-Definition g2add (p_1603 : g2_t) (q_1604 : g2_t) : g2_t :=
+Definition g2add (p_1603 : g2_t) (q_1604 : g2_t)  : g2_t :=
   let '(x1_1605, y1_1606, inf1_1607) :=
     p_1603 in 
   let '(x2_1608, y2_1609, inf2_1610) :=
@@ -473,7 +473,7 @@ Definition g2add (p_1603 : g2_t) (q_1604 : g2_t) : g2_t :=
                         y1_1606) =.? (fp2neg (y2_1609))))):bool then (g2add_a (
                     p_1603) (q_1604)) else ((fp2zero , fp2zero , true))))))))).
 
-Definition g2mul (m_1611 : scalar_t) (p_1612 : g2_t) : g2_t :=
+Definition g2mul (m_1611 : scalar_t) (p_1612 : g2_t)  : g2_t :=
   let t_1613 : (fp2_t '× fp2_t '× bool) :=
     (fp2zero , fp2zero , true) in 
   let t_1613 :=
@@ -489,12 +489,12 @@ Definition g2mul (m_1611 : scalar_t) (p_1612 : g2_t) : g2_t :=
     t_1613 in 
   t_1613.
 
-Definition g2neg (p_1615 : g2_t) : g2_t :=
+Definition g2neg (p_1615 : g2_t)  : g2_t :=
   let '(x_1616, y_1617, inf_1618) :=
     p_1615 in 
   (x_1616, fp2neg (y_1617), inf_1618).
 
-Definition twist (p_1619 : g1_t) : (fp12_t '× fp12_t) :=
+Definition twist (p_1619 : g1_t)  : (fp12_t '× fp12_t) :=
   let '(p0_1620, p1_1621, _) :=
     p_1619 in 
   let x_1622 : ((fp2_t '× fp2_t '× fp2_t) '× fp6_t) :=
@@ -503,7 +503,7 @@ Definition twist (p_1619 : g1_t) : (fp12_t '× fp12_t) :=
     (fp6zero , (fp2zero , fp2fromfp (p1_1621), fp2zero )) in 
   (x_1622, y_1623).
 
-Definition line_double_p (r_1624 : g2_t) (p_1625 : g1_t) : fp12_t :=
+Definition line_double_p (r_1624 : g2_t) (p_1625 : g1_t)  : fp12_t :=
   let '(r0_1626, r1_1627, _) :=
     r_1624 in 
   let a_1628 : (fp_t '× fp_t) :=
@@ -526,6 +526,7 @@ Definition line_add_p
   (r_1635 : g2_t)
   (q_1636 : g2_t)
   (p_1637 : g1_t)
+  
   : fp12_t :=
   let '(r0_1638, r1_1639, _) :=
     r_1635 in 
@@ -544,7 +545,7 @@ Definition line_add_p
     twist (p_1637) in 
   fp12neg (fp12sub (fp12sub (y_1647) (fp12mul (a_1644) (x_1646))) (b_1645)).
 
-Definition frobenius (f_1648 : fp12_t) : fp12_t :=
+Definition frobenius (f_1648 : fp12_t)  : fp12_t :=
   let '((g0_1649, g1_1650, g2_1651), (h0_1652, h1_1653, h2_1654)) :=
     f_1648 in 
   let t1_1655 : (fp_t '× fp_t) :=
@@ -609,7 +610,7 @@ Definition frobenius (f_1648 : fp12_t) : fp12_t :=
     fp2mul (t6_1660) (gamma15_1671) in 
   ((t1_1655, t3_1673, t5_1675), (t2_1672, t4_1674, t6_1676)).
 
-Definition final_exponentiation (f_1677 : fp12_t) : fp12_t :=
+Definition final_exponentiation (f_1677 : fp12_t)  : fp12_t :=
   let fp6_1678 : (fp6_t '× fp6_t) :=
     fp12conjugate (f_1677) in 
   let finv_1679 : (fp6_t '× fp6_t) :=
@@ -682,7 +683,7 @@ Definition final_exponentiation (f_1677 : fp12_t) : fp12_t :=
     fp12mul (t1_1708) (t2_1709) in 
   t1_1710.
 
-Definition pairing (p_1711 : g1_t) (q_1712 : g2_t) : fp12_t :=
+Definition pairing (p_1711 : g1_t) (q_1712 : g2_t)  : fp12_t :=
   let t_1713 : scalar_t :=
     nat_mod_from_literal (
       0x8000000000000000000000000000000000000000000000000000000000000000) (
@@ -712,7 +713,7 @@ Definition pairing (p_1711 : g1_t) (q_1712 : g2_t) : fp12_t :=
     (r_1714, f_1715) in 
   final_exponentiation (fp12conjugate (f_1715)).
 
-Definition test_fp2_prop_add_neg (a_1719 : fp2_t) : bool :=
+Definition test_fp2_prop_add_neg (a_1719 : fp2_t)  : bool :=
   let b_1720 : (fp_t '× fp_t) :=
     fp2neg (a_1719) in 
   (fp2fromfp (nat_mod_zero )) =.? (fp2add (a_1719) (b_1720)).
@@ -720,7 +721,7 @@ Definition test_fp2_prop_add_neg (a_1719 : fp2_t) : bool :=
   forAll g_fp2_t (fun a_1719 : fp2_t =>test_fp2_prop_add_neg a_1719)).*)
 
 
-Definition test_fp2_prop_mul_inv (a_1721 : fp2_t) : bool :=
+Definition test_fp2_prop_mul_inv (a_1721 : fp2_t)  : bool :=
   let b_1722 : (fp_t '× fp_t) :=
     fp2inv (a_1721) in 
   (fp2fromfp (nat_mod_one )) =.? (fp2mul (a_1721) (b_1722)).
@@ -728,7 +729,7 @@ Definition test_fp2_prop_mul_inv (a_1721 : fp2_t) : bool :=
   forAll g_fp2_t (fun a_1721 : fp2_t =>test_fp2_prop_mul_inv a_1721)).*)
 
 
-Definition test_extraction_issue  : bool :=
+Definition test_extraction_issue   : bool :=
   let b_1723 : (fp_t '× fp_t) :=
     fp2inv ((nat_mod_one , nat_mod_one )) in 
   (fp2fromfp (nat_mod_one )) =.? (fp2mul ((nat_mod_one , nat_mod_one )) (
@@ -736,7 +737,7 @@ Definition test_extraction_issue  : bool :=
 (*QuickChick (test_extraction_issue).*)
 
 
-Definition test_fp6_prop_mul_inv (a_1724 : fp6_t) : bool :=
+Definition test_fp6_prop_mul_inv (a_1724 : fp6_t)  : bool :=
   let b_1725 : (fp2_t '× fp2_t '× fp2_t) :=
     fp6inv (a_1724) in 
   (fp6fromfp2 (fp2fromfp (nat_mod_one ))) =.? (fp6mul (a_1724) (b_1725)).
@@ -744,7 +745,7 @@ Definition test_fp6_prop_mul_inv (a_1724 : fp6_t) : bool :=
   forAll g_fp6_t (fun a_1724 : fp6_t =>test_fp6_prop_mul_inv a_1724)).*)
 
 
-Definition test_fp6_prop_add_neg (a_1726 : fp6_t) : bool :=
+Definition test_fp6_prop_add_neg (a_1726 : fp6_t)  : bool :=
   let b_1727 : (fp2_t '× fp2_t '× fp2_t) :=
     fp6neg (a_1726) in 
   (fp6fromfp2 (fp2fromfp (nat_mod_zero ))) =.? (fp6add (a_1726) (b_1727)).
@@ -752,7 +753,7 @@ Definition test_fp6_prop_add_neg (a_1726 : fp6_t) : bool :=
   forAll g_fp6_t (fun a_1726 : fp6_t =>test_fp6_prop_add_neg a_1726)).*)
 
 
-Definition test_fp12_prop_add_neg (a_1728 : fp12_t) : bool :=
+Definition test_fp12_prop_add_neg (a_1728 : fp12_t)  : bool :=
   let b_1729 : (fp6_t '× fp6_t) :=
     fp12neg (a_1728) in 
   (fp12fromfp6 (fp6fromfp2 (fp2fromfp (nat_mod_zero )))) =.? (fp12add (a_1728) (
@@ -761,7 +762,7 @@ Definition test_fp12_prop_add_neg (a_1728 : fp12_t) : bool :=
   forAll g_fp12_t (fun a_1728 : fp12_t =>test_fp12_prop_add_neg a_1728)).*)
 
 
-Definition test_fp12_prop_mul_inv (a_1730 : fp12_t) : bool :=
+Definition test_fp12_prop_mul_inv (a_1730 : fp12_t)  : bool :=
   let b_1731 : (fp6_t '× fp6_t) :=
     fp12inv (a_1730) in 
   (fp12fromfp6 (fp6fromfp2 (fp2fromfp (nat_mod_one )))) =.? (fp12mul (a_1730) (

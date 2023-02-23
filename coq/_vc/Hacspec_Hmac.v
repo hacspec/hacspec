@@ -155,13 +155,13 @@ Definition o_pad_v : block_t :=
         secret (@repr WORDSIZE8 92) : int8
       ] in  l).
 
-Definition k_block (k_733 : byte_seq) : block_t :=
+Definition k_block (k_733 : byte_seq)  : block_t :=
   (if ((seq_len (k_733)) >.? (block_len_v)):bool then (array_update_start (
         array_new_ (default : uint8) (block_len_v)) (array_to_seq (hash (
           k_733)))) else (array_update_start (array_new_ (default : uint8) (
           block_len_v)) (k_733))).
 
-Definition hmac (k_734 : byte_seq) (txt_735 : byte_seq) : prk_t :=
+Definition hmac (k_734 : byte_seq) (txt_735 : byte_seq)  : prk_t :=
   let k_block_736 : block_t :=
     k_block (k_734) in 
   let h_in_737 : seq uint8 :=

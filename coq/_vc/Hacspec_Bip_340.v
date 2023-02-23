@@ -60,27 +60,27 @@ Inductive point_t :=
 | Affine : affine_point_t -> point_t
 | AtInfinity : point_t.
 
-Definition finite (p_2555 : point_t) : (option affine_point_t) :=
-  match p_2555 with
-  | Affine (p_2556) => some (p_2556)
+Definition finite (p_2658 : point_t)  : (option affine_point_t) :=
+  match p_2658 with
+  | Affine (p_2659) => some (p_2659)
   | AtInfinity => @None affine_point_t
   end.
 
-Definition x (p_2557 : affine_point_t) : field_element_t :=
-  let '(x_2558, _) :=
-    p_2557 in 
-  x_2558.
+Definition x (p_2660 : affine_point_t)  : field_element_t :=
+  let '(x_2661, _) :=
+    p_2660 in 
+  x_2661.
 
-Definition y (p_2559 : affine_point_t) : field_element_t :=
-  let '(_, y_2560) :=
-    p_2559 in 
-  y_2560.
+Definition y (p_2662 : affine_point_t)  : field_element_t :=
+  let '(_, y_2663) :=
+    p_2662 in 
+  y_2663.
 
-Definition has_even_y (p_2561 : affine_point_t) : bool :=
-  ((y (p_2561)) rem (nat_mod_two )) =.? (nat_mod_zero ).
+Definition has_even_y (p_2664 : affine_point_t)  : bool :=
+  ((y (p_2664)) rem (nat_mod_two )) =.? (nat_mod_zero ).
 
-Definition sqrt (y_2562 : field_element_t) : (option field_element_t) :=
-  let p1_4_2563 : field_element_t :=
+Definition sqrt (y_2665 : field_element_t)  : (option field_element_t) :=
+  let p1_4_2666 : field_element_t :=
     nat_mod_from_public_byte_seq_be (array_from_list int8 (let l :=
           [
             @repr WORDSIZE8 63;
@@ -116,103 +116,105 @@ Definition sqrt (y_2562 : field_element_t) : (option field_element_t) :=
             @repr WORDSIZE8 255;
             @repr WORDSIZE8 12
           ] in  l)) in 
-  let x_2564 : field_element_t :=
-    nat_mod_pow_self (y_2562) (p1_4_2563) in 
-  (if ((nat_mod_pow_self (x_2564) (nat_mod_two )) =.? (y_2562)):bool then (
-      some (x_2564)) else (@None field_element_t)).
+  let x_2667 : field_element_t :=
+    nat_mod_pow_self (y_2665) (p1_4_2666) in 
+  (if ((nat_mod_pow_self (x_2667) (nat_mod_two )) =.? (y_2665)):bool then (
+      some (x_2667)) else (@None field_element_t)).
 
 Definition lift_x
-  (x_2565 : field_element_t)
+  (x_2668 : field_element_t)
+  
   : (result affine_point_t error_t) :=
-  let one_2566 : field_element_t :=
+  let one_2669 : field_element_t :=
     nat_mod_one  in 
-  let two_2567 : field_element_t :=
+  let two_2670 : field_element_t :=
     nat_mod_two  in 
-  let three_2568 : field_element_t :=
+  let three_2671 : field_element_t :=
     nat_mod_from_literal (
       0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F) (
       @repr WORDSIZE128 3) : field_element_t in 
-  let seven_2569 : field_element_t :=
+  let seven_2672 : field_element_t :=
     nat_mod_from_literal (
       0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F) (
       @repr WORDSIZE128 7) : field_element_t in 
-  let y_sq_2570 : field_element_t :=
-    (nat_mod_pow_self (x_2565) (three_2568)) +% (seven_2569) in 
-  bind (option_ok_or (sqrt (y_sq_2570)) (InvalidXCoordinate)) (fun y_2571 =>
-    let '(y_2571) :=
-      if ((y_2571) rem (two_2567)) =.? (one_2566):bool then (let y_2571 :=
-          (nat_mod_zero ) -% (y_2571) in 
-        (y_2571)) else ((y_2571)) in 
-    @Ok affine_point_t error_t ((x_2565, y_2571))).
+  let y_sq_2673 : field_element_t :=
+    (nat_mod_pow_self (x_2668) (three_2671)) +% (seven_2672) in 
+  bind (option_ok_or (sqrt (y_sq_2673)) (InvalidXCoordinate)) (fun y_2674 =>
+    let '(y_2674) :=
+      if ((y_2674) rem (two_2670)) =.? (one_2669):bool then (let y_2674 :=
+          (nat_mod_zero ) -% (y_2674) in 
+        (y_2674)) else ((y_2674)) in 
+    @Ok affine_point_t error_t ((x_2668, y_2674))).
 
 Definition compute_lam
-  (p1_2572 : affine_point_t)
-  (p2_2573 : affine_point_t)
+  (p1_2675 : affine_point_t)
+  (p2_2676 : affine_point_t)
+  
   : field_element_t :=
-  let three_2574 : field_element_t :=
+  let three_2677 : field_element_t :=
     nat_mod_from_literal (
       0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F) (
       @repr WORDSIZE128 3) : field_element_t in 
-  (if ((p1_2572) !=.? (p2_2573)):bool then (((y (p2_2573)) -% (y (
-            p1_2572))) *% (nat_mod_pow_self ((x (p2_2573)) -% (x (p1_2572))) ((
-            nat_mod_zero ) -% (nat_mod_two )))) else ((((three_2574) *% (x (
-              p1_2572))) *% (x (p1_2572))) *% (nat_mod_pow_self ((
-            nat_mod_two ) *% (y (p1_2572))) ((nat_mod_zero ) -% (
+  (if ((p1_2675) !=.? (p2_2676)):bool then (((y (p2_2676)) -% (y (
+            p1_2675))) *% (nat_mod_pow_self ((x (p2_2676)) -% (x (p1_2675))) ((
+            nat_mod_zero ) -% (nat_mod_two )))) else ((((three_2677) *% (x (
+              p1_2675))) *% (x (p1_2675))) *% (nat_mod_pow_self ((
+            nat_mod_two ) *% (y (p1_2675))) ((nat_mod_zero ) -% (
             nat_mod_two ))))).
 
-Definition point_add (p1_2575 : point_t) (p2_2576 : point_t) : point_t :=
-  let result_2577 : point_t :=
+Definition point_add (p1_2678 : point_t) (p2_2679 : point_t)  : point_t :=
+  let result_2680 : point_t :=
     AtInfinity in 
-  let '(result_2577) :=
-    if option_is_none (finite (p1_2575)):bool then (let result_2577 :=
-        p2_2576 in 
-      (result_2577)) else (let '(result_2577) :=
-        if option_is_none (finite (p2_2576)):bool then (let result_2577 :=
-            p1_2575 in 
-          (result_2577)) else (let p1_2578 : (
+  let '(result_2680) :=
+    if option_is_none (finite (p1_2678)):bool then (let result_2680 :=
+        p2_2679 in 
+      (result_2680)) else (let '(result_2680) :=
+        if option_is_none (finite (p2_2679)):bool then (let result_2680 :=
+            p1_2678 in 
+          (result_2680)) else (let p1_2681 : (
               field_element_t '×
               field_element_t
             ) :=
-            option_unwrap (finite (p1_2575)) in 
-          let p2_2579 : (field_element_t '× field_element_t) :=
-            option_unwrap (finite (p2_2576)) in 
-          let '(result_2577) :=
-            if negb (((x (p1_2578)) =.? (x (p2_2579))) && ((y (p1_2578)) !=.? (
-                  y (p2_2579)))):bool then (let lam_2580 : field_element_t :=
-                compute_lam (p1_2578) (p2_2579) in 
-              let x3_2581 : field_element_t :=
-                (((lam_2580) *% (lam_2580)) -% (x (p1_2578))) -% (x (
-                    p2_2579)) in 
-              let result_2577 :=
+            option_unwrap (finite (p1_2678)) in 
+          let p2_2682 : (field_element_t '× field_element_t) :=
+            option_unwrap (finite (p2_2679)) in 
+          let '(result_2680) :=
+            if negb (((x (p1_2681)) =.? (x (p2_2682))) && ((y (p1_2681)) !=.? (
+                  y (p2_2682)))):bool then (let lam_2683 : field_element_t :=
+                compute_lam (p1_2681) (p2_2682) in 
+              let x3_2684 : field_element_t :=
+                (((lam_2683) *% (lam_2683)) -% (x (p1_2681))) -% (x (
+                    p2_2682)) in 
+              let result_2680 :=
                 Affine ((
-                    x3_2581,
-                    ((lam_2580) *% ((x (p1_2578)) -% (x3_2581))) -% (y (
-                        p1_2578))
+                    x3_2684,
+                    ((lam_2683) *% ((x (p1_2681)) -% (x3_2684))) -% (y (
+                        p1_2681))
                   )) in 
-              (result_2577)) else ((result_2577)) in 
-          (result_2577)) in 
-      (result_2577)) in 
-  result_2577.
+              (result_2680)) else ((result_2680)) in 
+          (result_2680)) in 
+      (result_2680)) in 
+  result_2680.
 
-Definition point_mul (s_2582 : scalar_t) (p_2583 : point_t) : point_t :=
-  let p_2584 : point_t :=
-    p_2583 in 
-  let q_2585 : point_t :=
+Definition point_mul (s_2685 : scalar_t) (p_2686 : point_t)  : point_t :=
+  let p_2687 : point_t :=
+    p_2686 in 
+  let q_2688 : point_t :=
     AtInfinity in 
-  let '(p_2584, q_2585) :=
-    foldi (usize 0) (usize 256) (fun i_2586 '(p_2584, q_2585) =>
-      let '(q_2585) :=
-        if nat_mod_bit (s_2582) (i_2586):bool then (let q_2585 :=
-            point_add (q_2585) (p_2584) in 
-          (q_2585)) else ((q_2585)) in 
-      let p_2584 :=
-        point_add (p_2584) (p_2584) in 
-      (p_2584, q_2585))
-    (p_2584, q_2585) in 
-  q_2585.
+  let '(p_2687, q_2688) :=
+    foldi (usize 0) (usize 256) (fun i_2689 '(p_2687, q_2688) =>
+      let '(q_2688) :=
+        if nat_mod_bit (s_2685) (i_2689):bool then (let q_2688 :=
+            point_add (q_2688) (p_2687) in 
+          (q_2688)) else ((q_2688)) in 
+      let p_2687 :=
+        point_add (p_2687) (p_2687) in 
+      (p_2687, q_2688))
+    (p_2687, q_2688) in 
+  q_2688.
 
-Definition point_mul_base (s_2587 : scalar_t) : point_t :=
-  let gx_2588 : p_bytes32_t :=
+Definition point_mul_base (s_2690 : scalar_t)  : point_t :=
+  let gx_2691 : p_bytes32_t :=
     array_from_list int8 (let l :=
         [
           @repr WORDSIZE8 121;
@@ -248,7 +250,7 @@ Definition point_mul_base (s_2587 : scalar_t) : point_t :=
           @repr WORDSIZE8 23;
           @repr WORDSIZE8 152
         ] in  l) in 
-  let gy_2589 : p_bytes32_t :=
+  let gy_2692 : p_bytes32_t :=
     array_from_list int8 (let l :=
         [
           @repr WORDSIZE8 72;
@@ -284,12 +286,12 @@ Definition point_mul_base (s_2587 : scalar_t) : point_t :=
           @repr WORDSIZE8 212;
           @repr WORDSIZE8 184
         ] in  l) in 
-  let g_2590 : point_t :=
+  let g_2693 : point_t :=
     Affine ((
-        nat_mod_from_public_byte_seq_be (gx_2588),
-        nat_mod_from_public_byte_seq_be (gy_2589)
+        nat_mod_from_public_byte_seq_be (gx_2691),
+        nat_mod_from_public_byte_seq_be (gy_2692)
       )) in 
-  point_mul (s_2587) (g_2590).
+  point_mul (s_2690) (g_2693).
 
 Definition bytes32_t := nseq (uint8) (usize 32).
 
@@ -304,15 +306,16 @@ Notation "'aux_rand_t'" := (bytes32_t) : hacspec_scope.
 Definition signature_t := nseq (uint8) (usize 64).
 
 Definition tagged_hash
-  (tag_2591 : public_byte_seq)
-  (msg_2592 : byte_seq)
+  (tag_2694 : public_byte_seq)
+  (msg_2695 : byte_seq)
+  
   : bytes32_t :=
-  let tag_hash_2593 : seq uint8 :=
-    array_to_be_bytes (sha256 (seq_from_public_seq (tag_2591))) in 
-  let hash_2594 : sha256_digest_t :=
-    sha256 (seq_concat (seq_concat (tag_hash_2593) (tag_hash_2593)) (
-        msg_2592)) in 
-  array_from_seq (32) (array_to_seq (hash_2594)).
+  let tag_hash_2696 : seq uint8 :=
+    array_to_be_bytes (sha256 (seq_from_public_seq (tag_2694))) in 
+  let hash_2697 : sha256_digest_t :=
+    sha256 (seq_concat (seq_concat (tag_hash_2696) (tag_hash_2696)) (
+        msg_2695)) in 
+  array_from_seq (32) (array_to_seq (hash_2697)).
 
 Definition tagged_hash_aux_prefix_t := nseq (int8) (usize 11).
 
@@ -332,9 +335,9 @@ Definition bip0340_aux_v : tagged_hash_aux_prefix_t :=
         @repr WORDSIZE8 120
       ] in  l).
 
-Definition hash_aux (aux_rand_2595 : aux_rand_t) : bytes32_t :=
+Definition hash_aux (aux_rand_2698 : aux_rand_t)  : bytes32_t :=
   tagged_hash (seq_from_seq (array_to_seq (bip0340_aux_v))) (seq_from_seq (
-      aux_rand_2595)).
+      aux_rand_2698)).
 
 Definition tagged_hash_nonce_prefix_t := nseq (int8) (usize 13).
 
@@ -357,14 +360,15 @@ Definition bip0340_nonce_v : tagged_hash_nonce_prefix_t :=
       ] in  l).
 
 Definition hash_nonce
-  (rand_2596 : bytes32_t)
-  (pubkey_2597 : bytes32_t)
-  (msg_2598 : message_t)
+  (rand_2699 : bytes32_t)
+  (pubkey_2700 : bytes32_t)
+  (msg_2701 : message_t)
+  
   : bytes32_t :=
-  let c_2599 : byte_seq :=
-    seq_concat (seq_concat (seq_from_seq (array_to_seq (rand_2596))) (
-        array_to_seq (pubkey_2597))) (msg_2598) in 
-  tagged_hash (seq_from_seq (array_to_seq (bip0340_nonce_v))) (c_2599).
+  let c_2702 : byte_seq :=
+    seq_concat (seq_concat (seq_from_seq (array_to_seq (rand_2699))) (
+        array_to_seq (pubkey_2700))) (msg_2701) in 
+  tagged_hash (seq_from_seq (array_to_seq (bip0340_nonce_v))) (c_2702).
 
 Definition tagged_hash_challenge_prefix_t := nseq (int8) (usize 17).
 
@@ -391,140 +395,144 @@ Definition bip0340_challenge_v : tagged_hash_challenge_prefix_t :=
       ] in  l).
 
 Definition hash_challenge
-  (rx_2600 : bytes32_t)
-  (pubkey_2601 : bytes32_t)
-  (msg_2602 : bytes32_t)
+  (rx_2703 : bytes32_t)
+  (pubkey_2704 : bytes32_t)
+  (msg_2705 : bytes32_t)
+  
   : bytes32_t :=
-  let c_2603 : byte_seq :=
-    seq_concat (seq_concat (seq_from_seq (array_to_seq (rx_2600))) (
-        array_to_seq (pubkey_2601))) (array_to_seq (msg_2602)) in 
-  tagged_hash (seq_from_seq (array_to_seq (bip0340_challenge_v))) (c_2603).
+  let c_2706 : byte_seq :=
+    seq_concat (seq_concat (seq_from_seq (array_to_seq (rx_2703))) (
+        array_to_seq (pubkey_2704))) (array_to_seq (msg_2705)) in 
+  tagged_hash (seq_from_seq (array_to_seq (bip0340_challenge_v))) (c_2706).
 
-Definition bytes_from_point (p_2604 : affine_point_t) : bytes32_t :=
-  let '(x_2605, _) :=
-    p_2604 in 
-  array_from_seq (32) (nat_mod_to_byte_seq_be (x_2605)).
+Definition bytes_from_point (p_2707 : affine_point_t)  : bytes32_t :=
+  let '(x_2708, _) :=
+    p_2707 in 
+  array_from_seq (32) (nat_mod_to_byte_seq_be (x_2708)).
 
-Definition bytes_from_scalar (x_2606 : scalar_t) : bytes32_t :=
-  array_from_seq (32) (nat_mod_to_byte_seq_be (x_2606)).
+Definition bytes_from_scalar (x_2709 : scalar_t)  : bytes32_t :=
+  array_from_seq (32) (nat_mod_to_byte_seq_be (x_2709)).
 
-Definition scalar_from_bytes (b_2607 : bytes32_t) : scalar_t :=
-  nat_mod_from_byte_seq_be (array_to_seq (b_2607)) : scalar_t.
+Definition scalar_from_bytes (b_2710 : bytes32_t)  : scalar_t :=
+  nat_mod_from_byte_seq_be (array_to_seq (b_2710)) : scalar_t.
 
-Definition scalar_from_bytes_strict (b_2608 : bytes32_t) : (option scalar_t) :=
-  let s_2609 : big_integer_t :=
-    nat_mod_from_byte_seq_be (array_to_seq (b_2608)) : big_integer_t in 
-  let max_scalar_2610 : big_integer_t :=
+Definition scalar_from_bytes_strict (b_2711 : bytes32_t)  : (option scalar_t) :=
+  let s_2712 : big_integer_t :=
+    nat_mod_from_byte_seq_be (array_to_seq (b_2711)) : big_integer_t in 
+  let max_scalar_2713 : big_integer_t :=
     nat_mod_from_byte_seq_be (nat_mod_to_byte_seq_be (
         nat_mod_max_val )) : big_integer_t in 
-  (if ((s_2609) >.? (max_scalar_2610)):bool then (@None scalar_t) else (
+  (if ((s_2712) >.? (max_scalar_2713)):bool then (@None scalar_t) else (
       @Some scalar_t (nat_mod_from_byte_seq_be (
-          array_to_seq (b_2608)) : scalar_t))).
+          array_to_seq (b_2711)) : scalar_t))).
 
-Definition seckey_scalar_from_bytes (b_2611 : bytes32_t) : (option scalar_t) :=
-  bind (scalar_from_bytes_strict (b_2611)) (fun s_2612 => (if ((s_2612) =.? (
+Definition seckey_scalar_from_bytes (b_2714 : bytes32_t)  : (option scalar_t) :=
+  bind (scalar_from_bytes_strict (b_2714)) (fun s_2715 => (if ((s_2715) =.? (
           nat_mod_zero )):bool then (@None scalar_t) else (@Some scalar_t (
-          s_2612)))).
+          s_2715)))).
 
 Definition fieldelem_from_bytes
-  (b_2613 : public_key_t)
+  (b_2716 : public_key_t)
+  
   : (option field_element_t) :=
-  let s_2614 : big_integer_t :=
-    nat_mod_from_byte_seq_be (b_2613) : big_integer_t in 
-  let max_fe_2615 : big_integer_t :=
+  let s_2717 : big_integer_t :=
+    nat_mod_from_byte_seq_be (b_2716) : big_integer_t in 
+  let max_fe_2718 : big_integer_t :=
     nat_mod_from_byte_seq_be (nat_mod_to_byte_seq_be (
         nat_mod_max_val )) : big_integer_t in 
-  (if ((s_2614) >.? (max_fe_2615)):bool then (@None field_element_t) else (
+  (if ((s_2717) >.? (max_fe_2718)):bool then (@None field_element_t) else (
       @Some field_element_t (nat_mod_from_byte_seq_be (
-          b_2613) : field_element_t))).
+          b_2716) : field_element_t))).
 
-Definition xor_bytes (b0_2616 : bytes32_t) (b1_2617 : bytes32_t) : bytes32_t :=
-  let b_2618 : seq uint8 :=
-    seq_new_ (default : uint8) (array_len (b0_2616)) in 
-  let b_2618 :=
-    foldi (usize 0) (array_len (b0_2616)) (fun i_2619 b_2618 =>
-      let b_2618 :=
-        seq_upd b_2618 (i_2619) ((array_index (b0_2616) (i_2619)) .^ (
-            array_index (b1_2617) (i_2619))) in 
-      (b_2618))
-    b_2618 in 
-  array_from_seq (32) (b_2618).
+Definition xor_bytes (b0_2719 : bytes32_t) (b1_2720 : bytes32_t)  : bytes32_t :=
+  let b_2721 : seq uint8 :=
+    seq_new_ (default : uint8) (array_len (b0_2719)) in 
+  let b_2721 :=
+    foldi (usize 0) (array_len (b0_2719)) (fun i_2722 b_2721 =>
+      let b_2721 :=
+        seq_upd b_2721 (i_2722) ((array_index (b0_2719) (i_2722)) .^ (
+            array_index (b1_2720) (i_2722))) in 
+      (b_2721))
+    b_2721 in 
+  array_from_seq (32) (b_2721).
 
 Notation "'pubkey_gen_result_t'" := ((
   result public_key_t error_t)) : hacspec_scope.
 
-Definition pubkey_gen (seckey_2620 : secret_key_t) : pubkey_gen_result_t :=
-  bind (option_ok_or (seckey_scalar_from_bytes (seckey_2620)) (
-      InvalidSecretKey)) (fun d0_2621 => let p_2622 : (
+Definition pubkey_gen (seckey_2723 : secret_key_t)  : pubkey_gen_result_t :=
+  bind (option_ok_or (seckey_scalar_from_bytes (seckey_2723)) (
+      InvalidSecretKey)) (fun d0_2724 => let p_2725 : (
         field_element_t '×
         field_element_t
       ) :=
-      option_unwrap (finite (point_mul_base (d0_2621))) in 
-    @Ok public_key_t error_t (bytes_from_point (p_2622))).
+      option_unwrap (finite (point_mul_base (d0_2724))) in 
+    @Ok public_key_t error_t (bytes_from_point (p_2725))).
 
 Notation "'sign_result_t'" := ((result signature_t error_t)) : hacspec_scope.
 
 Definition sign
-  (msg_2623 : message_t)
-  (seckey_2624 : secret_key_t)
-  (aux_rand_2625 : aux_rand_t)
+  (msg_2726 : message_t)
+  (seckey_2727 : secret_key_t)
+  (aux_rand_2728 : aux_rand_t)
+  
   : sign_result_t :=
-  bind (option_ok_or (seckey_scalar_from_bytes (seckey_2624)) (
-      InvalidSecretKey)) (fun d0_2626 => let p_2627 : (
+  bind (option_ok_or (seckey_scalar_from_bytes (seckey_2727)) (
+      InvalidSecretKey)) (fun d0_2729 => let p_2730 : (
         field_element_t '×
         field_element_t
       ) :=
-      option_unwrap (finite (point_mul_base (d0_2626))) in 
-    let d_2628 : scalar_t :=
-      (if (has_even_y (p_2627)):bool then (d0_2626) else ((nat_mod_zero ) -% (
-            d0_2626))) in 
-    let t_2629 : bytes32_t :=
-      xor_bytes (bytes_from_scalar (d_2628)) (hash_aux (aux_rand_2625)) in 
-    let k0_2630 : scalar_t :=
-      scalar_from_bytes (hash_nonce (t_2629) (bytes_from_point (p_2627)) (
-          msg_2623)) in 
-    ifbnd (k0_2630) =.? (nat_mod_zero ) : bool
+      option_unwrap (finite (point_mul_base (d0_2729))) in 
+    let d_2731 : scalar_t :=
+      (if (has_even_y (p_2730)):bool then (d0_2729) else ((nat_mod_zero ) -% (
+            d0_2729))) in 
+    let t_2732 : bytes32_t :=
+      xor_bytes (bytes_from_scalar (d_2731)) (hash_aux (aux_rand_2728)) in 
+    let k0_2733 : scalar_t :=
+      scalar_from_bytes (hash_nonce (t_2732) (bytes_from_point (p_2730)) (
+          msg_2726)) in 
+    ifbnd (k0_2733) =.? (nat_mod_zero ) : bool
     thenbnd (bind (@Err signature_t error_t (InvalidNonceGenerated)) (fun _ =>
         @Ok unit error_t (tt)))
     else (tt) >> (fun 'tt =>
-    let r_2631 : (field_element_t '× field_element_t) :=
-      option_unwrap (finite (point_mul_base (k0_2630))) in 
-    let k_2632 : scalar_t :=
-      (if (has_even_y (r_2631)):bool then (k0_2630) else ((nat_mod_zero ) -% (
-            k0_2630))) in 
-    let e_2633 : scalar_t :=
-      scalar_from_bytes (hash_challenge (bytes_from_point (r_2631)) (
-          bytes_from_point (p_2627)) (msg_2623)) in 
-    let sig_2634 : signature_t :=
+    let r_2734 : (field_element_t '× field_element_t) :=
+      option_unwrap (finite (point_mul_base (k0_2733))) in 
+    let k_2735 : scalar_t :=
+      (if (has_even_y (r_2734)):bool then (k0_2733) else ((nat_mod_zero ) -% (
+            k0_2733))) in 
+    let e_2736 : scalar_t :=
+      scalar_from_bytes (hash_challenge (bytes_from_point (r_2734)) (
+          bytes_from_point (p_2730)) (msg_2726)) in 
+    let sig_2737 : signature_t :=
       array_update (array_update (array_new_ (default : uint8) (64)) (usize 0) (
-          array_to_seq (bytes_from_point (r_2631)))) (usize 32) (
-        array_to_seq (bytes_from_scalar ((k_2632) +% ((e_2633) *% (
-              d_2628))))) in 
-    bind (verify (msg_2623) (bytes_from_point (p_2627)) (sig_2634)) (fun _ =>
-      @Ok signature_t error_t (sig_2634)))).
+          array_to_seq (bytes_from_point (r_2734)))) (usize 32) (
+        array_to_seq (bytes_from_scalar ((k_2735) +% ((e_2736) *% (
+              d_2731))))) in 
+    bind (verify (msg_2726) (bytes_from_point (p_2730)) (sig_2737)) (fun _ =>
+      @Ok signature_t error_t (sig_2737)))).
 
 Notation "'verification_result_t'" := ((result unit error_t)) : hacspec_scope.
 
 Definition verify
-  (msg_2635 : message_t)
-  (pubkey_2636 : public_key_t)
-  (sig_2637 : signature_t)
+  (msg_2738 : message_t)
+  (pubkey_2739 : public_key_t)
+  (sig_2740 : signature_t)
+  
   : verification_result_t :=
-  bind (option_ok_or (fieldelem_from_bytes (pubkey_2636)) (InvalidPublicKey)) (
-    fun p_x_2638 => bind (lift_x (p_x_2638)) (fun p_2639 => bind (option_ok_or (
+  bind (option_ok_or (fieldelem_from_bytes (pubkey_2739)) (InvalidPublicKey)) (
+    fun p_x_2741 => bind (lift_x (p_x_2741)) (fun p_2742 => bind (option_ok_or (
           fieldelem_from_bytes (array_from_slice (default : uint8) (32) (
-              array_to_seq (sig_2637)) (usize 0) (usize 32))) (
-          InvalidSignature)) (fun r_2640 => bind (option_ok_or (
+              array_to_seq (sig_2740)) (usize 0) (usize 32))) (
+          InvalidSignature)) (fun r_2743 => bind (option_ok_or (
             scalar_from_bytes_strict (array_from_slice (default : uint8) (32) (
-                array_to_seq (sig_2637)) (usize 32) (usize 32))) (
-            InvalidSignature)) (fun s_2641 => let e_2642 : scalar_t :=
+                array_to_seq (sig_2740)) (usize 32) (usize 32))) (
+            InvalidSignature)) (fun s_2744 => let e_2745 : scalar_t :=
             scalar_from_bytes (hash_challenge (array_from_slice (
-                  default : uint8) (32) (array_to_seq (sig_2637)) (usize 0) (
-                  usize 32)) (bytes_from_point (p_2639)) (msg_2635)) in 
-          bind (option_ok_or (finite (point_add (point_mul_base (s_2641)) (
-                  point_mul ((nat_mod_zero ) -% (e_2642)) (Affine (p_2639))))) (
-              InvalidSignature)) (fun r_p_2643 => (if ((negb (has_even_y (
-                      r_p_2643))) || ((x (r_p_2643)) !=.? (r_2640))):bool then (
+                  default : uint8) (32) (array_to_seq (sig_2740)) (usize 0) (
+                  usize 32)) (bytes_from_point (p_2742)) (msg_2738)) in 
+          bind (option_ok_or (finite (point_add (point_mul_base (s_2744)) (
+                  point_mul ((nat_mod_zero ) -% (e_2745)) (Affine (p_2742))))) (
+              InvalidSignature)) (fun r_p_2746 => (if ((negb (has_even_y (
+                      r_p_2746))) || ((x (r_p_2746)) !=.? (r_2743))):bool then (
                 @Err unit error_t (InvalidSignature)) else (@Ok unit error_t (
                   tt)))))))).
 

@@ -83,422 +83,431 @@ Definition p_5_8_v : arr_ed25519_field_element_t :=
       ] in  l).
 
 Definition expand_message_xmd
-  (msg_2290 : byte_seq)
-  (dst_2291 : byte_seq)
-  (len_in_bytes_2292 : uint_size)
+  (msg_2393 : byte_seq)
+  (dst_2394 : byte_seq)
+  (len_in_bytes_2395 : uint_size)
+  
   : byte_seq_result_t :=
-  let ell_2293 : uint_size :=
-    (((len_in_bytes_2292) + (b_in_bytes_v)) - (usize 1)) / (b_in_bytes_v) in 
-  let result_2294 : (result byte_seq error_t) :=
+  let ell_2396 : uint_size :=
+    (((len_in_bytes_2395) + (b_in_bytes_v)) - (usize 1)) / (b_in_bytes_v) in 
+  let result_2397 : (result byte_seq error_t) :=
     @Err byte_seq error_t (ExpandMessageAbort) in 
-  let '(result_2294) :=
-    if negb ((((ell_2293) >.? (usize 255)) || ((len_in_bytes_2292) >.? (
-            usize 65535))) || ((seq_len (dst_2291)) >.? (
-          usize 255))):bool then (let dst_prime_2295 : seq uint8 :=
-        seq_push (dst_2291) (uint8_from_usize (seq_len (dst_2291))) in 
-      let z_pad_2296 : seq uint8 :=
+  let '(result_2397) :=
+    if negb ((((ell_2396) >.? (usize 255)) || ((len_in_bytes_2395) >.? (
+            usize 65535))) || ((seq_len (dst_2394)) >.? (
+          usize 255))):bool then (let dst_prime_2398 : seq uint8 :=
+        seq_push (dst_2394) (uint8_from_usize (seq_len (dst_2394))) in 
+      let z_pad_2399 : seq uint8 :=
         seq_new_ (default : uint8) (s_in_bytes_v) in 
-      let l_i_b_str_2297 : seq uint8 :=
+      let l_i_b_str_2400 : seq uint8 :=
         seq_new_ (default : uint8) (usize 2) in 
-      let l_i_b_str_2297 :=
-        seq_upd l_i_b_str_2297 (usize 0) (uint8_from_usize ((
-              len_in_bytes_2292) / (usize 256))) in 
-      let l_i_b_str_2297 :=
-        seq_upd l_i_b_str_2297 (usize 1) (uint8_from_usize (
-            len_in_bytes_2292)) in 
-      let msg_prime_2298 : seq uint8 :=
-        seq_concat (seq_concat (seq_concat (seq_concat (z_pad_2296) (
-                msg_2290)) (l_i_b_str_2297)) (seq_new_ (default : uint8) (
-              usize 1))) (dst_prime_2295) in 
-      let b_0_2299 : seq uint8 :=
-        seq_from_seq (array_to_seq (hash (msg_prime_2298))) in 
-      let b_i_2300 : seq uint8 :=
-        seq_from_seq (array_to_seq (hash (seq_concat (seq_push (b_0_2299) (
-                secret (@repr WORDSIZE8 1) : int8)) (dst_prime_2295)))) in 
-      let uniform_bytes_2301 : seq uint8 :=
-        seq_from_seq (b_i_2300) in 
-      let '(b_i_2300, uniform_bytes_2301) :=
-        foldi (usize 2) ((ell_2293) + (usize 1)) (fun i_2302 '(
-            b_i_2300,
-            uniform_bytes_2301
+      let l_i_b_str_2400 :=
+        seq_upd l_i_b_str_2400 (usize 0) (uint8_from_usize ((
+              len_in_bytes_2395) / (usize 256))) in 
+      let l_i_b_str_2400 :=
+        seq_upd l_i_b_str_2400 (usize 1) (uint8_from_usize (
+            len_in_bytes_2395)) in 
+      let msg_prime_2401 : seq uint8 :=
+        seq_concat (seq_concat (seq_concat (seq_concat (z_pad_2399) (
+                msg_2393)) (l_i_b_str_2400)) (seq_new_ (default : uint8) (
+              usize 1))) (dst_prime_2398) in 
+      let b_0_2402 : seq uint8 :=
+        seq_from_seq (array_to_seq (hash (msg_prime_2401))) in 
+      let b_i_2403 : seq uint8 :=
+        seq_from_seq (array_to_seq (hash (seq_concat (seq_push (b_0_2402) (
+                secret (@repr WORDSIZE8 1) : int8)) (dst_prime_2398)))) in 
+      let uniform_bytes_2404 : seq uint8 :=
+        seq_from_seq (b_i_2403) in 
+      let '(b_i_2403, uniform_bytes_2404) :=
+        foldi (usize 2) ((ell_2396) + (usize 1)) (fun i_2405 '(
+            b_i_2403,
+            uniform_bytes_2404
           ) =>
-          let t_2303 : seq uint8 :=
-            seq_from_seq (b_0_2299) in 
-          let b_i_2300 :=
+          let t_2406 : seq uint8 :=
+            seq_from_seq (b_0_2402) in 
+          let b_i_2403 :=
             seq_from_seq (array_to_seq (hash (seq_concat (seq_push ((
-                      t_2303) seq_xor (b_i_2300)) (uint8_from_usize (i_2302))) (
-                  dst_prime_2295)))) in 
-          let uniform_bytes_2301 :=
-            seq_concat (uniform_bytes_2301) (b_i_2300) in 
-          (b_i_2300, uniform_bytes_2301))
-        (b_i_2300, uniform_bytes_2301) in 
-      let result_2294 :=
-        @Ok byte_seq error_t (seq_truncate (uniform_bytes_2301) (
-            len_in_bytes_2292)) in 
-      (result_2294)) else ((result_2294)) in 
-  result_2294.
+                      t_2406) seq_xor (b_i_2403)) (uint8_from_usize (i_2405))) (
+                  dst_prime_2398)))) in 
+          let uniform_bytes_2404 :=
+            seq_concat (uniform_bytes_2404) (b_i_2403) in 
+          (b_i_2403, uniform_bytes_2404))
+        (b_i_2403, uniform_bytes_2404) in 
+      let result_2397 :=
+        @Ok byte_seq error_t (seq_truncate (uniform_bytes_2404) (
+            len_in_bytes_2395)) in 
+      (result_2397)) else ((result_2397)) in 
+  result_2397.
 
 Definition ed_hash_to_field
-  (msg_2304 : byte_seq)
-  (dst_2305 : byte_seq)
-  (count_2306 : uint_size)
+  (msg_2407 : byte_seq)
+  (dst_2408 : byte_seq)
+  (count_2409 : uint_size)
+  
   : seq_ed_result_t :=
-  let len_in_bytes_2307 : uint_size :=
-    (count_2306) * (l_v) in 
-  bind (expand_message_xmd (msg_2304) (dst_2305) (len_in_bytes_2307)) (
-    fun uniform_bytes_2308 => let output_2309 : seq ed25519_field_element_t :=
-      seq_new_ (default : ed25519_field_element_t) (count_2306) in 
-    let output_2309 :=
-      foldi (usize 0) (count_2306) (fun i_2310 output_2309 =>
-        let elm_offset_2311 : uint_size :=
-          (l_v) * (i_2310) in 
-        let tv_2312 : seq uint8 :=
-          seq_slice (uniform_bytes_2308) (elm_offset_2311) (l_v) in 
-        let u_i_2313 : ed25519_field_element_t :=
+  let len_in_bytes_2410 : uint_size :=
+    (count_2409) * (l_v) in 
+  bind (expand_message_xmd (msg_2407) (dst_2408) (len_in_bytes_2410)) (
+    fun uniform_bytes_2411 => let output_2412 : seq ed25519_field_element_t :=
+      seq_new_ (default : ed25519_field_element_t) (count_2409) in 
+    let output_2412 :=
+      foldi (usize 0) (count_2409) (fun i_2413 output_2412 =>
+        let elm_offset_2414 : uint_size :=
+          (l_v) * (i_2413) in 
+        let tv_2415 : seq uint8 :=
+          seq_slice (uniform_bytes_2411) (elm_offset_2414) (l_v) in 
+        let u_i_2416 : ed25519_field_element_t :=
           nat_mod_from_byte_seq_be (seq_slice (nat_mod_to_byte_seq_be (
-                nat_mod_from_byte_seq_be (tv_2312) : ed_field_hash_t)) (
+                nat_mod_from_byte_seq_be (tv_2415) : ed_field_hash_t)) (
               usize 32) (usize 32)) : ed25519_field_element_t in 
-        let output_2309 :=
-          seq_upd output_2309 (i_2310) (u_i_2313) in 
-        (output_2309))
-      output_2309 in 
-    @Ok seq ed25519_field_element_t error_t (output_2309)).
+        let output_2412 :=
+          seq_upd output_2412 (i_2413) (u_i_2416) in 
+        (output_2412))
+      output_2412 in 
+    @Ok seq ed25519_field_element_t error_t (output_2412)).
 
-Definition ed_is_square (x_2314 : ed25519_field_element_t) : bool :=
-  let c1_2315 : ed25519_field_element_t :=
+Definition ed_is_square (x_2417 : ed25519_field_element_t)  : bool :=
+  let c1_2418 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_be (array_to_be_bytes (
         p_1_2_v)) : ed25519_field_element_t in 
-  let tv_2316 : ed25519_field_element_t :=
-    nat_mod_pow_self (x_2314) (c1_2315) in 
-  ((tv_2316) =.? (nat_mod_zero )) || ((tv_2316) =.? (nat_mod_one )).
+  let tv_2419 : ed25519_field_element_t :=
+    nat_mod_pow_self (x_2417) (c1_2418) in 
+  ((tv_2419) =.? (nat_mod_zero )) || ((tv_2419) =.? (nat_mod_one )).
 
-Definition sgn0_m_eq_1 (x_2317 : ed25519_field_element_t) : bool :=
-  ((x_2317) rem (nat_mod_two )) =.? (nat_mod_one ).
+Definition sgn0_m_eq_1 (x_2420 : ed25519_field_element_t)  : bool :=
+  ((x_2420) rem (nat_mod_two )) =.? (nat_mod_one ).
 
-Definition ed_clear_cofactor (x_2318 : ed_point_t) : ed_point_t :=
-  point_mul_by_cofactor (x_2318).
+Definition ed_clear_cofactor (x_2421 : ed_point_t)  : ed_point_t :=
+  point_mul_by_cofactor (x_2421).
 
 Definition cmov
-  (a_2319 : ed25519_field_element_t)
-  (b_2320 : ed25519_field_element_t)
-  (c_2321 : bool)
+  (a_2422 : ed25519_field_element_t)
+  (b_2423 : ed25519_field_element_t)
+  (c_2424 : bool)
+  
   : ed25519_field_element_t :=
-  (if (c_2321):bool then (b_2320) else (a_2319)).
+  (if (c_2424):bool then (b_2423) else (a_2422)).
 
-Definition xor (a_2322 : bool) (b_2323 : bool) : bool :=
-  (if (a_2322):bool then ((if (b_2323):bool then (false) else (true))) else ((
-        if (b_2323):bool then (true) else (false)))).
+Definition xor (a_2425 : bool) (b_2426 : bool)  : bool :=
+  (if (a_2425):bool then ((if (b_2426):bool then (false) else (true))) else ((
+        if (b_2426):bool then (true) else (false)))).
 
-Definition curve25519_to_edwards25519 (p_2324 : ed_point_t) : ed_point_t :=
-  let '(s_2325, t_2326, _, _) :=
-    point_normalize (p_2324) in 
-  let one_2327 : ed25519_field_element_t :=
+Definition curve25519_to_edwards25519 (p_2427 : ed_point_t)  : ed_point_t :=
+  let '(s_2428, t_2429, _, _) :=
+    point_normalize (p_2427) in 
+  let one_2430 : ed25519_field_element_t :=
     nat_mod_one  in 
-  let zero_2328 : ed25519_field_element_t :=
+  let zero_2431 : ed25519_field_element_t :=
     nat_mod_zero  in 
-  let tv1_2329 : ed25519_field_element_t :=
-    (s_2325) +% (one_2327) in 
-  let tv2_2330 : ed25519_field_element_t :=
-    (tv1_2329) *% (t_2326) in 
-  let tv2_2331 : ed25519_field_element_t :=
-    nat_mod_inv (tv2_2330) in 
-  let v_2332 : ed25519_field_element_t :=
-    (tv2_2331) *% (tv1_2329) in 
-  let v_2333 : ed25519_field_element_t :=
-    (v_2332) *% (s_2325) in 
-  let w_2334 : ed25519_field_element_t :=
-    (tv2_2331) *% (t_2326) in 
-  let tv1_2335 : ed25519_field_element_t :=
-    (s_2325) -% (one_2327) in 
-  let w_2336 : ed25519_field_element_t :=
-    (w_2334) *% (tv1_2335) in 
-  let e_2337 : bool :=
-    (tv2_2331) =.? (zero_2328) in 
-  let w_2338 : ed25519_field_element_t :=
-    cmov (w_2336) (one_2327) (e_2337) in 
-  let c_2339 : ed25519_field_element_t :=
+  let tv1_2432 : ed25519_field_element_t :=
+    (s_2428) +% (one_2430) in 
+  let tv2_2433 : ed25519_field_element_t :=
+    (tv1_2432) *% (t_2429) in 
+  let tv2_2434 : ed25519_field_element_t :=
+    nat_mod_inv (tv2_2433) in 
+  let v_2435 : ed25519_field_element_t :=
+    (tv2_2434) *% (tv1_2432) in 
+  let v_2436 : ed25519_field_element_t :=
+    (v_2435) *% (s_2428) in 
+  let w_2437 : ed25519_field_element_t :=
+    (tv2_2434) *% (t_2429) in 
+  let tv1_2438 : ed25519_field_element_t :=
+    (s_2428) -% (one_2430) in 
+  let w_2439 : ed25519_field_element_t :=
+    (w_2437) *% (tv1_2438) in 
+  let e_2440 : bool :=
+    (tv2_2434) =.? (zero_2431) in 
+  let w_2441 : ed25519_field_element_t :=
+    cmov (w_2439) (one_2430) (e_2440) in 
+  let c_2442 : ed25519_field_element_t :=
     (nat_mod_zero ) -% (nat_mod_from_literal (_) (
         @repr WORDSIZE128 486664) : ed25519_field_element_t) in 
-  let sq_2340 : (option ed25519_field_element_t) :=
-    sqrt (c_2339) in 
-  let v_2341 : ed25519_field_element_t :=
-    (v_2333) *% (option_unwrap (sq_2340)) in 
-  (v_2341, w_2338, one_2327, (v_2341) *% (w_2338)).
+  let sq_2443 : (option ed25519_field_element_t) :=
+    sqrt (c_2442) in 
+  let v_2444 : ed25519_field_element_t :=
+    (v_2436) *% (option_unwrap (sq_2443)) in 
+  (v_2444, w_2441, one_2430, (v_2444) *% (w_2441)).
 
 Definition map_to_curve_elligator2
-  (u_2342 : ed25519_field_element_t)
+  (u_2445 : ed25519_field_element_t)
+  
   : ed_point_t :=
-  let j_2343 : ed25519_field_element_t :=
+  let j_2446 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (j_v) : ed25519_field_element_t in 
-  let z_2344 : ed25519_field_element_t :=
+  let z_2447 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (z_v) : ed25519_field_element_t in 
-  let one_2345 : ed25519_field_element_t :=
+  let one_2448 : ed25519_field_element_t :=
     nat_mod_one  in 
-  let zero_2346 : ed25519_field_element_t :=
+  let zero_2449 : ed25519_field_element_t :=
     nat_mod_zero  in 
-  let x1_2347 : ed25519_field_element_t :=
-    ((zero_2346) -% (j_2343)) *% (nat_mod_inv ((one_2345) +% (((z_2344) *% (
-              u_2342)) *% (u_2342)))) in 
-  let '(x1_2347) :=
-    if (x1_2347) =.? (zero_2346):bool then (let x1_2347 :=
-        (zero_2346) -% (j_2343) in 
-      (x1_2347)) else ((x1_2347)) in 
-  let gx1_2348 : ed25519_field_element_t :=
-    ((((x1_2347) *% (x1_2347)) *% (x1_2347)) +% (((j_2343) *% (x1_2347)) *% (
-          x1_2347))) +% (x1_2347) in 
-  let x2_2349 : ed25519_field_element_t :=
-    ((zero_2346) -% (x1_2347)) -% (j_2343) in 
-  let gx2_2350 : ed25519_field_element_t :=
-    ((((x2_2349) *% (x2_2349)) *% (x2_2349)) +% ((j_2343) *% ((x2_2349) *% (
-            x2_2349)))) +% (x2_2349) in 
-  let x_2351 : ed25519_field_element_t :=
-    zero_2346 in 
-  let y_2352 : ed25519_field_element_t :=
-    zero_2346 in 
-  let '(x_2351, y_2352) :=
-    if ed_is_square (gx1_2348):bool then (let x_2351 :=
-        x1_2347 in 
-      let y_2352 :=
-        option_unwrap (sqrt (gx1_2348)) in 
-      let '(y_2352) :=
-        if negb (sgn0_m_eq_1 (y_2352)):bool then (let y_2352 :=
-            (zero_2346) -% (y_2352) in 
-          (y_2352)) else ((y_2352)) in 
-      (x_2351, y_2352)) else (let x_2351 :=
-        x2_2349 in 
-      let y_2352 :=
-        option_unwrap (sqrt (gx2_2350)) in 
-      let '(y_2352) :=
-        if sgn0_m_eq_1 (y_2352):bool then (let y_2352 :=
-            (zero_2346) -% (y_2352) in 
-          (y_2352)) else ((y_2352)) in 
-      (x_2351, y_2352)) in 
-  let s_2353 : ed25519_field_element_t :=
-    x_2351 in 
-  let t_2354 : ed25519_field_element_t :=
-    y_2352 in 
-  (s_2353, t_2354, one_2345, (s_2353) *% (t_2354)).
+  let x1_2450 : ed25519_field_element_t :=
+    ((zero_2449) -% (j_2446)) *% (nat_mod_inv ((one_2448) +% (((z_2447) *% (
+              u_2445)) *% (u_2445)))) in 
+  let '(x1_2450) :=
+    if (x1_2450) =.? (zero_2449):bool then (let x1_2450 :=
+        (zero_2449) -% (j_2446) in 
+      (x1_2450)) else ((x1_2450)) in 
+  let gx1_2451 : ed25519_field_element_t :=
+    ((((x1_2450) *% (x1_2450)) *% (x1_2450)) +% (((j_2446) *% (x1_2450)) *% (
+          x1_2450))) +% (x1_2450) in 
+  let x2_2452 : ed25519_field_element_t :=
+    ((zero_2449) -% (x1_2450)) -% (j_2446) in 
+  let gx2_2453 : ed25519_field_element_t :=
+    ((((x2_2452) *% (x2_2452)) *% (x2_2452)) +% ((j_2446) *% ((x2_2452) *% (
+            x2_2452)))) +% (x2_2452) in 
+  let x_2454 : ed25519_field_element_t :=
+    zero_2449 in 
+  let y_2455 : ed25519_field_element_t :=
+    zero_2449 in 
+  let '(x_2454, y_2455) :=
+    if ed_is_square (gx1_2451):bool then (let x_2454 :=
+        x1_2450 in 
+      let y_2455 :=
+        option_unwrap (sqrt (gx1_2451)) in 
+      let '(y_2455) :=
+        if negb (sgn0_m_eq_1 (y_2455)):bool then (let y_2455 :=
+            (zero_2449) -% (y_2455) in 
+          (y_2455)) else ((y_2455)) in 
+      (x_2454, y_2455)) else (let x_2454 :=
+        x2_2452 in 
+      let y_2455 :=
+        option_unwrap (sqrt (gx2_2453)) in 
+      let '(y_2455) :=
+        if sgn0_m_eq_1 (y_2455):bool then (let y_2455 :=
+            (zero_2449) -% (y_2455) in 
+          (y_2455)) else ((y_2455)) in 
+      (x_2454, y_2455)) in 
+  let s_2456 : ed25519_field_element_t :=
+    x_2454 in 
+  let t_2457 : ed25519_field_element_t :=
+    y_2455 in 
+  (s_2456, t_2457, one_2448, (s_2456) *% (t_2457)).
 
 Definition map_to_curve_elligator2_straight
-  (u_2355 : ed25519_field_element_t)
+  (u_2458 : ed25519_field_element_t)
+  
   : ed_point_t :=
-  let j_2356 : ed25519_field_element_t :=
+  let j_2459 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (j_v) : ed25519_field_element_t in 
-  let z_2357 : ed25519_field_element_t :=
+  let z_2460 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (z_v) : ed25519_field_element_t in 
-  let one_2358 : ed25519_field_element_t :=
+  let one_2461 : ed25519_field_element_t :=
     nat_mod_one  in 
-  let zero_2359 : ed25519_field_element_t :=
+  let zero_2462 : ed25519_field_element_t :=
     nat_mod_zero  in 
-  let tv1_2360 : ed25519_field_element_t :=
-    (u_2355) *% (u_2355) in 
-  let tv1_2361 : ed25519_field_element_t :=
-    (z_2357) *% (tv1_2360) in 
-  let e1_2362 : bool :=
-    (tv1_2361) =.? ((zero_2359) -% (one_2358)) in 
-  let tv1_2363 : ed25519_field_element_t :=
-    cmov (tv1_2361) (zero_2359) (e1_2362) in 
-  let x1_2364 : ed25519_field_element_t :=
-    (tv1_2363) +% (one_2358) in 
-  let x1_2365 : ed25519_field_element_t :=
-    nat_mod_inv (x1_2364) in 
-  let x1_2366 : ed25519_field_element_t :=
-    ((zero_2359) -% (j_2356)) *% (x1_2365) in 
-  let gx1_2367 : ed25519_field_element_t :=
-    (x1_2366) +% (j_2356) in 
-  let gx1_2368 : ed25519_field_element_t :=
-    (gx1_2367) *% (x1_2366) in 
-  let gx1_2369 : ed25519_field_element_t :=
-    (gx1_2368) +% (one_2358) in 
-  let gx1_2370 : ed25519_field_element_t :=
-    (gx1_2369) *% (x1_2366) in 
-  let x2_2371 : ed25519_field_element_t :=
-    ((zero_2359) -% (x1_2366)) -% (j_2356) in 
-  let gx2_2372 : ed25519_field_element_t :=
-    (tv1_2363) *% (gx1_2370) in 
-  let e2_2373 : bool :=
-    ed_is_square (gx1_2370) in 
-  let x_2374 : ed25519_field_element_t :=
-    cmov (x2_2371) (x1_2366) (e2_2373) in 
-  let y2_2375 : ed25519_field_element_t :=
-    cmov (gx2_2372) (gx1_2370) (e2_2373) in 
-  let y_2376 : ed25519_field_element_t :=
-    option_unwrap (sqrt (y2_2375)) in 
-  let e3_2377 : bool :=
-    sgn0_m_eq_1 (y_2376) in 
-  let y_2378 : ed25519_field_element_t :=
-    cmov (y_2376) ((zero_2359) -% (y_2376)) (xor (e2_2373) (e3_2377)) in 
-  let s_2379 : ed25519_field_element_t :=
-    x_2374 in 
-  let t_2380 : ed25519_field_element_t :=
-    y_2378 in 
-  (s_2379, t_2380, one_2358, (s_2379) *% (t_2380)).
+  let tv1_2463 : ed25519_field_element_t :=
+    (u_2458) *% (u_2458) in 
+  let tv1_2464 : ed25519_field_element_t :=
+    (z_2460) *% (tv1_2463) in 
+  let e1_2465 : bool :=
+    (tv1_2464) =.? ((zero_2462) -% (one_2461)) in 
+  let tv1_2466 : ed25519_field_element_t :=
+    cmov (tv1_2464) (zero_2462) (e1_2465) in 
+  let x1_2467 : ed25519_field_element_t :=
+    (tv1_2466) +% (one_2461) in 
+  let x1_2468 : ed25519_field_element_t :=
+    nat_mod_inv (x1_2467) in 
+  let x1_2469 : ed25519_field_element_t :=
+    ((zero_2462) -% (j_2459)) *% (x1_2468) in 
+  let gx1_2470 : ed25519_field_element_t :=
+    (x1_2469) +% (j_2459) in 
+  let gx1_2471 : ed25519_field_element_t :=
+    (gx1_2470) *% (x1_2469) in 
+  let gx1_2472 : ed25519_field_element_t :=
+    (gx1_2471) +% (one_2461) in 
+  let gx1_2473 : ed25519_field_element_t :=
+    (gx1_2472) *% (x1_2469) in 
+  let x2_2474 : ed25519_field_element_t :=
+    ((zero_2462) -% (x1_2469)) -% (j_2459) in 
+  let gx2_2475 : ed25519_field_element_t :=
+    (tv1_2466) *% (gx1_2473) in 
+  let e2_2476 : bool :=
+    ed_is_square (gx1_2473) in 
+  let x_2477 : ed25519_field_element_t :=
+    cmov (x2_2474) (x1_2469) (e2_2476) in 
+  let y2_2478 : ed25519_field_element_t :=
+    cmov (gx2_2475) (gx1_2473) (e2_2476) in 
+  let y_2479 : ed25519_field_element_t :=
+    option_unwrap (sqrt (y2_2478)) in 
+  let e3_2480 : bool :=
+    sgn0_m_eq_1 (y_2479) in 
+  let y_2481 : ed25519_field_element_t :=
+    cmov (y_2479) ((zero_2462) -% (y_2479)) (xor (e2_2476) (e3_2480)) in 
+  let s_2482 : ed25519_field_element_t :=
+    x_2477 in 
+  let t_2483 : ed25519_field_element_t :=
+    y_2481 in 
+  (s_2482, t_2483, one_2461, (s_2482) *% (t_2483)).
 
 Definition map_to_curve_elligator2_curve25519
-  (u_2381 : ed25519_field_element_t)
+  (u_2484 : ed25519_field_element_t)
+  
   : ed_point_t :=
-  let j_2382 : ed25519_field_element_t :=
+  let j_2485 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (j_v) : ed25519_field_element_t in 
-  let zero_2383 : ed25519_field_element_t :=
+  let zero_2486 : ed25519_field_element_t :=
     nat_mod_zero  in 
-  let one_2384 : ed25519_field_element_t :=
+  let one_2487 : ed25519_field_element_t :=
     nat_mod_one  in 
-  let two_2385 : ed25519_field_element_t :=
+  let two_2488 : ed25519_field_element_t :=
     nat_mod_two  in 
-  let c1_2386 : ed25519_field_element_t :=
+  let c1_2489 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_be (array_to_be_bytes (
         p_3_8_v)) : ed25519_field_element_t in 
-  let c2_2387 : ed25519_field_element_t :=
-    nat_mod_pow_self (two_2385) (c1_2386) in 
-  let c3_2388 : ed25519_field_element_t :=
-    option_unwrap (sqrt ((zero_2383) -% (one_2384))) in 
-  let c4_2389 : ed25519_field_element_t :=
+  let c2_2490 : ed25519_field_element_t :=
+    nat_mod_pow_self (two_2488) (c1_2489) in 
+  let c3_2491 : ed25519_field_element_t :=
+    option_unwrap (sqrt ((zero_2486) -% (one_2487))) in 
+  let c4_2492 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_be (array_to_be_bytes (
         p_5_8_v)) : ed25519_field_element_t in 
-  let tv1_2390 : ed25519_field_element_t :=
-    (u_2381) *% (u_2381) in 
-  let tv1_2391 : ed25519_field_element_t :=
-    (two_2385) *% (tv1_2390) in 
-  let xd_2392 : ed25519_field_element_t :=
-    (tv1_2391) +% (one_2384) in 
-  let x1n_2393 : ed25519_field_element_t :=
-    (zero_2383) -% (j_2382) in 
-  let tv2_2394 : ed25519_field_element_t :=
-    (xd_2392) *% (xd_2392) in 
-  let gxd_2395 : ed25519_field_element_t :=
-    (tv2_2394) *% (xd_2392) in 
-  let gx1_2396 : ed25519_field_element_t :=
-    (j_2382) *% (tv1_2391) in 
-  let gx1_2397 : ed25519_field_element_t :=
-    (gx1_2396) *% (x1n_2393) in 
-  let gx1_2398 : ed25519_field_element_t :=
-    (gx1_2397) +% (tv2_2394) in 
-  let gx1_2399 : ed25519_field_element_t :=
-    (gx1_2398) *% (x1n_2393) in 
-  let tv3_2400 : ed25519_field_element_t :=
-    (gxd_2395) *% (gxd_2395) in 
-  let tv2_2401 : ed25519_field_element_t :=
-    (tv3_2400) *% (tv3_2400) in 
-  let tv3_2402 : ed25519_field_element_t :=
-    (tv3_2400) *% (gxd_2395) in 
-  let tv3_2403 : ed25519_field_element_t :=
-    (tv3_2402) *% (gx1_2399) in 
-  let tv2_2404 : ed25519_field_element_t :=
-    (tv2_2401) *% (tv3_2403) in 
-  let y11_2405 : ed25519_field_element_t :=
-    nat_mod_pow_self (tv2_2404) (c4_2389) in 
-  let y11_2406 : ed25519_field_element_t :=
-    (y11_2405) *% (tv3_2403) in 
-  let y12_2407 : ed25519_field_element_t :=
-    (y11_2406) *% (c3_2388) in 
-  let tv2_2408 : ed25519_field_element_t :=
-    (y11_2406) *% (y11_2406) in 
-  let tv2_2409 : ed25519_field_element_t :=
-    (tv2_2408) *% (gxd_2395) in 
-  let e1_2410 : bool :=
-    (tv2_2409) =.? (gx1_2399) in 
-  let y1_2411 : ed25519_field_element_t :=
-    cmov (y12_2407) (y11_2406) (e1_2410) in 
-  let x2n_2412 : ed25519_field_element_t :=
-    (x1n_2393) *% (tv1_2391) in 
-  let y21_2413 : ed25519_field_element_t :=
-    (y11_2406) *% (u_2381) in 
-  let y21_2414 : ed25519_field_element_t :=
-    (y21_2413) *% (c2_2387) in 
-  let y22_2415 : ed25519_field_element_t :=
-    (y21_2414) *% (c3_2388) in 
-  let gx2_2416 : ed25519_field_element_t :=
-    (gx1_2399) *% (tv1_2391) in 
-  let tv2_2417 : ed25519_field_element_t :=
-    (y21_2414) *% (y21_2414) in 
-  let tv2_2418 : ed25519_field_element_t :=
-    (tv2_2417) *% (gxd_2395) in 
-  let e2_2419 : bool :=
-    (tv2_2418) =.? (gx2_2416) in 
-  let y2_2420 : ed25519_field_element_t :=
-    cmov (y22_2415) (y21_2414) (e2_2419) in 
-  let tv2_2421 : ed25519_field_element_t :=
-    (y1_2411) *% (y1_2411) in 
-  let tv2_2422 : ed25519_field_element_t :=
-    (tv2_2421) *% (gxd_2395) in 
-  let e3_2423 : bool :=
-    (tv2_2422) =.? (gx1_2399) in 
-  let xn_2424 : ed25519_field_element_t :=
-    cmov (x2n_2412) (x1n_2393) (e3_2423) in 
-  let y_2425 : ed25519_field_element_t :=
-    cmov (y2_2420) (y1_2411) (e3_2423) in 
-  let e4_2426 : bool :=
-    sgn0_m_eq_1 (y_2425) in 
-  let y_2427 : ed25519_field_element_t :=
-    cmov (y_2425) ((zero_2383) -% (y_2425)) (xor (e3_2423) (e4_2426)) in 
-  (xn_2424, xd_2392, y_2427, one_2384).
+  let tv1_2493 : ed25519_field_element_t :=
+    (u_2484) *% (u_2484) in 
+  let tv1_2494 : ed25519_field_element_t :=
+    (two_2488) *% (tv1_2493) in 
+  let xd_2495 : ed25519_field_element_t :=
+    (tv1_2494) +% (one_2487) in 
+  let x1n_2496 : ed25519_field_element_t :=
+    (zero_2486) -% (j_2485) in 
+  let tv2_2497 : ed25519_field_element_t :=
+    (xd_2495) *% (xd_2495) in 
+  let gxd_2498 : ed25519_field_element_t :=
+    (tv2_2497) *% (xd_2495) in 
+  let gx1_2499 : ed25519_field_element_t :=
+    (j_2485) *% (tv1_2494) in 
+  let gx1_2500 : ed25519_field_element_t :=
+    (gx1_2499) *% (x1n_2496) in 
+  let gx1_2501 : ed25519_field_element_t :=
+    (gx1_2500) +% (tv2_2497) in 
+  let gx1_2502 : ed25519_field_element_t :=
+    (gx1_2501) *% (x1n_2496) in 
+  let tv3_2503 : ed25519_field_element_t :=
+    (gxd_2498) *% (gxd_2498) in 
+  let tv2_2504 : ed25519_field_element_t :=
+    (tv3_2503) *% (tv3_2503) in 
+  let tv3_2505 : ed25519_field_element_t :=
+    (tv3_2503) *% (gxd_2498) in 
+  let tv3_2506 : ed25519_field_element_t :=
+    (tv3_2505) *% (gx1_2502) in 
+  let tv2_2507 : ed25519_field_element_t :=
+    (tv2_2504) *% (tv3_2506) in 
+  let y11_2508 : ed25519_field_element_t :=
+    nat_mod_pow_self (tv2_2507) (c4_2492) in 
+  let y11_2509 : ed25519_field_element_t :=
+    (y11_2508) *% (tv3_2506) in 
+  let y12_2510 : ed25519_field_element_t :=
+    (y11_2509) *% (c3_2491) in 
+  let tv2_2511 : ed25519_field_element_t :=
+    (y11_2509) *% (y11_2509) in 
+  let tv2_2512 : ed25519_field_element_t :=
+    (tv2_2511) *% (gxd_2498) in 
+  let e1_2513 : bool :=
+    (tv2_2512) =.? (gx1_2502) in 
+  let y1_2514 : ed25519_field_element_t :=
+    cmov (y12_2510) (y11_2509) (e1_2513) in 
+  let x2n_2515 : ed25519_field_element_t :=
+    (x1n_2496) *% (tv1_2494) in 
+  let y21_2516 : ed25519_field_element_t :=
+    (y11_2509) *% (u_2484) in 
+  let y21_2517 : ed25519_field_element_t :=
+    (y21_2516) *% (c2_2490) in 
+  let y22_2518 : ed25519_field_element_t :=
+    (y21_2517) *% (c3_2491) in 
+  let gx2_2519 : ed25519_field_element_t :=
+    (gx1_2502) *% (tv1_2494) in 
+  let tv2_2520 : ed25519_field_element_t :=
+    (y21_2517) *% (y21_2517) in 
+  let tv2_2521 : ed25519_field_element_t :=
+    (tv2_2520) *% (gxd_2498) in 
+  let e2_2522 : bool :=
+    (tv2_2521) =.? (gx2_2519) in 
+  let y2_2523 : ed25519_field_element_t :=
+    cmov (y22_2518) (y21_2517) (e2_2522) in 
+  let tv2_2524 : ed25519_field_element_t :=
+    (y1_2514) *% (y1_2514) in 
+  let tv2_2525 : ed25519_field_element_t :=
+    (tv2_2524) *% (gxd_2498) in 
+  let e3_2526 : bool :=
+    (tv2_2525) =.? (gx1_2502) in 
+  let xn_2527 : ed25519_field_element_t :=
+    cmov (x2n_2515) (x1n_2496) (e3_2526) in 
+  let y_2528 : ed25519_field_element_t :=
+    cmov (y2_2523) (y1_2514) (e3_2526) in 
+  let e4_2529 : bool :=
+    sgn0_m_eq_1 (y_2528) in 
+  let y_2530 : ed25519_field_element_t :=
+    cmov (y_2528) ((zero_2486) -% (y_2528)) (xor (e3_2526) (e4_2529)) in 
+  (xn_2527, xd_2495, y_2530, one_2487).
 
 Definition map_to_curve_elligator2_edwards25519
-  (u_2428 : ed25519_field_element_t)
+  (u_2531 : ed25519_field_element_t)
+  
   : ed_point_t :=
-  let j_2429 : ed25519_field_element_t :=
+  let j_2532 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (j_v) : ed25519_field_element_t in 
-  let zero_2430 : ed25519_field_element_t :=
+  let zero_2533 : ed25519_field_element_t :=
     nat_mod_zero  in 
-  let one_2431 : ed25519_field_element_t :=
+  let one_2534 : ed25519_field_element_t :=
     nat_mod_one  in 
-  let two_2432 : ed25519_field_element_t :=
+  let two_2535 : ed25519_field_element_t :=
     nat_mod_two  in 
-  let c1_2433 : ed25519_field_element_t :=
-    option_unwrap (sqrt ((zero_2430) -% ((j_2429) +% (two_2432)))) in 
-  let '(xmn_2434, xmd_2435, ymn_2436, ymd_2437) :=
-    map_to_curve_elligator2_curve25519 (u_2428) in 
-  let xn_2438 : ed25519_field_element_t :=
-    (xmn_2434) *% (ymd_2437) in 
-  let xn_2439 : ed25519_field_element_t :=
-    (xn_2438) *% (c1_2433) in 
-  let xd_2440 : ed25519_field_element_t :=
-    (xmd_2435) *% (ymn_2436) in 
-  let yn_2441 : ed25519_field_element_t :=
-    (xmn_2434) -% (xmd_2435) in 
-  let yd_2442 : ed25519_field_element_t :=
-    (xmn_2434) +% (xmd_2435) in 
-  let tv1_2443 : ed25519_field_element_t :=
-    (xd_2440) *% (yd_2442) in 
-  let e_2444 : bool :=
-    (tv1_2443) =.? (zero_2430) in 
-  let xn_2445 : ed25519_field_element_t :=
-    cmov (xn_2439) (zero_2430) (e_2444) in 
-  let xd_2446 : ed25519_field_element_t :=
-    cmov (xd_2440) (one_2431) (e_2444) in 
-  let yn_2447 : ed25519_field_element_t :=
-    cmov (yn_2441) (one_2431) (e_2444) in 
-  let yd_2448 : ed25519_field_element_t :=
-    cmov (yd_2442) (one_2431) (e_2444) in 
-  let x_2449 : ed25519_field_element_t :=
-    (xn_2445) *% (nat_mod_inv (xd_2446)) in 
-  let y_2450 : ed25519_field_element_t :=
-    (yn_2447) *% (nat_mod_inv (yd_2448)) in 
-  (x_2449, y_2450, one_2431, (x_2449) *% (y_2450)).
+  let c1_2536 : ed25519_field_element_t :=
+    option_unwrap (sqrt ((zero_2533) -% ((j_2532) +% (two_2535)))) in 
+  let '(xmn_2537, xmd_2538, ymn_2539, ymd_2540) :=
+    map_to_curve_elligator2_curve25519 (u_2531) in 
+  let xn_2541 : ed25519_field_element_t :=
+    (xmn_2537) *% (ymd_2540) in 
+  let xn_2542 : ed25519_field_element_t :=
+    (xn_2541) *% (c1_2536) in 
+  let xd_2543 : ed25519_field_element_t :=
+    (xmd_2538) *% (ymn_2539) in 
+  let yn_2544 : ed25519_field_element_t :=
+    (xmn_2537) -% (xmd_2538) in 
+  let yd_2545 : ed25519_field_element_t :=
+    (xmn_2537) +% (xmd_2538) in 
+  let tv1_2546 : ed25519_field_element_t :=
+    (xd_2543) *% (yd_2545) in 
+  let e_2547 : bool :=
+    (tv1_2546) =.? (zero_2533) in 
+  let xn_2548 : ed25519_field_element_t :=
+    cmov (xn_2542) (zero_2533) (e_2547) in 
+  let xd_2549 : ed25519_field_element_t :=
+    cmov (xd_2543) (one_2534) (e_2547) in 
+  let yn_2550 : ed25519_field_element_t :=
+    cmov (yn_2544) (one_2534) (e_2547) in 
+  let yd_2551 : ed25519_field_element_t :=
+    cmov (yd_2545) (one_2534) (e_2547) in 
+  let x_2552 : ed25519_field_element_t :=
+    (xn_2548) *% (nat_mod_inv (xd_2549)) in 
+  let y_2553 : ed25519_field_element_t :=
+    (yn_2550) *% (nat_mod_inv (yd_2551)) in 
+  (x_2552, y_2553, one_2534, (x_2552) *% (y_2553)).
 
 Definition map_to_curve_elligator2_edwards
-  (u_2451 : ed25519_field_element_t)
+  (u_2554 : ed25519_field_element_t)
+  
   : ed_point_t :=
-  let st_2452 : (
+  let st_2555 : (
       ed25519_field_element_t '×
       ed25519_field_element_t '×
       ed25519_field_element_t '×
       ed25519_field_element_t
     ) :=
-    map_to_curve_elligator2 (u_2451) in 
-  curve25519_to_edwards25519 (st_2452).
+    map_to_curve_elligator2 (u_2554) in 
+  curve25519_to_edwards25519 (st_2555).
 
 Definition ed_encode_to_curve
-  (msg_2453 : byte_seq)
-  (dst_2454 : byte_seq)
+  (msg_2556 : byte_seq)
+  (dst_2557 : byte_seq)
+  
   : ed_point_result_t :=
-  bind (ed_hash_to_field (msg_2453) (dst_2454) (usize 1)) (fun u_2455 =>
-    let q_2456 : (
+  bind (ed_hash_to_field (msg_2556) (dst_2557) (usize 1)) (fun u_2558 =>
+    let q_2559 : (
         ed25519_field_element_t '×
         ed25519_field_element_t '×
         ed25519_field_element_t '×
         ed25519_field_element_t
       ) :=
-      map_to_curve_elligator2_edwards (seq_index (u_2455) (usize 0)) in 
-    @Ok ed_point_t error_t (ed_clear_cofactor (q_2456))).
+      map_to_curve_elligator2_edwards (seq_index (u_2558) (usize 0)) in 
+    @Ok ed_point_t error_t (ed_clear_cofactor (q_2559))).
 
