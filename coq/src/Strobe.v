@@ -37,6 +37,7 @@ Notation "'strobe_t'" := ((state_uint8_t '× int8 '× int8 '× int8
 
 Definition transmute_state_to_u64
   (state_986 : state_uint8_t)
+  
   : state_uint64_t :=
   let new_state_987 : state_t :=
     array_new_ (default : uint64) (25) in 
@@ -57,7 +58,10 @@ Definition transmute_state_to_u64
     new_state_987 in 
   new_state_987.
 
-Definition transmute_state_to_u8 (state_991 : state_uint64_t) : state_uint8_t :=
+Definition transmute_state_to_u8
+  (state_991 : state_uint64_t)
+  
+  : state_uint8_t :=
   let new_state_992 : state_uint8_t :=
     array_new_ (default : uint8) (200) in 
   let new_state_992 :=
@@ -75,7 +79,7 @@ Definition transmute_state_to_u8 (state_991 : state_uint64_t) : state_uint8_t :=
     new_state_992 in 
   new_state_992.
 
-Definition run_f (strobe_996 : strobe_t) : strobe_t :=
+Definition run_f (strobe_996 : strobe_t)  : strobe_t :=
   let '(state_997, pos_998, pos_begin_999, cur_fl_1000) :=
     strobe_996 in 
   let state_997 :=
@@ -99,7 +103,11 @@ Definition run_f (strobe_996 : strobe_t) : strobe_t :=
     @repr WORDSIZE8 0 in 
   (state_997, pos_998, pos_begin_999, cur_fl_1000).
 
-Definition absorb (strobe_1002 : strobe_t) (data_1003 : seq uint8) : strobe_t :=
+Definition absorb
+  (strobe_1002 : strobe_t)
+  (data_1003 : seq uint8)
+  
+  : strobe_t :=
   let '(state_1004, pos_1005, pos_begin_1006, cur_fl_1007) :=
     strobe_1002 in 
   let '(state_1004, pos_1005, pos_begin_1006, cur_fl_1007) :=
@@ -143,6 +151,7 @@ Definition absorb (strobe_1002 : strobe_t) (data_1003 : seq uint8) : strobe_t :=
 Definition squeeze
   (strobe_1013 : strobe_t)
   (data_1014 : seq uint8)
+  
   : (strobe_t '× seq uint8) :=
   let '(state_1015, pos_1016, pos_begin_1017, cur_fl_1018) :=
     strobe_1013 in 
@@ -190,6 +199,7 @@ Definition begin_op
   (strobe_1024 : strobe_t)
   (flags_1025 : int8)
   (more_1026 : bool)
+  
   : strobe_t :=
   let '(state_1027, pos_1028, pos_begin_1029, cur_fl_1030) :=
     strobe_1024 in 
@@ -238,7 +248,7 @@ Definition begin_op
       )) in 
   ret_1031.
 
-Definition new_strobe (protocol_label_1039 : seq uint8) : strobe_t :=
+Definition new_strobe (protocol_label_1039 : seq uint8)  : strobe_t :=
   let st_1040 : state_uint8_t :=
     array_new_ (default : uint8) (200) in 
   let st_1040 :=
@@ -279,6 +289,7 @@ Definition meta_ad
   (strobe_1042 : strobe_t)
   (data_1043 : seq uint8)
   (more_1044 : bool)
+  
   : strobe_t :=
   let strobe_1042 :=
     begin_op (strobe_1042) ((flag_m_v) .| (flag_a_v)) (more_1044) in 
@@ -288,6 +299,7 @@ Definition ad
   (strobe_1045 : strobe_t)
   (data_1046 : seq uint8)
   (more_1047 : bool)
+  
   : strobe_t :=
   let strobe_1045 :=
     begin_op (strobe_1045) (flag_a_v) (more_1047) in 
@@ -297,6 +309,7 @@ Definition prf
   (strobe_1048 : strobe_t)
   (data_1049 : seq uint8)
   (more_1050 : bool)
+  
   : (strobe_t '× seq uint8) :=
   let strobe_1048 :=
     begin_op (strobe_1048) (((flag_i_v) .| (flag_a_v)) .| (flag_c_v)) (

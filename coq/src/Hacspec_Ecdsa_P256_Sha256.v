@@ -32,11 +32,14 @@ Notation "'check_result_t'" := ((result unit error_t)) : hacspec_scope.
 
 Notation "'arithmetic_result_t'" := ((result affine_t error_t)) : hacspec_scope.
 
-Definition check_scalar_zero (r_527 : p256_scalar_t) : check_result_t :=
+Definition check_scalar_zero (r_527 : p256_scalar_t)  : check_result_t :=
   (if (nat_mod_equal (r_527) (nat_mod_zero )):bool then (@Err unit error_t (
         InvalidScalar)) else (@Ok unit error_t (tt))).
 
-Definition ecdsa_point_mul_base (x_528 : p256_scalar_t) : arithmetic_result_t :=
+Definition ecdsa_point_mul_base
+  (x_528 : p256_scalar_t)
+  
+  : arithmetic_result_t :=
   match p256_point_mul_base (x_528) with
   | Ok (s_529) => @Ok affine_t error_t (s_529)
   | Err (_) => @Err affine_t error_t (InvalidScalar)
@@ -45,6 +48,7 @@ Definition ecdsa_point_mul_base (x_528 : p256_scalar_t) : arithmetic_result_t :=
 Definition ecdsa_point_mul
   (k_530 : p256_scalar_t)
   (p_531 : affine_t)
+  
   : arithmetic_result_t :=
   match p256_point_mul (k_530) (p_531) with
   | Ok (s_532) => @Ok affine_t error_t (s_532)
@@ -54,6 +58,7 @@ Definition ecdsa_point_mul
 Definition ecdsa_point_add
   (p_533 : affine_t)
   (q_534 : affine_t)
+  
   : arithmetic_result_t :=
   match point_add (p_533) (q_534) with
   | Ok (s_535) => @Ok affine_t error_t (s_535)
@@ -64,6 +69,7 @@ Definition sign
   (payload_536 : byte_seq)
   (sk_537 : p256_secret_key_t)
   (nonce_538 : p256_scalar_t)
+  
   : p256_signature_result_t :=
   bind (check_scalar_zero (nonce_538)) (fun _ => bind (ecdsa_point_mul_base (
         nonce_538)) (fun '(k_x_539, k_y_540) => let r_541 : p256_scalar_t :=
@@ -89,6 +95,7 @@ Definition ecdsa_p256_sha256_sign
   (payload_548 : byte_seq)
   (sk_549 : p256_secret_key_t)
   (nonce_550 : p256_scalar_t)
+  
   : p256_signature_result_t :=
   sign (payload_548) (sk_549) (nonce_550).
 
@@ -96,6 +103,7 @@ Definition verify
   (payload_551 : byte_seq)
   (pk_552 : p256_public_key_t)
   (signature_553 : p256_signature_t)
+  
   : p256_verify_result_t :=
   let '(r_554, s_555) :=
     signature_553 in 
@@ -123,6 +131,7 @@ Definition ecdsa_p256_sha256_verify
   (payload_566 : byte_seq)
   (pk_567 : p256_public_key_t)
   (signature_568 : p256_signature_t)
+  
   : p256_verify_result_t :=
   verify (payload_566) (pk_567) (signature_568).
 

@@ -8,7 +8,7 @@ Open Scope bool_scope.
 Open Scope hacspec_scope.
 Require Import Hacspec_Lib.
 
-Definition build_irreducible (p_1256 : uint_size) : seq int128 :=
+Definition build_irreducible (p_1256 : uint_size)  : seq int128 :=
   let irr_1257 : seq int128 :=
     seq_new_ (default : int128) ((p_1256) + (usize 1)) in 
   let irr_1257 :=
@@ -19,7 +19,11 @@ Definition build_irreducible (p_1256 : uint_size) : seq int128 :=
     seq_upd irr_1257 (p_1256) (@repr WORDSIZE128 1) in 
   irr_1257.
 
-Definition round_to_3 (poly_1258 : seq int128) (q_1259 : int128) : seq int128 :=
+Definition round_to_3
+  (poly_1258 : seq int128)
+  (q_1259 : int128)
+  
+  : seq int128 :=
   let result_1260 : seq int128 :=
     (poly_1258) in 
   let q_12_1261 : int128 :=
@@ -58,6 +62,7 @@ Definition encrypt
   (h_1265 : seq int128)
   (q_1266 : int128)
   (irreducible_1267 : seq int128)
+  
   : seq int128 :=
   let pre_1268 : seq int128 :=
     mul_poly_irr (r_1264) (h_1265) (irreducible_1267) (q_1266) in 
@@ -66,6 +71,7 @@ Definition encrypt
 Definition ntru_prime_653_encrypt
   (r_1269 : seq int128)
   (h_1270 : seq int128)
+  
   : seq int128 :=
   let p_1271 : uint_size :=
     usize 653 in 
@@ -81,6 +87,7 @@ Definition ntru_prime_653_decrypt
   (c_1275 : seq int128)
   (key_f_1276 : seq int128)
   (key_v_1277 : seq int128)
+  
   : (seq int128 '× bool) :=
   let p_1278 : uint_size :=
     usize 653 in 
