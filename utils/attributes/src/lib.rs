@@ -43,7 +43,8 @@ macro_rules! declare_attribute {
             let func = parse_macro_input!(item as ItemFn);
             let mut attr_args_iter = attr.into_iter();
             let _impl_type_name: Option<String> =
-                attr_args_iter.next().map(|arg| format!("{}", arg));
+                attr_args_iter.next().map(|arg| "" // format!("{}", arg)
+                );
             let _is_generic: bool = attr_args_iter.next().map_or(false, |_| {
                 let _ = attr_args_iter.next().expect("Error 7");
                 true

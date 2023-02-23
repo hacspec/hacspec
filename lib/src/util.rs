@@ -8,7 +8,10 @@ use core::num::ParseIntError;
 
 use alloc::vec::Vec;
 
+use creusot_contracts::trusted;
+
 #[cfg_attr(feature = "use_attributes", not_hacspec)]
+#[trusted]
 pub fn hex_string_to_bytes(s: &str) -> Vec<u8> {
     debug_assert!(s.len() % 2 == 0);
     let b: Result<Vec<u8>, ParseIntError> = (0..s.len())
@@ -19,6 +22,7 @@ pub fn hex_string_to_bytes(s: &str) -> Vec<u8> {
 }
 
 #[cfg_attr(feature = "use_attributes", not_hacspec)]
+#[trusted]
 pub fn to_array<A, T>(slice: &[T]) -> A
 where
     A: Default + AsMut<[T]>,
