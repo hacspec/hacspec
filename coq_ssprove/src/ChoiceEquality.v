@@ -205,7 +205,6 @@ Instance package_both {L I} {x y z} (pkg : both_package L I ((x, (y, z)) :: nil)
 Proof.
   destruct pkg as [pure state eq_proof].
   pose (o := (x, (y, z)) : opsigCE).
-  Check pack_eq_proof_statement.
   refine {| is_pure := pure o (List.in_eq _ _) args ;
            is_state := {code get_op_default state (opsigCE_opsig o) (args) #with valid_get_op_default _ _ _ state (opsigCE_opsig o) (args) _ (pack_helper (List.in_eq _ _)) } |}.
   apply eq_proof.
@@ -754,6 +753,17 @@ Ltac solve_post_from_pre :=
            | intros ? ?
              ; solve_heap_ignore_remove_set_heap ] )).
 
+Corollary better_r :
+  forall {A B : choice.Choice.type}
+    (r₀ : raw_code A)
+    (r₁ : raw_code B) (pre : precond)
+    (post : postcond (choice.Choice.sort A) (choice.Choice.sort B)),
+    ⊢ ⦃ fun '(s₀, s₁) => pre (s₀, s₁) ⦄ r₀ ≈ r₁ ⦃ post ⦄ <->
+      ⊢ ⦃ pre ⦄ r₀ ≈ r₁ ⦃ post ⦄.
+Proof.
+  split ; intros ; (eapply rpre_hypothesis_rule ; intros ; eapply rpre_weaken_rule ; [ apply H | intros ? ? [] ; subst ; easy ]).
+Qed.
+
 Corollary better_r_put_lhs : forall {A B : choice.Choice.type} (ℓ : Location)
        (v : choice.Choice.sort (Value (projT1 ℓ))) (r₀ : raw_code A)
        (r₁ : raw_code B) (pre : precond)
@@ -761,16 +771,20 @@ Corollary better_r_put_lhs : forall {A B : choice.Choice.type} (ℓ : Location)
      ⊢ ⦃ set_lhs ℓ v pre ⦄ r₀ ≈ r₁ ⦃ post ⦄ ->
      ⊢ ⦃ pre ⦄ #put ℓ := v ;; r₀ ≈ r₁ ⦃ post ⦄.
 Proof.
-  intros.
-  replace (pre) with (fun '(x, y) => pre (x, y)).
-  apply r_put_lhs.
-  apply H.
-  apply functional_extensionality.
-  intros [].
-  reflexivity.
+  intros ; now apply better_r, r_put_lhs, better_r.
 Qed.
 
-Corollary better_r_put_get : forall (A : choice.Choice.type) (ℓ : Location) (v : choice.Choice.sort ℓ) (r : choice.Choice.sort ℓ -> raw_code A) rhs (pre : precond) (post : postcond (choice.Choice.sort A) (choice.Choice.sort A)),
+Corollary better_r_put_rhs : forall {A B : choice.Choice.type} (ℓ : Location)
+                               (v : choice.Choice.sort (Value (projT1 ℓ))) (r₀ : raw_code A)
+                               (r₁ : raw_code B) (pre : precond)
+                               (post : postcond (choice.Choice.sort A) (choice.Choice.sort B)),
+    ⊢ ⦃ set_rhs ℓ v pre ⦄ r₀ ≈ r₁ ⦃ post ⦄ ->
+    ⊢ ⦃ pre ⦄ r₀ ≈ #put ℓ := v ;; r₁ ⦃ post ⦄.
+Proof.
+  intros ; now apply better_r, r_put_rhs, better_r.
+Qed.
+
+Corollary better_r_put_get_lhs : forall (A : choice.Choice.type) (B : choice.Choice.type) (ℓ : Location) (v : choice.Choice.sort ℓ) (r : choice.Choice.sort ℓ -> raw_code A) rhs (pre : precond) (post : postcond (choice.Choice.sort A) (choice.Choice.sort B)),
     ⊢ ⦃ pre ⦄
      #put ℓ := v ;;
      r v ≈ rhs ⦃ post ⦄ ->
@@ -785,6 +799,23 @@ Proof.
   apply H.
 Qed.
 
+Corollary better_r_put_get_rhs : forall (A : choice.Choice.type) (B : choice.Choice.type) (ℓ : Location) (v : choice.Choice.sort ℓ) (r : choice.Choice.sort ℓ -> raw_code B) lhs (pre : precond) (post : postcond (choice.Choice.sort A) (choice.Choice.sort B)),
+    ⊢ ⦃ pre ⦄
+        lhs ≈
+        #put ℓ := v ;;
+        r v ⦃ post ⦄ ->
+    ⊢ ⦃ pre ⦄
+        lhs ≈
+        #put ℓ := v ;;
+        x ← get ℓ ;;
+        r x ⦃ post ⦄.
+Proof.
+  intros.
+  apply (r_transR _ (#put ℓ := v ;; r v )).
+  apply r_put_get.
+  apply H.
+Qed.
+
 Corollary better_r_get_remind_lhs : forall {A B : choice.Choice.type} (ℓ : Location)
        (v : choice.Choice.sort (Value (projT1 ℓ)))
        (r₀ : choice.Choice.sort (Value (projT1 ℓ)) -> raw_code A) (r₁ : raw_code B)
@@ -794,13 +825,11 @@ Corollary better_r_get_remind_lhs : forall {A B : choice.Choice.type} (ℓ : Loc
      ⊢ ⦃ pre ⦄ x ← get ℓ ;; r₀ x ≈ r₁ ⦃ post ⦄.
 Proof.
   intros.
-  replace (pre) with (fun '(x, y) => pre (x, y)) in *.
+  apply better_r.
   eapply r_get_remind_lhs.
   apply H.
+  apply better_r.
   apply H0.
-  apply functional_extensionality.
-  intros [].
-  reflexivity.
 Qed.
 
 Lemma isolate_mem_sectiongetr_set_lhs :

@@ -252,7 +252,10 @@ pub(crate) fn translate_binop<'a, 'b>(
         (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
             op_prefix.append(RcDoc::as_string("/"))
         }
-        (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
+        (BinOpKind::Rem, BaseTyp::Usize) => {
+            RcDoc::as_string(".%")
+        }
+        (BinOpKind::Rem, BaseTyp::Isize) => {
             RcDoc::as_string("%%")
         }
         (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("usize_shift_left"),
@@ -286,7 +289,6 @@ pub(crate) fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
     }
 }
 
-// taken from rustspec_to_fstar
 pub(crate) fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match &(t.1).0 {
         BaseTyp::Seq(_) => RcDoc::as_string("seq"),
@@ -313,15 +315,13 @@ pub(crate) fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'
     }
 }
 
-// taken from rustspec_to_fstar
 pub(crate) fn add_ok_if_result(
     stmt: Statement,
     carrier: Fillable<CarrierTyp>,
-    // question_mark: Option<ScopeMutableVars>,
 ) -> Spanned<Statement> {
     (
         match carrier {
-            Some(ert) // if question_mark.is_some()
+            Some(ert)
                 =>
             // If b has an early return, then we must prefix the returned
             // mutated variables by Ok or Some
