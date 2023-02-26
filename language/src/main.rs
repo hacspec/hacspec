@@ -846,7 +846,7 @@ fn read_crate(package: Package, args: &mut Vec<String>, callbacks: &mut HacspecC
             p.crate_types.contains(&"lib".to_string())
                 || p.crate_types.contains(&"rlib".to_string())
         })
-        .expect(&format!(" ⚠️  No target in the Cargo.toml\n\n{}", APP_USAGE));
+        .expect(&format!(" ⚠️  Cannot find lib target for package `{}`\n\n{}", package.name, APP_USAGE));
 
     // Add the target source file to the arguments
     args.push(target.src_path.clone());
