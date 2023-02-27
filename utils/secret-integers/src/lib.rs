@@ -270,6 +270,7 @@ macro_rules! define_secret_integer {
                 temp.flatten().collect()
             }
 
+            #[trusted]
             pub fn from_be_bytes(bytes: &[U8]) -> Vec<$name> {
                 assert!(bytes.len() % ($bits/8) == 0);
 

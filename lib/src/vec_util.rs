@@ -22,9 +22,12 @@ pub(crate) fn pad<T: Numeric + Copy>(v: &[T], l: usize) -> Vec<T> {
 /// Generate a `Vec<T>` of length `l`, containing the first `l` elements of `v`.
 pub(crate) fn make_fixed_length<T: Numeric + Copy>(v: &[T], l: usize) -> Vec<T> {
     let mut out = vec![T::default(); l];
-    for (a, &b) in out.iter_mut().zip(v.iter()) {
-        *a = b;
+    for i in (0..out.len()) {
+        out[i] = v[i];
     }
+    // for (a, &b) in out.iter_mut().zip(v.iter()) {
+    //     *a = b;
+    // }
     out
 }
 
@@ -56,11 +59,13 @@ pub(crate) fn leading_coefficient<T: Numeric + Copy>(x: &[T]) -> (usize, T) {
     let zero = T::default();
     let mut degree: usize = 0;
     let mut coefficient = T::default();
-    for (i, &c) in x.iter().enumerate() {
+    let mut i = 0;
+    for &c in x.iter() {
         if !c.equal(zero) {
             degree = i;
             coefficient = c;
         }
+        i += 1;
     }
     (degree, coefficient)
 }

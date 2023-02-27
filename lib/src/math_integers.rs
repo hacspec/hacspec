@@ -61,7 +61,7 @@ macro_rules! unsigned_public_integer {
         impl UnsignedInteger for $name {}
         impl UnsignedIntegerCopy for $name {}
         impl Integer for $name {
-            const NUM_BITS: usize = $n;
+            fn NUM_BITS() -> usize { $n }
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -120,15 +120,15 @@ macro_rules! unsigned_public_integer {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
         }
         impl ModNumeric for $name {
@@ -602,7 +602,7 @@ macro_rules! signed_integer {
 
         impl NumericCopy for $name {}
         impl Integer for $name {
-            const NUM_BITS: usize = $n;
+            fn NUM_BITS() -> usize { $n }
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -666,15 +666,15 @@ macro_rules! signed_integer {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
         }
         impl ModNumeric for $name {
@@ -846,7 +846,7 @@ macro_rules! nat_mod {
 
         impl NumericCopy for $name {}
         impl Integer for $name {
-            const NUM_BITS: usize = $bits;
+            fn NUM_BITS() -> usize { $bits }
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -905,15 +905,15 @@ macro_rules! nat_mod {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
         }
         impl UnsignedInteger for $name {}
@@ -1166,7 +1166,7 @@ macro_rules! public_nat_mod {
         impl UnsignedInteger for $name {}
         impl UnsignedIntegerCopy for $name {}
         impl Integer for $name {
-            const NUM_BITS: usize = $bits;
+            fn NUM_BITS() -> usize { $bits }
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -1225,15 +1225,15 @@ macro_rules! public_nat_mod {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
         }
         impl ModNumeric for $name {

@@ -103,9 +103,12 @@ fn divstepsx<T: Integer + Copy>(
 /// Divide a by x assuming a is a multiple of x (shift right by one)
 fn poly_divx<T: Numeric + Copy>(v: &[T]) -> Vec<T> {
     let mut out = vec![T::default(); v.len() - 1];
-    for (a, &b) in out.iter_mut().zip(v.iter().skip(1)) {
-        *a = b;
+    for i in (0..out.len()) {
+        out[i] = v[i+1];
     }
+    // for (a, &b) in out.iter_mut().zip(v.iter().skip(1)) {
+    //     *a = b;
+    // }
     out
 }
 
