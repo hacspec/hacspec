@@ -164,7 +164,7 @@ pub trait Numeric:
     + Shl<usize, Output = Self>
     + Shr<usize, Output = Self>
     + Not<Output = Self>
-    + Default
+    + creusot_contracts::Default
     + Clone
     // + Debug
 {

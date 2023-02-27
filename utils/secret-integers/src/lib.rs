@@ -80,6 +80,8 @@ use alloc::vec::Vec;
 use core::num::Wrapping;
 use core::ops::*;
 
+use creusot_contracts::pearlite;
+use creusot_contracts::predicate;
 use creusot_contracts::trusted;
 
 macro_rules! define_wrapping_op {
@@ -89,6 +91,7 @@ macro_rules! define_wrapping_op {
         impl $op_name for $name {
             type Output = Self;
             #[inline]
+            #[trusted]
             fn $func_op(self, rhs: Self) -> Self {
                 let $name(i1) = self;
                 let $name(i2) = rhs;
@@ -158,6 +161,7 @@ macro_rules! define_shift {
         impl $op_name<usize> for $name {
             type Output = Self;
             #[inline]
+            #[trusted]
             fn $func_op(self, rhs: usize) -> Self {
                 let $name(i1) = self;
                 $name(i1.$wrapop(rhs as u32))
@@ -175,11 +179,20 @@ macro_rules! define_shift {
 
 macro_rules! define_secret_integer {
     ($name:ident, $repr:ty, $bits:tt) => {
-        #[derive(Clone, Copy)] // , Default
+        #[derive(Clone, Copy, creusot_contracts::std::default::Default)]
         pub struct $name(pub $repr);
+
+        impl creusot_contracts::Default for $name {
+            #[predicate]
+            fn is_default(self) -> bool {
+                // TODO implement correctly!
+                pearlite! { <$repr>::is_default(self.0) }
+            }
+        }
 
         impl $name {
             #[inline]
+            #[trusted]
             pub fn classify<T : Into<$repr>>(x: T) -> Self {
                 $name(x.into())
             }
@@ -205,58 +218,120 @@ macro_rules! define_secret_integer {
                 !Self::zero()
             }
 
-        //     // pub fn from_le_bytes(bytes: &[U8]) -> Vec<$name> {
-        //     //     assert!(bytes.len() % ($bits/8) == 0);
-        //     //     bytes.chunks($bits/8).map(|chunk| {
-        //     //         let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
-        //     //         for i in 0..$bits/8 {
-        //     //             chunk_raw[i] = U8::declassify(chunk[i]);
-        //     //         }
-        //     //         $name::classify(unsafe {
-        //     //             core::mem::transmute::<[u8;$bits/8], $repr>(
-        //     //                 chunk_raw
-        //     //             ).to_le()
-        //     //         })
-        //     //     }).collect::<Vec<$name>>()
-        //     // }
+            #[trusted]
+            pub fn from_le_bytes(bytes: &[U8]) -> Vec<$name> {
+                assert!(bytes.len() % ($bits/8) == 0);
 
-        //     // pub fn to_le_bytes(ints: &[$name]) -> Vec<U8> {
-        //     //     ints.iter().map(|int| {
-        //     //         let int = $name::declassify(*int);
-        //     //         let bytes : [u8;$bits/8] = unsafe {
-        //     //              core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_le())
-        //     //         };
-        //     //         let secret_bytes : Vec<U8> = bytes.iter().map(|x| U8::classify(*x)).collect();
-        //     //         secret_bytes
-        //     //     }).flatten().collect()
-        //     // }
+                let mut temp : Vec<$name> = Vec::new();
+                for i in 0..(bytes.len() / ($bits/8)) {
+                    let mut chunk_raw : [u8; $bits/8] = unsafe {
+                         core::mem::transmute::<$repr, [u8;$bits/8]>(0)
+                    };
+                    for j in 0..$bits/8 {
+                        chunk_raw[j] = U8::declassify(bytes[i*($bits/8)+j]);
+                    }
+                    temp.push($name::classify(
+                        #[trusted]
+                        unsafe {
+                        core::mem::transmute::<[u8;$bits/8], $repr>(
+                            chunk_raw
+                        ).to_le()
+                    }))
+                }
+                temp
+                // bytes.chunks($bits/8).map(|chunk| {
+                //     let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
+                //     for i in 0..$bits/8 {
+                //         chunk_raw[i] = U8::declassify(chunk[i]);
+                //     }
+                //     $name::classify(unsafe {
+                //         core::mem::transmute::<[u8;$bits/8], $repr>(
+                //             chunk_raw
+                //         ).to_le()
+                //     })
+                // }).collect::<Vec<$name>>()
+            }
 
-        //     // pub fn from_be_bytes(bytes: &[U8]) -> Vec<$name> {
-        //     //     assert!(bytes.len() % ($bits/8) == 0);
-        //     //     bytes.chunks($bits/8).map(|chunk| {
-        //     //         let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
-        //     //         for i in 0..$bits/8 {
-        //     //             chunk_raw[i] = U8::declassify(chunk[i]);
-        //     //         }
-        //     //         $name::classify(unsafe {
-        //     //             core::mem::transmute::<[u8;$bits/8], $repr>(
-        //     //                 chunk_raw
-        //     //             ).to_be()
-        //     //         })
-        //     //     }).collect::<Vec<$name>>()
-        //     // }
+            #[trusted]
+            pub fn to_le_bytes(ints: &[$name]) -> Vec<U8> {
+                let temp = ints.iter().map(|int| {
+                    let int = $name::declassify(*int);
+                    let bytes : [u8;$bits/8] = unsafe {
+                        core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_le())
+                    };
+                    let mut secret_bytes : Vec<U8> = Vec::new();
+                    for i in 1..$bits/8 {
+                        secret_bytes.push(U8::classify(bytes[i]));
+                    }
+                    // let secret_bytes : Vec<U8> =
+                    //     bytes.iter().map(|x| U8::classify(*x)).collect();
+                    secret_bytes
+                });
 
-        //     // pub fn to_be_bytes(ints: &[$name]) -> Vec<U8> {
-        //     //     ints.iter().map(|int| {
-        //     //         let int = $name::declassify(*int);
-        //     //         let bytes : [u8;$bits/8] = unsafe {
-        //     //              core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_be())
-        //     //         };
-        //     //         let secret_bytes : Vec<U8> = bytes.iter().map(|x| U8::classify(*x)).collect();
-        //     //         secret_bytes
-        //     //     }).flatten().collect()
-        //     // }
+                temp.flatten().collect()
+            }
 
+            pub fn from_be_bytes(bytes: &[U8]) -> Vec<$name> {
+                assert!(bytes.len() % ($bits/8) == 0);
+
+                let mut temp : Vec<$name> = Vec::new();
+                for i in 0..(bytes.len() / ($bits/8)) {
+                    let mut chunk_raw : [u8; $bits/8] = unsafe {
+                         core::mem::transmute::<$repr, [u8;$bits/8]>(0)
+                    };
+                    for j in 0..$bits/8 {
+                        chunk_raw[j] = U8::declassify(bytes[i*($bits/8)+j]);
+                    }
+                    temp.push($name::classify(unsafe {
+                        core::mem::transmute::<[u8;$bits/8], $repr>(
+                            chunk_raw
+                        ).to_be()
+                    }))
+                }
+                temp
+
+                // bytes.chunks($bits/8).map(|chunk| {
+                //     let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
+                //     for i in 0..$bits/8 {
+                //         chunk_raw[i] = U8::declassify(chunk[i]);
+                //     }
+                //     $name::classify(unsafe {
+                //         core::mem::transmute::<[u8;$bits/8], $repr>(
+                //             chunk_raw
+                //         ).to_be()
+                //     })
+                // }).collect::<Vec<$name>>()
+            }
+
+            #[trusted]
+            pub fn to_be_bytes(ints: &[$name]) -> Vec<U8> {
+                let temp = ints.iter().map(|int| {
+                    let int = $name::declassify(*int);
+                    let bytes : [u8;$bits/8] = unsafe {
+                         core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_be())
+                    };
+                    let mut secret_bytes : Vec<U8> = Vec::new();
+                    for i in 1..$bits/8 {
+                        secret_bytes.push(U8::classify(bytes[i]));
+                    }
+                    // let secret_bytes : Vec<U8> =
+                    //     bytes.iter().map(|x| U8::classify(*x)).collect();
+                    secret_bytes
+                });
+
+                temp.flatten().collect()
+
+                // ints.iter().map(|int| {
+                //     let int = $name::declassify(*int);
+                //     let bytes : [u8;$bits/8] = unsafe {
+                //          core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_be())
+                //     };
+                //     let secret_bytes : Vec<U8> = bytes.iter().map(|x| U8::classify(*x)).collect();
+                //     secret_bytes
+                // }).flatten().collect()
+            }
+
+            #[trusted]
             pub fn max_value() -> $name {
                 $name::classify(<$repr>::max_value())
             }
@@ -278,12 +353,14 @@ macro_rules! define_secret_integer {
 
         impl $name {
             #[inline]
+            #[trusted]
             pub fn rotate_left(self, rotval:usize) -> Self {
                 let $name(i) = self;
                 $name(i.rotate_left(rotval as u32))
             }
 
             #[inline]
+            #[trusted]
             pub fn rotate_right(self, rotval:usize) -> Self {
                 let $name(i) = self;
                 $name(i.rotate_right(rotval as u32))
@@ -331,6 +408,7 @@ macro_rules! define_secret_unsigned_integer {
         impl Neg for $name {
             type Output = Self;
             #[inline]
+            #[trusted]
             fn neg(self) -> Self {
                 let $name(i1) = self;
                 $name((Wrapping(!i1) + Wrapping(1)).0)
@@ -473,6 +551,7 @@ macro_rules! define_uU_casting {
     ($from:ident, $to:ident, $to_repr:ident, $func_name: ident) => {
         impl From<$from> for $to {
             #[inline]
+            #[trusted]
             fn from(x: $from) -> $to {
                 $to(<$to_repr>::from(x))
             }
@@ -480,6 +559,7 @@ macro_rules! define_uU_casting {
 
         #[inline]
         #[allow(non_snake_case)]
+        #[trusted]
         pub fn $func_name(x: $from) -> $to {
             $to(<$to_repr>::from(x))
         }

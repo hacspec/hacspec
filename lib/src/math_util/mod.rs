@@ -119,7 +119,7 @@ pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool
     }
 
     if r.greater_than(T::ONE()) && !x.equal(T::ZERO()) {
-        panic!("{:x?} is not invertible in ℤ/{:x?}", x, n);
+        panic!(); // panic!("{:x?} is not invertible in ℤ/{:x?}", x, n);
     }
     if t.less_than(T::ZERO()) {
         if signed {

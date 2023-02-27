@@ -8,7 +8,7 @@ members = [
     "utils/evercrypt-provider",
     "utils/secret-integers",
     "utils/abstract-integers",
-    "utils/attributes",
+    # "utils/attributes",
     "utils/rc-bench",
     "utils/rc-tests",
     "utils/util",
@@ -22,7 +22,7 @@ default-members = [
     "utils/derive",
     "utils/secret-integers",
     "utils/abstract-integers",
-    "utils/attributes",
+    # "utils/attributes",
     "utils/util",
     "examples-unsafe",
 ]

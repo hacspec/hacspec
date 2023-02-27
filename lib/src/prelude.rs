@@ -7,17 +7,17 @@
 pub use crate::array::*;
 // pub use crate::bigint_integers::*;
 // pub use crate::buf::*;
-// pub use crate::machine_integers::*;
+pub use crate::machine_integers::*;
 // pub use crate::math_integers::*;
-// pub use crate::math_util::{ct_util::*, *};
+pub use crate::math_util::{ct_util::*, *};
 pub use crate::seq::*;
 pub use crate::traits::*;
 pub use crate::transmute::*;
 pub use crate::util::*;
-// pub use crate::vec_integers::*;
+pub use crate::vec_integers::*;
 // pub use crate::vec_integers_public::*;
 // pub use crate::vec_integers_secret::*;
-// pub(crate) use crate::vec_util::*;
+pub(crate) use crate::vec_util::*;
 pub use crate::*;
 
 pub use abstract_integers::*;
@@ -51,6 +51,9 @@ public_bytes!(u128Word, 16);
 // pub use core::convert::TryFrom; // Allow down-casting of integers.
 
 pub use creusot_contracts::trusted;
+pub use creusot_contracts::predicate;
+pub use creusot_contracts::pearlite;
 pub use creusot_contracts::std::vec::Vec;
+pub use creusot_contracts::std::vec;
 
 pub use core::default::Default;

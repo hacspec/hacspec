@@ -22,7 +22,7 @@ macro_rules! declare_seq {
     };
     ($name:ident) => {
         /// Variable length byte arrays.
-        #[derive(Debug, Clone, Default)]
+        #[derive(Debug, Clone, core::default::Default)]
         pub struct $name<T: Default> {
             pub(crate) b: Vec<T>,
         }
@@ -39,7 +39,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             #[trusted]
             pub fn new(l: usize) -> Self {
                 Self {
-                    b: vec![T::default(); l],
+                    b: creusot_contracts::std::vec![T::default(); l],
                 }
             }
 
@@ -616,8 +616,9 @@ impl Seq<U8> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     #[trusted]
     pub fn to_hex(&self) -> String {
-        let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
-        strs.join("")
+        // let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
+        // strs.join("")
+        "".to_string()
     }
 }
 
@@ -625,8 +626,9 @@ impl PublicSeq<u8> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     #[trusted]
     pub fn to_hex(&self) -> String {
-        let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();
-        strs.join("")
+        // let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();
+        // strs.join("")
+        "".to_string()
     }
 }
 
@@ -634,7 +636,7 @@ impl PublicSeq<u8> {
 macro_rules! public_byte_seq {
     ($( $b:expr ),+) => {
         PublicByteSeq::from_vec(
-            vec![
+            creusot_contracts::std::vec![
                 $(
                     $b
                 ),+
@@ -647,7 +649,7 @@ macro_rules! public_byte_seq {
 macro_rules! byte_seq {
     ($( $b:expr ),+) => {
         ByteSeq::from_vec(
-            vec![
+            creusot_contracts::std::vec![
                 $(
                     U8($b)
                 ),+

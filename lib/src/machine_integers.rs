@@ -80,6 +80,7 @@ macro_rules! implement_public_signed_mi {
             }
             /// `(self ^ exp) % n`
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            #[trusted]
             fn pow_mod(self, exp: Self, n: Self) -> Self {
                 let r_big = BigInt::from(self).modpow(&BigInt::from(exp), &BigInt::from(n));
                 debug_assert!(r_big <= BigInt::from(Self::max_val()));
@@ -146,6 +147,7 @@ macro_rules! implement_public_mi {
             /// Get bit `i` of this integer.
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            #[trusted]
             fn get_bit(self, i: usize) -> Self {
                 (self >> i) & Self::ONE()
             }
@@ -154,6 +156,7 @@ macro_rules! implement_public_mi {
             /// Bit `b` has to be `0` or `1`.
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            #[trusted]
             fn set_bit(self, b: Self, i: usize) -> Self {
                 debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
                 let tmp1 = Self::from_literal(!(1 << i));
@@ -170,6 +173,7 @@ macro_rules! implement_public_mi {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            #[trusted]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
@@ -177,6 +181,7 @@ macro_rules! implement_public_mi {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            #[trusted]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
@@ -458,6 +463,7 @@ macro_rules! implement_secret_mi {
             /// Bit `b` has to be `0` or `1`.
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            #[trusted]
             fn set_bit(self, b: Self, i: usize) -> Self {
                 debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
                 let tmp1 = Self::from_literal(!(1 << i));
@@ -474,6 +480,7 @@ macro_rules! implement_secret_mi {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            #[trusted]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
@@ -481,6 +488,7 @@ macro_rules! implement_secret_mi {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            #[trusted]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);

@@ -208,6 +208,12 @@ macro_rules! _implement_numeric_unsigned_public {
                 self
             }
         }
+        impl creusot_contracts::Default for $name {
+            #[predicate]
+            fn is_default(self) -> bool {
+                pearlite! { true } // TODO
+            }
+        }
         impl Numeric for $name {
             // TODO: decide if we want this.
             /// Return largest value that can be represented.
@@ -475,6 +481,12 @@ macro_rules! _implement_numeric_signed_public {
                 out
             }
         }
+        impl creusot_contracts::Default for $name {
+            #[predicate]
+            fn is_default(self) -> bool {
+                pearlite! { true } // TODO
+            }
+        }
         impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -724,6 +736,12 @@ macro_rules! _implement_numeric_unsigned_secret {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn absolute(self) -> Self {
                 self
+            }
+        }
+        impl creusot_contracts::Default for $name {
+            #[predicate]
+            fn is_default(self) -> bool {
+                pearlite! { true } // TODO
             }
         }
         impl Numeric for $name {
