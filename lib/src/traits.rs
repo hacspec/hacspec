@@ -61,7 +61,8 @@ pub trait SeqTrait<T: Clone>:
 /// types. It offers bit manipulation, instantiation from literal, and convenient
 /// constants.
 pub trait Integer: Numeric {
-    const NUM_BITS: usize;
+    #[trusted]
+    fn NUM_BITS() -> usize;
 
     // Some useful values.
     // Not constants because math integers can't do that.
@@ -164,9 +165,9 @@ pub trait Numeric:
     + Shl<usize, Output = Self>
     + Shr<usize, Output = Self>
     + Not<Output = Self>
-    + Default
+    + CreusotDefault
     + Clone
-    + Debug
+    // + Debug
 {
     /// Return largest value that can be represented.
     fn max_val() -> Self;

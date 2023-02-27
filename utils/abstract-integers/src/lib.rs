@@ -70,5 +70,8 @@ pub use core::ops::*;
 pub use num::{traits, traits::identities::*, CheckedSub, Zero};
 pub use num_bigint::{BigInt, BigUint, Sign};
 
+// extern crate creusot_contracts;
+pub use creusot_contracts::{pearlite, predicate, trusted, Default as CreusotDefault};
+
 pub mod abstract_int;
 pub mod nat_mod;

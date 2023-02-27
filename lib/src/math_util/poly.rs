@@ -6,13 +6,20 @@ pub(crate) fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
-    for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
+    for i in (0..x.len()) {
         if n.equal(T::default()) {
-            *a = b - c;
+            out[i] = x[i] - y[i];
         } else {
-            *a = b.sub_mod(c, n);
+            out[i] = x[i].sub_mod(y[i], n);
         }
     }
+    // for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
+    //     if n.equal(T::default()) {
+    //         *a = b - c;
+    //     } else {
+    //         *a = b.sub_mod(c, n);
+    //     }
+    // }
     out
 }
 
@@ -22,13 +29,20 @@ pub(crate) fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
-    for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
+    for i in (0..x.len()) {
         if n.equal(T::default()) {
-            *a = b + c;
+            out[i] = x[i] + y[i];
         } else {
-            *a = b.add_mod(c, n);
+            out[i] = x[i].add_mod(y[i], n);
         }
     }
+    // for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
+    //     if n.equal(T::default()) {
+    //         *a = b + c;
+    //     } else {
+    //         *a = b.add_mod(c, n);
+    //     }
+    // }
     out
 }
 

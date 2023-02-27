@@ -87,7 +87,7 @@ extern crate alloc;
 extern crate std as alloc;
 
 pub mod array;
-mod bigint_integers;
+// mod bigint_integers;
 mod machine_integers;
 pub mod math_integers;
 mod math_util;
@@ -97,9 +97,9 @@ mod traits;
 mod transmute;
 mod util;
 mod vec_integers;
-mod vec_integers_public;
-mod vec_integers_secret;
+// mod vec_integers_public;
+// mod vec_integers_secret;
 mod vec_util;
-pub mod buf;
+// pub mod buf;
 
 pub use crate::prelude::*;

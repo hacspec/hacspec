@@ -69,7 +69,9 @@ pub fn cmul<T: Integer + Copy>(x: T, y: T, c: T) -> T {
 pub fn ct_div<T: Integer + Copy>(a: T, d: T) -> (T, T) {
     let mut q = T::default();
     let mut r = T::default();
-    for i in (0..T::NUM_BITS).rev() {
+    for j in (0..T::NUM_BITS())// .rev()
+    {
+        let i = T::NUM_BITS() - 1 - j;
         r = r << 1;
         r = r.set(0, a, i);
         // The code below is equivalent to the following.

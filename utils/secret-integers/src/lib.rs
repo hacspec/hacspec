@@ -80,6 +80,10 @@ use alloc::vec::Vec;
 use core::num::Wrapping;
 use core::ops::*;
 
+use creusot_contracts::pearlite;
+use creusot_contracts::predicate;
+use creusot_contracts::trusted;
+
 macro_rules! define_wrapping_op {
     ($name:ident, $op:tt, $op_name:ident, $func_op:ident, $assign_name:ident, $assign_func:ident, $checked_func_op:ident) => {
 
@@ -87,6 +91,7 @@ macro_rules! define_wrapping_op {
         impl $op_name for $name {
             type Output = Self;
             #[inline]
+            #[trusted]
             fn $func_op(self, rhs: Self) -> Self {
                 let $name(i1) = self;
                 let $name(i2) = rhs;
@@ -100,7 +105,7 @@ macro_rules! define_wrapping_op {
                 let $name(i1) = self;
                 let $name(i2) = rhs;
                 match i1.$checked_func_op(i2) {
-                    None => panic!("Secret integer {} overflow!", stringify!($func_op)),
+                    None => panic!(), // panic!("Secret integer {} overflow!", stringify!($func_op)),
                     Some(r) => $name(r)
                 }
             }
@@ -121,6 +126,7 @@ macro_rules! define_bitwise_op {
         impl $op_name for $name {
             type Output = Self;
             #[inline]
+            #[trusted]
             fn $func_op(self, rhs: Self) -> Self {
                 let $name(i1) = self;
                 let $name(i2) = rhs;
@@ -155,6 +161,7 @@ macro_rules! define_shift {
         impl $op_name<usize> for $name {
             type Output = Self;
             #[inline]
+            #[trusted]
             fn $func_op(self, rhs: usize) -> Self {
                 let $name(i1) = self;
                 $name(i1.$wrapop(rhs as u32))
@@ -172,11 +179,20 @@ macro_rules! define_shift {
 
 macro_rules! define_secret_integer {
     ($name:ident, $repr:ty, $bits:tt) => {
-        #[derive(Clone, Copy, Default)]
+        #[derive(Clone, Copy, creusot_contracts::std::default::Default)]
         pub struct $name(pub $repr);
+
+        impl creusot_contracts::Default for $name {
+            #[predicate]
+            fn is_default(self) -> bool {
+                // TODO implement correctly!
+                pearlite! { <$repr>::is_default(self.0) }
+            }
+        }
 
         impl $name {
             #[inline]
+            #[trusted]
             pub fn classify<T : Into<$repr>>(x: T) -> Self {
                 $name(x.into())
             }
@@ -202,58 +218,120 @@ macro_rules! define_secret_integer {
                 !Self::zero()
             }
 
+            #[trusted]
             pub fn from_le_bytes(bytes: &[U8]) -> Vec<$name> {
                 assert!(bytes.len() % ($bits/8) == 0);
-                bytes.chunks($bits/8).map(|chunk| {
-                    let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
-                    for i in 0..$bits/8 {
-                        chunk_raw[i] = U8::declassify(chunk[i]);
+
+                let mut temp : Vec<$name> = Vec::new();
+                for i in 0..(bytes.len() / ($bits/8)) {
+                    let mut chunk_raw : [u8; $bits/8] = unsafe {
+                        creusot_contracts::std::mem::transmute::<$repr, [u8;$bits/8]>(0)
+                    };
+                    for j in 0..$bits/8 {
+                        chunk_raw[j] = U8::declassify(bytes[i*($bits/8)+j]);
                     }
-                    $name::classify(unsafe {
-                        core::mem::transmute::<[u8;$bits/8], $repr>(
+                    temp.push($name::classify(
+                        unsafe {
+                        creusot_contracts::std::mem::transmute::<[u8;$bits/8], $repr>(
                             chunk_raw
                         ).to_le()
-                    })
-                }).collect::<Vec<$name>>()
+                    }))
+                }
+                temp
+                // bytes.chunks($bits/8).map(|chunk| {
+                //     let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
+                //     for i in 0..$bits/8 {
+                //         chunk_raw[i] = U8::declassify(chunk[i]);
+                //     }
+                //     $name::classify(unsafe {
+                //         core::mem::transmute::<[u8;$bits/8], $repr>(
+                //             chunk_raw
+                //         ).to_le()
+                //     })
+                // }).collect::<Vec<$name>>()
             }
 
+            #[trusted]
             pub fn to_le_bytes(ints: &[$name]) -> Vec<U8> {
-                ints.iter().map(|int| {
+                let temp = ints.iter().map(|int| {
                     let int = $name::declassify(*int);
                     let bytes : [u8;$bits/8] = unsafe {
-                         core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_le())
+                        core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_le())
                     };
-                    let secret_bytes : Vec<U8> = bytes.iter().map(|x| U8::classify(*x)).collect();
+                    let mut secret_bytes : Vec<U8> = Vec::new();
+                    for i in 1..$bits/8 {
+                        secret_bytes.push(U8::classify(bytes[i]));
+                    }
+                    // let secret_bytes : Vec<U8> =
+                    //     bytes.iter().map(|x| U8::classify(*x)).collect();
                     secret_bytes
-                }).flatten().collect()
+                });
+
+                temp.flatten().collect()
             }
 
+            #[trusted]
             pub fn from_be_bytes(bytes: &[U8]) -> Vec<$name> {
                 assert!(bytes.len() % ($bits/8) == 0);
-                bytes.chunks($bits/8).map(|chunk| {
-                    let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
-                    for i in 0..$bits/8 {
-                        chunk_raw[i] = U8::declassify(chunk[i]);
+
+                let mut temp : Vec<$name> = Vec::new();
+                for i in 0..(bytes.len() / ($bits/8)) {
+                    let mut chunk_raw : [u8; $bits/8] = unsafe {
+                         core::mem::transmute::<$repr, [u8;$bits/8]>(0)
+                    };
+                    for j in 0..$bits/8 {
+                        chunk_raw[j] = U8::declassify(bytes[i*($bits/8)+j]);
                     }
-                    $name::classify(unsafe {
+                    temp.push($name::classify(unsafe {
                         core::mem::transmute::<[u8;$bits/8], $repr>(
                             chunk_raw
                         ).to_be()
-                    })
-                }).collect::<Vec<$name>>()
+                    }))
+                }
+                temp
+
+                // bytes.chunks($bits/8).map(|chunk| {
+                //     let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
+                //     for i in 0..$bits/8 {
+                //         chunk_raw[i] = U8::declassify(chunk[i]);
+                //     }
+                //     $name::classify(unsafe {
+                //         core::mem::transmute::<[u8;$bits/8], $repr>(
+                //             chunk_raw
+                //         ).to_be()
+                //     })
+                // }).collect::<Vec<$name>>()
             }
 
+            #[trusted]
             pub fn to_be_bytes(ints: &[$name]) -> Vec<U8> {
-                ints.iter().map(|int| {
+                let temp = ints.iter().map(|int| {
                     let int = $name::declassify(*int);
                     let bytes : [u8;$bits/8] = unsafe {
                          core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_be())
                     };
-                    let secret_bytes : Vec<U8> = bytes.iter().map(|x| U8::classify(*x)).collect();
+                    let mut secret_bytes : Vec<U8> = Vec::new();
+                    for i in 1..$bits/8 {
+                        secret_bytes.push(U8::classify(bytes[i]));
+                    }
+                    // let secret_bytes : Vec<U8> =
+                    //     bytes.iter().map(|x| U8::classify(*x)).collect();
                     secret_bytes
-                }).flatten().collect()
+                });
+
+                temp.flatten().collect()
+
+                // ints.iter().map(|int| {
+                //     let int = $name::declassify(*int);
+                //     let bytes : [u8;$bits/8] = unsafe {
+                //          core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_be())
+                //     };
+                //     let secret_bytes : Vec<U8> = bytes.iter().map(|x| U8::classify(*x)).collect();
+                //     secret_bytes
+                // }).flatten().collect()
             }
 
+            #[trusted]
             pub fn max_value() -> $name {
                 $name::classify(<$repr>::max_value())
             }
@@ -275,12 +353,14 @@ macro_rules! define_secret_integer {
 
         impl $name {
             #[inline]
+            #[trusted]
             pub fn rotate_left(self, rotval:usize) -> Self {
                 let $name(i) = self;
                 $name(i.rotate_left(rotval as u32))
             }
 
             #[inline]
+            #[trusted]
             pub fn rotate_right(self, rotval:usize) -> Self {
                 let $name(i) = self;
                 $name(i.rotate_right(rotval as u32))
@@ -294,30 +374,30 @@ macro_rules! define_secret_integer {
         // `Not` has bitwise semantics for integers
         define_unary_op!($name, !, Not, not);
 
-        // Printing integers.
-        impl core::fmt::Display for $name {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                let uint: $repr = self.declassify();
-                write!(f, "{}", uint)
-            }
-        }
-        impl core::fmt::Debug for $name {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                let uint: $repr = self.declassify();
-                write!(f, "{}", uint)
-            }
-        }
-        impl core::fmt::LowerHex for $name {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                let val: $repr = self.declassify();
-                core::fmt::LowerHex::fmt(&val, f)
-            }
-        }
-        // impl Distribution<$name> for Standard {
-        //     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $name {
-        //         $name(rng.gen())
+        // // Printing integers.
+        // impl core::fmt::Display for $name {
+        //     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        //         let uint: $repr = self.declassify();
+        //         write!(f, "{}", uint)
         //     }
         // }
+        // impl core::fmt::Debug for $name {
+        //     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        //         let uint: $repr = self.declassify();
+        //         write!(f, "{}", uint)
+        //     }
+        // }
+        // impl core::fmt::LowerHex for $name {
+        //     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        //         let val: $repr = self.declassify();
+        //         core::fmt::LowerHex::fmt(&val, f)
+        //     }
+        // }
+        // // impl Distribution<$name> for Standard {
+        // //     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $name {
+        // //         $name(rng.gen())
+        // //     }
+        // // }
     }
 }
 
@@ -328,6 +408,7 @@ macro_rules! define_secret_unsigned_integer {
         impl Neg for $name {
             type Output = Self;
             #[inline]
+            #[trusted]
             fn neg(self) -> Self {
                 let $name(i1) = self;
                 $name((Wrapping(!i1) + Wrapping(1)).0)
@@ -340,6 +421,7 @@ macro_rules! define_secret_unsigned_integer {
             /// all zeroes otherwise. With inspiration from
             /// [Wireguard](https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=2e60bb395c1f589a398ec606d611132ef9ef764b).
             #[inline]
+            #[trusted]
             pub fn comp_eq(self, rhs: Self) -> Self {
                 let a = self;
                 let b = rhs;
@@ -362,6 +444,7 @@ macro_rules! define_secret_unsigned_integer {
             /// equal to the second argument, and all zeroes otherwise. With inspiration from
             /// [WireGuard](https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=0a483a9b431d87eca1b275463c632f8d5551978a).
             #[inline]
+            #[trusted]
             pub fn comp_gte(self, rhs: Self) -> Self {
                 let x = self;
                 let y = rhs;
@@ -468,6 +551,7 @@ macro_rules! define_uU_casting {
     ($from:ident, $to:ident, $to_repr:ident, $func_name: ident) => {
         impl From<$from> for $to {
             #[inline]
+            #[trusted]
             fn from(x: $from) -> $to {
                 $to(<$to_repr>::from(x))
             }
@@ -475,6 +559,7 @@ macro_rules! define_uU_casting {
 
         #[inline]
         #[allow(non_snake_case)]
+        #[trusted]
         pub fn $func_name(x: $from) -> $to {
             $to(<$to_repr>::from(x))
         }
@@ -503,6 +588,7 @@ macro_rules! define_Uu_casting {
         /// **Warning:** conversion can be lossy!
         impl From<$from> for $to {
             #[inline]
+            #[trusted]
             fn from(x: $from) -> $to {
                 <$to>::from(x.declassify())
             }
@@ -510,6 +596,7 @@ macro_rules! define_Uu_casting {
 
         /// **Warning:** conversion can be lossy!
         #[inline]
+        #[trusted]
         #[allow(non_snake_case)]
         pub fn $func_name(x: $from) -> $to {
             <$to>::from(x.declassify())

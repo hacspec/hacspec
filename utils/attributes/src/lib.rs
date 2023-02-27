@@ -29,7 +29,10 @@ use std::collections::{HashMap, HashSet};
 #[cfg(feature = "print_attributes")]
 use std::fs::OpenOptions;
 #[cfg(any(feature = "print_attributes", feature = "hacspec_unsafe"))]
-use syn::{parse_macro_input, spanned::Spanned, ItemFn};
+use syn::{
+    parse_macro_input, // spanned::Spanned,
+    ItemFn,
+};
 #[cfg(feature = "print_attributes")]
 const ITEM_LIST_LOCATION: &str = "./allowed_item_list.json";
 
@@ -42,8 +45,9 @@ macro_rules! declare_attribute {
             let item_copy = proc_macro2::TokenStream::from(item.clone());
             let func = parse_macro_input!(item as ItemFn);
             let mut attr_args_iter = attr.into_iter();
-            let _impl_type_name: Option<String> =
-                attr_args_iter.next().map(|arg| format!("{}", arg));
+            let _impl_type_name: Option<String> = attr_args_iter.next().map(
+                |arg| "", // format!("{}", arg)
+            );
             let _is_generic: bool = attr_args_iter.next().map_or(false, |_| {
                 let _ = attr_args_iter.next().expect("Error 7");
                 true
@@ -120,35 +124,36 @@ declare_attribute!(
 
 #[cfg(feature = "hacspec_unsafe")]
 #[proc_macro_attribute]
-pub fn hacspec_unsafe(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let item_copy = item.clone();
-    let func = parse_macro_input!(item_copy as ItemFn);
-    let outside = match attr.into_iter().next() {
-        Some(Ident(arg)) => {
-            if arg.to_string() == "outside" {
-                true
-            } else {
-                false
-            }
-        }
-        Some(_) | None => false,
-    };
-    let msg = if outside {
-        format!("function outside of hacspec")
-    } else {
-        format!("unsafe hacspec function")
-    };
+pub fn hacspec_unsafe(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    // let item_copy = item.clone();
+    // let func = parse_macro_input!(item_copy as ItemFn);
+    // let outside = match attr.into_iter().next() {
+    //     Some(Ident(arg)) => {
+    //         if arg.to_string() == "outside" {
+    //             true
+    //         } else {
+    //             false
+    //         }
+    //     }
+    //     Some(_) | None => false,
+    // };
+    // let msg = if outside {
+    //     format!("function outside of hacspec")
+    // } else {
+    //     format!("unsafe hacspec function")
+    // };
     Diagnostic::new(
         Level::Note,
-        format!("{}: {} {}", msg, format!("{}", func.sig.ident), {
-            let file = func.sig.span().unwrap().source_file().path();
-            let start = func.sig.span().start();
-            format!(
-                "in {}:{}",
-                file.to_str().unwrap(),
-                format!("{}", start.line)
-            )
-        }),
+        "",
+        // format!("{}: {} {}", msg, format!("{}", func.sig.ident), {
+        //     let file = func.sig.span().unwrap().source_file().path();
+        //     let start = func.sig.span().start();
+        //     format!(
+        //         "in {}:{}",
+        //         file.to_str().unwrap(),
+        //         format!("{}", start.line)
+        //     )
+        // }),
     )
     .emit();
     item
