@@ -9,7 +9,7 @@
 //! * Natural Numbers modulo an integer: `nat_mod`, `public_nat_mod`
 //!
 //! ```
-//! use hacspec_lib::prelude::*;
+//! use hacspec_lib::*;
 //! unsigned_integer!(LargeSecretInteger, 233);
 //! let a = LargeSecretInteger::from_literal(1);
 //! let b = LargeSecretInteger::from_literal(2);
