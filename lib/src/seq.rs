@@ -39,7 +39,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             #[trusted]
             pub fn new(l: usize) -> Self {
                 Self {
-                    b: creusot_contracts::std::vec![T::default(); l],
+                    b: vec![T::default(); l],
                 }
             }
 
@@ -636,7 +636,7 @@ impl PublicSeq<u8> {
 macro_rules! public_byte_seq {
     ($( $b:expr ),+) => {
         PublicByteSeq::from_vec(
-            creusot_contracts::std::vec![
+            vec![
                 $(
                     $b
                 ),+
@@ -649,7 +649,7 @@ macro_rules! public_byte_seq {
 macro_rules! byte_seq {
     ($( $b:expr ),+) => {
         ByteSeq::from_vec(
-            creusot_contracts::std::vec![
+            vec![
                 $(
                     U8($b)
                 ),+

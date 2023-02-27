@@ -208,7 +208,7 @@ macro_rules! _implement_numeric_unsigned_public {
                 self
             }
         }
-        impl creusot_contracts::Default for $name {
+        impl CreusotDefault for $name {
             #[predicate]
             fn is_default(self) -> bool {
                 pearlite! { true } // TODO
@@ -481,7 +481,7 @@ macro_rules! _implement_numeric_signed_public {
                 out
             }
         }
-        impl creusot_contracts::Default for $name {
+        impl CreusotDefault for $name {
             #[predicate]
             fn is_default(self) -> bool {
                 pearlite! { true } // TODO
@@ -738,7 +738,7 @@ macro_rules! _implement_numeric_unsigned_secret {
                 self
             }
         }
-        impl creusot_contracts::Default for $name {
+        impl CreusotDefault for $name {
             #[predicate]
             fn is_default(self) -> bool {
                 pearlite! { true } // TODO

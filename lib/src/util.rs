@@ -2,13 +2,11 @@
 //! Utility functions for hacspec internally.
 //!
 
-#[cfg(feature = "use_attributes")]
+// #[cfg(feature = "use_attributes")]
 use crate::prelude::*;
 use core::num::ParseIntError;
 
 use alloc::vec::Vec;
-
-use creusot_contracts::trusted;
 
 #[cfg_attr(feature = "use_attributes", not_hacspec)]
 #[trusted]

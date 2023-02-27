@@ -225,15 +225,14 @@ macro_rules! define_secret_integer {
                 let mut temp : Vec<$name> = Vec::new();
                 for i in 0..(bytes.len() / ($bits/8)) {
                     let mut chunk_raw : [u8; $bits/8] = unsafe {
-                         core::mem::transmute::<$repr, [u8;$bits/8]>(0)
+                        creusot_contracts::std::mem::transmute::<$repr, [u8;$bits/8]>(0)
                     };
                     for j in 0..$bits/8 {
                         chunk_raw[j] = U8::declassify(bytes[i*($bits/8)+j]);
                     }
                     temp.push($name::classify(
-                        #[trusted]
                         unsafe {
-                        core::mem::transmute::<[u8;$bits/8], $repr>(
+                        creusot_contracts::std::mem::transmute::<[u8;$bits/8], $repr>(
                             chunk_raw
                         ).to_le()
                     }))

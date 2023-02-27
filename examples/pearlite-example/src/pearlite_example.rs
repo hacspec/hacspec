@@ -3,8 +3,8 @@ extern crate hacspec_lib;
 
 use hacspec_lib::*;
 
-#[cfg(not(feature = "hacspec"))]
-use creusot_contracts::{ensures, requires};
+// #[cfg(not(feature = "hacspec"))]
+// use creusot_contracts::{ensures, requires};
 
 #[requires(x == y)]
 #[ensures(!(result == false))]

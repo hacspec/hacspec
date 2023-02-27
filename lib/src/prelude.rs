@@ -8,7 +8,7 @@ pub use crate::array::*;
 // pub use crate::bigint_integers::*;
 // pub use crate::buf::*;
 pub use crate::machine_integers::*;
-// pub use crate::math_integers::*;
+pub use crate::math_integers::*;
 pub use crate::math_util::{ct_util::*, *};
 pub use crate::seq::*;
 pub use crate::traits::*;
@@ -50,10 +50,11 @@ public_bytes!(u128Word, 16);
 // // Re-export some std lib functions
 // pub use core::convert::TryFrom; // Allow down-casting of integers.
 
-pub use creusot_contracts::trusted;
-pub use creusot_contracts::predicate;
-pub use creusot_contracts::pearlite;
-pub use creusot_contracts::std::vec::Vec;
-pub use creusot_contracts::std::vec;
+// pub use creusot_contracts::*; // Re-export
+pub use creusot_contracts::{
+    ensures, pearlite, predicate, requires,
+    std::{vec, vec::Vec},
+    trusted, Default as CreusotDefault,
+};
 
 pub use core::default::Default;

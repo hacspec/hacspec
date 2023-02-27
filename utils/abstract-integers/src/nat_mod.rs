@@ -4,6 +4,13 @@ macro_rules! modular_integer {
         #[derive(Clone, Copy, Default)]
         pub struct $name($base);
 
+        impl CreusotDefault for $name {
+            #[predicate]
+            fn is_default(self) -> bool {
+                pearlite! { true } // TODO
+            }
+        }
+
         impl core::fmt::Display for $name {
             fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 let uint: $base = (*self).into();

@@ -111,6 +111,13 @@ macro_rules! abstract_int {
             }
         }
 
+        impl CreusotDefault for $name {
+            #[predicate]
+            fn is_default() -> bool {
+                true // TODO
+            }
+        }
+
         impl Into<BigInt> for $name {
             fn into(self) -> BigInt {
                 BigInt::from_bytes_be(self.sign, &self.b)

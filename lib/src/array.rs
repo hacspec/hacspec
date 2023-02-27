@@ -650,35 +650,35 @@ macro_rules! _secret_array {
             }
         }
         impl $name {
-            // #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            // #[trusted]
-            // pub fn to_be_bytes(&self) -> Seq<U8> {
-            //     const FACTOR: usize = core::mem::size_of::<$t>();
-            //     let mut out: Seq<U8> = Seq::new($l * FACTOR);
-            //     for i in 0..$l {
-            //         let tmp: $t = self[i];
-            //         let tmp = <$t>::to_be_bytes(&[tmp]);
-            //         for j in 0..FACTOR {
-            //             out[i * FACTOR + j] = tmp[j];
-            //         }
-            //     }
-            //     out
-            // }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            #[trusted]
+            pub fn to_be_bytes(&self) -> Seq<U8> {
+                const FACTOR: usize = core::mem::size_of::<$t>();
+                let mut out: Seq<U8> = Seq::new($l * FACTOR);
+                for i in 0..$l {
+                    let tmp: $t = self[i];
+                    let tmp = <$t>::to_be_bytes(&[tmp]);
+                    for j in 0..FACTOR {
+                        out[i * FACTOR + j] = tmp[j];
+                    }
+                }
+                out
+            }
 
-            // #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            // #[trusted]
-            // pub fn to_le_bytes(&self) -> Seq<U8> {
-            //     const FACTOR: usize = core::mem::size_of::<$t>();
-            //     let mut out: Seq<U8> = Seq::new($l * FACTOR);
-            //     for i in 0..$l {
-            //         let tmp: $t = self[i];
-            //         let tmp = <$t>::to_le_bytes(&[tmp]);
-            //         for j in 0..FACTOR {
-            //             out[i * FACTOR + j] = tmp[j];
-            //         }
-            //     }
-            //     out
-            // }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            #[trusted]
+            pub fn to_le_bytes(&self) -> Seq<U8> {
+                const FACTOR: usize = core::mem::size_of::<$t>();
+                let mut out: Seq<U8> = Seq::new($l * FACTOR);
+                for i in 0..$l {
+                    let tmp: $t = self[i];
+                    let tmp = <$t>::to_le_bytes(&[tmp]);
+                    for j in 0..FACTOR {
+                        out[i * FACTOR + j] = tmp[j];
+                    }
+                }
+                out
+            }
         }
         impl $name {
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]

@@ -8,11 +8,11 @@ members = [
     "utils/evercrypt-provider",
     "utils/secret-integers",
     "utils/abstract-integers",
-    # "utils/attributes",
+    "utils/attributes",
     "utils/rc-bench",
     "utils/rc-tests",
     "utils/util",
-    "examples-unsafe",
+    # "examples-unsafe",
     "no_std",
 ]
 default-members = [
@@ -22,8 +22,8 @@ default-members = [
     "utils/derive",
     "utils/secret-integers",
     "utils/abstract-integers",
-    # "utils/attributes",
+    "utils/attributes",
     "utils/util",
-    "examples-unsafe",
+    # "examples-unsafe",
 ]
 exclude = [ "language" , "examples" ]

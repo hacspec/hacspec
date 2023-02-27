@@ -1,59 +1,59 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
-pub fn big_integer_test () {
-    /////////////////////////
-    // lib/big_integers.rs //
-    /////////////////////////
+// pub fn big_integer_test () {
+//     /////////////////////////
+//     // lib/big_integers.rs //
+//     /////////////////////////
 
-    BigInt::ZERO();
-    BigInt::ONE();
-    BigInt::TWO();
-    let mut bi = BigInt::from_literal(1238_u128);
-    // BigInt::from_hex_string(&String::from(""));
-    bi = bi.get_bit(3);
-    bi = bi.set_bit(BigInt::ONE(), 3);
-    bi = bi.set(4, BigInt::TWO(), 2);
-    // bi = bi.rotate_left(1);
-    // bi = bi.rotate_right(4);
+//     BigInt::ZERO();
+//     BigInt::ONE();
+//     BigInt::TWO();
+//     let mut bi = BigInt::from_literal(1238_u128);
+//     // BigInt::from_hex_string(&String::from(""));
+//     bi = bi.get_bit(3);
+//     bi = bi.set_bit(BigInt::ONE(), 3);
+//     bi = bi.set(4, BigInt::TWO(), 2);
+//     // bi = bi.rotate_left(1);
+//     // bi = bi.rotate_right(4);
 
-    // BigInt::max_val(); // unimplemented!
-    bi = bi.wrap_add(BigInt::TWO());
-    bi = bi.wrap_sub(BigInt::TWO());
-    bi = bi.wrap_mul(BigInt::TWO());
-    // bi = bi.wrap_div(BigInt::TWO()); // unimplemented
+//     // BigInt::max_val(); // unimplemented!
+//     bi = bi.wrap_add(BigInt::TWO());
+//     bi = bi.wrap_sub(BigInt::TWO());
+//     bi = bi.wrap_mul(BigInt::TWO());
+//     // bi = bi.wrap_div(BigInt::TWO()); // unimplemented
 
-    // bi = bi.exp(2_u32); // unimplemented
-    // bi = bi.pow_self(BigInt::TWO()); // unimplemented
-    // bi = bi.divide(BigInt::TWO()); // unimplemented
-    // bi = bi.inv(BigInt::TWO()); // unimplemented
-    let _ : bool = BigInt::ONE().equal(BigInt::TWO()); // unimplemented
+//     // bi = bi.exp(2_u32); // unimplemented
+//     // bi = bi.pow_self(BigInt::TWO()); // unimplemented
+//     // bi = bi.divide(BigInt::TWO()); // unimplemented
+//     // bi = bi.inv(BigInt::TWO()); // unimplemented
+//     let _ : bool = BigInt::ONE().equal(BigInt::TWO()); // unimplemented
 
-    // let _ : bool = BigInt::ONE().greater_than(BigInt::TWO()); // unimplemented
-    // let _ : bool = BigInt::ONE().greater_than_or_equal(BigInt::TWO()); // unimplemented
-    // let _ : bool = BigInt::ONE().less_than(BigInt::TWO()); // unimplemented
-    // let _ : bool = BigInt::ONE().less_than_or_equal(BigInt::TWO()); // unimplemented
+//     // let _ : bool = BigInt::ONE().greater_than(BigInt::TWO()); // unimplemented
+//     // let _ : bool = BigInt::ONE().greater_than_or_equal(BigInt::TWO()); // unimplemented
+//     // let _ : bool = BigInt::ONE().less_than(BigInt::TWO()); // unimplemented
+//     // let _ : bool = BigInt::ONE().less_than_or_equal(BigInt::TWO()); // unimplemented
 
-    // bi = bi.not_equal_bm(BigInt::TWO()); // unimplemented
-    // bi = bi.equal_bm(BigInt::TWO()); // unimplemented
-    // bi = bi.greater_than_bm(BigInt::TWO()); // unimplemented
-    // bi = bi.greater_than_or_equal_bm(BigInt::TWO()); // unimplemented
-    // bi = bi.less_than_bm(BigInt::TWO()); // unimplemented
-    // bi = bi.less_than_or_equal_bm(BigInt::TWO()); // unimplemented
+//     // bi = bi.not_equal_bm(BigInt::TWO()); // unimplemented
+//     // bi = bi.equal_bm(BigInt::TWO()); // unimplemented
+//     // bi = bi.greater_than_bm(BigInt::TWO()); // unimplemented
+//     // bi = bi.greater_than_or_equal_bm(BigInt::TWO()); // unimplemented
+//     // bi = bi.less_than_bm(BigInt::TWO()); // unimplemented
+//     // bi = bi.less_than_or_equal_bm(BigInt::TWO()); // unimplemented
 
-    bi = bi.sub_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
-    bi = bi.add_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
-    bi = bi.mul_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
-    // bi = bi.pow_mod(BigInt::TWO(), BigInt::from_literal(4_u128)); // unimplemented
-    bi = bi.absolute();
+//     bi = bi.sub_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
+//     bi = bi.add_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
+//     bi = bi.mul_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
+//     // bi = bi.pow_mod(BigInt::TWO(), BigInt::from_literal(4_u128)); // unimplemented
+//     bi = bi.absolute();
 
-    // let sbi = BigInt::classify(bi);
-}
+//     // let sbi = BigInt::classify(bi);
+// }
 
-#[test]
-fn test_big_integer () {
-    big_integer_test()
-}
+// #[test]
+// fn test_big_integer () {
+//     big_integer_test()
+// }
 
 fn machine_integer_test () {
     /////////////////////////////

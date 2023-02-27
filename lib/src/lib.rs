@@ -89,7 +89,7 @@ extern crate std as alloc;
 pub mod array;
 // mod bigint_integers;
 mod machine_integers;
-// pub mod math_integers;
+pub mod math_integers;
 mod math_util;
 pub mod prelude;
 pub mod seq;
