@@ -10,7 +10,7 @@
 //! To define a new array type with name `State`, holding `16` `u32` run
 //!
 //! ```
-//! use hacspec_lib::prelude::*;
+//! use hacspec_lib::*;
 //! array!(State, 16, u32, type_for_indexes: StateIdx);
 //! ```
 //!
