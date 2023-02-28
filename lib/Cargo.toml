@@ -14,7 +14,7 @@ num = { version = "0.4", default-features = false }
 secret_integers = { path = "../utils/secret-integers", optional = true, version = "0.1.7" } #FIXME: publish new version
 abstract_integers = { path = "../utils/abstract-integers", version = "0.1.5", default-features = false } #FIXME: publish new version
 hacspec-attributes = { path = "../utils/attributes",  optional = true, version = "0.1.0-beta.1" }
-creusot-contracts = { git = "https://github.com/xldenis/creusot", rev = "417b958b11c5a4a4f89da510b9e0a87433d5836e" } # branch = "master"
+creusot-contracts = { git = "https://github.com/cmester0/creusot", branch = "add_default_to_vec" } # branch = "master"
 
 [features]
 default = ["std"]

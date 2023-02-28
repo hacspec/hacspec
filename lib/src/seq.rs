@@ -14,17 +14,32 @@ pub use bytes::*;
 macro_rules! declare_seq {
     ($name:ident, $constraint:ident) => {
         /// Variable length byte arrays.
-        #[derive(Debug, Clone, Default)]
-        pub struct $name<T: Default + $constraint> {
+        #[derive(Clone, Default)] // Debug,
+        pub struct $name<T: CreusotDefault + $constraint> {
             pub(crate) b: Vec<T>,
         }
+
+        impl<T: CreusotDefault + $constraint> CreusotDefault for $name<T> {
+            #[predicate]
+            fn is_default(self) -> bool {
+                pearlite! { true }
+            }
+        }
+
         declare_seq_with_contents_constraints_impl!($name, Clone + Default + $constraint);
     };
     ($name:ident) => {
         /// Variable length byte arrays.
-        #[derive(Debug, Clone, core::default::Default)]
+        #[derive(Clone, Default)] // Debug,
         pub struct $name<T: Default> {
             pub(crate) b: Vec<T>,
+        }
+
+        impl<T: Default> CreusotDefault for $name<T> {
+            #[predicate]
+            fn is_default(self) -> bool {
+                pearlite! { true }
+            }
         }
 
         declare_seq_with_contents_constraints_impl!($name, Clone + Default);
@@ -488,11 +503,27 @@ impl<T: Copy + Default + PartialEq + PublicInteger> PartialEq for PublicSeq<T> {
     }
 }
 
+impl<T: Copy + Default + PartialEq + PublicInteger> DeepModel for PublicSeq<T> {
+    type DeepModelTy = Self;
+    #[logic]
+    fn deep_model(self) -> Self::DeepModelTy {
+        self
+    }
+}
+
 impl<T: Copy + Default + PartialEq + PublicInteger> PartialEq for Seq<T> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     #[trusted]
     fn eq(&self, other: &Self) -> bool {
         self.b == other.b
+    }
+}
+
+impl<T: Copy + Default + PartialEq + PublicInteger> DeepModel for Seq<T> {
+    type DeepModelTy = Self;
+    #[logic]
+    fn deep_model(self) -> Self::DeepModelTy {
+        self
     }
 }
 
@@ -510,6 +541,14 @@ impl PartialEq for Seq<U8> {
                 .iter()
                 .map(|x| <U8>::declassify(*x))
                 .collect::<Vec<_>>()
+    }
+}
+
+impl DeepModel for Seq<U8> {
+    type DeepModelTy = Self;
+    #[logic]
+    fn deep_model(self) -> Self::DeepModelTy {
+        self
     }
 }
 

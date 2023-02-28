@@ -12,7 +12,7 @@ use alloc::collections::VecDeque;
 use super::seq::*;
 use crate::prelude::*;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)] // Debug, 
 pub struct ByteBuffer {
     value: VecDeque<Bytes>,
 }

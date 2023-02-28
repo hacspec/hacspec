@@ -34,7 +34,10 @@ pub use alloc::string::{String, ToString};
 // pub use core::num::ParseIntError;
 // pub use core::ops::*;
 // pub use core::str::FromStr;
-pub use core::{cmp::min, cmp::PartialEq, fmt, fmt::Debug};
+pub use core::{
+    cmp::min,
+    cmp::PartialEq, // , fmt, fmt::Debug
+};
 // pub use num::{self, traits::sign::Signed, CheckedSub, Num, Zero};
 
 bytes!(U16Word, 2);
@@ -52,9 +55,12 @@ public_bytes!(u128Word, 16);
 
 // pub use creusot_contracts::*; // Re-export
 pub use creusot_contracts::{
-    ensures, pearlite, predicate, requires,
+    ensures, predicate, requires, logic, law,
     std::{vec, vec::Vec},
     trusted, Default as CreusotDefault,
+    DeepModel,
+    OrdLogic,
+    extern_spec, pearlite,
 };
 
 pub use core::default::Default;

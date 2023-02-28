@@ -33,7 +33,8 @@ pub type AffinePoint = (FieldElement, FieldElement);
 
 public_bytes!(PBytes32, 32);
 
-#[derive(Debug, Copy, Clone)]
+#[derive(// Debug,
+         Copy, Clone)]
 pub enum Point {
     Affine(AffinePoint),
     AtInfinity,

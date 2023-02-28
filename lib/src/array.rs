@@ -603,14 +603,14 @@ macro_rules! generic_array {
             }
         }
 
-        /// **Warning:** declassifies secret integer types.
-        impl<T: Numeric + Copy> fmt::Debug for $name<T> {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            #[trusted]
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                self.0[..].iter().collect::<Vec<_>>().fmt(f)
-            }
-        }
+        // /// **Warning:** declassifies secret integer types.
+        // impl<T: Numeric + Copy> fmt::Debug for $name<T> {
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     #[trusted]
+        //     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //         self.0[..].iter().collect::<Vec<_>>().fmt(f)
+        //     }
+        // }
     };
 }
 
@@ -622,18 +622,18 @@ macro_rules! _secret_array {
     ($name:ident,$l:expr,$t:ty, $tbase:ty) => {
         _array_base!($name, $l, $t);
 
-        /// **Warning:** declassifies secret integer types.
-        impl fmt::Debug for $name {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            #[trusted]
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                self.0[..]
-                    .iter()
-                    .map(|x| <$t>::declassify(*x))
-                    .collect::<Vec<_>>()
-                    .fmt(f)
-            }
-        }
+        // /// **Warning:** declassifies secret integer types.
+        // impl fmt::Debug for $name {
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     #[trusted]
+        //     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //         self.0[..]
+        //             .iter()
+        //             .map(|x| <$t>::declassify(*x))
+        //             .collect::<Vec<_>>()
+        //             .fmt(f)
+        //     }
+        // }
         /// **Warning:** declassifies secret integer types.
         impl $name {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
@@ -750,18 +750,25 @@ macro_rules! _public_array {
             }
         }
 
-        impl fmt::Debug for $name {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            #[trusted]
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                self.0[..].fmt(f)
-            }
-        }
+        // impl fmt::Debug for $name {
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     #[trusted]
+        //     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //         self.0[..].fmt(f)
+        //     }
+        // }
         impl PartialEq for $name {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             #[trusted]
             fn eq(&self, other: &Self) -> bool {
                 self.0[..] == other.0[..]
+            }
+        }
+        impl DeepModel for $name {
+            type DeepModelTy = Self;
+            #[logic]
+            fn deep_model(self) -> Self::DeepModelTy {
+                self
             }
         }
     };

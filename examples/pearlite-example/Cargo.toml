@@ -9,7 +9,7 @@ path = "src/pearlite_example.rs"
 
 [dependencies]
 hacspec-lib = { path = "../../lib" }
-creusot-contracts = { git = "https://github.com/xldenis/creusot", rev = "417b958b11c5a4a4f89da510b9e0a87433d5836e" } # branch = "master"
+creusot-contracts = { git = "https://github.com/cmester0/creusot", branch = "add_default_to_vec" } # branch = "master"
 
 [features]
 hacspec = []

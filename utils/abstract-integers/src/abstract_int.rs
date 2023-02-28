@@ -130,26 +130,26 @@ macro_rules! abstract_int {
             }
         }
 
-        impl core::fmt::Display for $name {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                let uint: BigInt = (*self).into();
-                write!(f, "{}", uint)
-            }
-        }
+        // impl core::fmt::Display for $name {
+        //     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        //         let uint: BigInt = (*self).into();
+        //         write!(f, "{}", uint)
+        //     }
+        // }
 
-        impl core::fmt::Debug for $name {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                let uint: BigInt = (*self).into();
-                write!(f, "{}", uint)
-            }
-        }
+        // impl core::fmt::Debug for $name {
+        //     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        //         let uint: BigInt = (*self).into();
+        //         write!(f, "{}", uint)
+        //     }
+        // }
 
-        impl core::fmt::LowerHex for $name {
-            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                let val: BigInt = (*self).into();
-                core::fmt::LowerHex::fmt(&val, f)
-            }
-        }
+        // impl core::fmt::LowerHex for $name {
+        //     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        //         let val: BigInt = (*self).into();
+        //         core::fmt::LowerHex::fmt(&val, f)
+        //     }
+        // }
     };
 }
 
