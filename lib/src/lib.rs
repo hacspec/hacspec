@@ -10,7 +10,7 @@
 //! See the [seq](`mod@seq`) module documentation for more details.
 //!
 //! ```
-//! use hacspec_lib::prelude::*;
+//! use hacspec_lib::*;
 //! let x = Seq::<U128>::from_public_slice(&[5, 2, 7, 8, 9]);
 //! let x = Seq::<u128>::from_native_slice(&[5, 2, 7, 8, 9]);
 //! let y = ByteSeq::from_hex("0388dace60b6a392f328c2b971b2fe78");
@@ -25,7 +25,7 @@
 //! To define a new array type with name `State`, holding `16` `u32` run
 //!
 //! ```
-//! use hacspec_lib::prelude::*;
+//! use hacspec_lib::*;
 //! array!(State, 16, u32, type_for_indexes: StateIdx);
 //! ```
 //!
@@ -33,7 +33,7 @@
 //! Such an array can now be used similarly to regular Rust arrays.
 //!
 //! ```
-//! use hacspec_lib::prelude::*;
+//! use hacspec_lib::*;
 //! array!(State, 16, u32, type_for_indexes: StateIdx);
 //! fn modify_state(mut state: State) -> State {
 //!     state[1] = state[1] + state[2];
@@ -51,7 +51,7 @@
 //! The following example defines and uses the type `LargeSecretInteger` that can hold unsigned integers up to 2^233-1.
 //!
 //! ```
-//! use hacspec_lib::prelude::*;
+//! use hacspec_lib::*;
 //! unsigned_integer!(LargeSecretInteger, 233);
 //! let a = LargeSecretInteger::from_literal(1);
 //! let b = LargeSecretInteger::from_literal(2);
@@ -100,5 +100,6 @@ mod vec_integers;
 mod vec_integers_public;
 mod vec_integers_secret;
 mod vec_util;
+pub mod buf;
 
 pub use crate::prelude::*;

@@ -17,7 +17,7 @@ pub trait SeqTrait<T: Clone>:
     /// # Examples
     ///
     /// ```
-    /// use hacspec_lib::prelude::*;
+    /// use hacspec_lib::*;
     ///
     /// let mut s = Seq::<u8>::new(5);
     /// let tmp = Seq::<u8>::from_native_slice(&[2, 3]);
@@ -37,7 +37,7 @@ pub trait SeqTrait<T: Clone>:
     /// # Examples
     ///
     /// ```
-    /// use hacspec_lib::prelude::*;
+    /// use hacspec_lib::*;
     ///
     /// let mut s = Seq::<u8>::new(5);
     /// let tmp = Seq::<u8>::from_native_slice(&[2, 3]);

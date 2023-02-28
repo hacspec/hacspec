@@ -21,6 +21,7 @@ alloc = ["secret_integers"]
 std = ["alloc", "secret_integers", "num/std", "abstract_integers/std"]
 
 use_attributes = ["hacspec-attributes", "hacspec-attributes/print_attributes"]
+release = [] # A release mode for hacspec that disables some checks and doesn't use secret integers.
 
 [dev-dependencies]
 rand = "0.8"
