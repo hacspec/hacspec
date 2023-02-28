@@ -24,6 +24,7 @@ Notation "'byte_seq_result_t'" := ((result byte_seq error_t)) : hacspec_scope.
 Definition init
   (key_408 : cha_cha_poly_key_t)
   (iv_409 : cha_cha_poly_iv_t)
+  
   : poly_state_t :=
   let key_block0_410 : block_t :=
     chacha20_key_block0 (key_408) (iv_409) in 
@@ -35,6 +36,7 @@ Definition init
 Definition poly1305_update_padded
   (m_412 : byte_seq)
   (st_413 : poly_state_t)
+  
   : poly_state_t :=
   let st_414 : (field_element_t '× field_element_t '× poly_key_t) :=
     poly1305_update_blocks (m_412) (st_413) in 
@@ -46,6 +48,7 @@ Definition finish
   (aad_len_416 : uint_size)
   (cipher_len_417 : uint_size)
   (st_418 : poly_state_t)
+  
   : poly1305_tag_t :=
   let last_block_419 : poly_block_t :=
     array_new_ (default : uint8) (16) in 
@@ -64,6 +67,7 @@ Definition chacha20_poly1305_encrypt
   (iv_422 : cha_cha_poly_iv_t)
   (aad_423 : byte_seq)
   (msg_424 : byte_seq)
+  
   : (byte_seq '× poly1305_tag_t) :=
   let cipher_text_425 : seq uint8 :=
     chacha20 (key_421) (iv_422) (@repr WORDSIZE32 1) (msg_424) in 
@@ -83,6 +87,7 @@ Definition chacha20_poly1305_decrypt
   (aad_430 : byte_seq)
   (cipher_text_431 : byte_seq)
   (tag_432 : poly1305_tag_t)
+  
   : byte_seq_result_t :=
   let poly_st_433 : (field_element_t '× field_element_t '× poly_key_t) :=
     init (key_428) (iv_429) in 

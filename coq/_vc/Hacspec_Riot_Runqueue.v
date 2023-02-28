@@ -33,7 +33,7 @@ Definition next_ids_t := nseq (int8) (n_threads_v).
 Inductive clist_t :=
 | Clist : (tail_t '× next_ids_t) -> clist_t.
 
-Definition clist_new  : clist_t :=
+Definition clist_new   : clist_t :=
   let tail_1347 : tail_t :=
     array_new_ (default : int8) (n_queues_v) in 
   let tail_1347 :=
@@ -52,7 +52,11 @@ Definition clist_new  : clist_t :=
     next_idxs_1349 in 
   Clist ((tail_1347, next_idxs_1349)).
 
-Definition clist_is_empty (x_1351 : clist_t) (rq_1352 : runqueue_id_t) : bool :=
+Definition clist_is_empty
+  (x_1351 : clist_t)
+  (rq_1352 : runqueue_id_t)
+  
+  : bool :=
   let 'RunqueueId (rq_1353) :=
     rq_1352 in 
   let 'Clist ((tail_1354, next_ids_1355)) :=
@@ -63,6 +67,7 @@ Definition clist_push
   (x_1356 : clist_t)
   (n_1357 : thread_id_t)
   (rq_1358 : runqueue_id_t)
+  
   : clist_t :=
   let 'RunqueueId (rq_1359) :=
     rq_1358 in 
@@ -94,6 +99,7 @@ Definition clist_push
 Definition clist_pop_head
   (x_1363 : clist_t)
   (rq_1364 : runqueue_id_t)
+  
   : (clist_t '× (option int8)) :=
   let 'RunqueueId (rq_1365) :=
     rq_1364 in 
@@ -126,6 +132,7 @@ Definition clist_pop_head
 Definition clist_peek_head
   (x_1370 : clist_t)
   (rq_1371 : runqueue_id_t)
+  
   : (option int8) :=
   let 'RunqueueId (rq_1372) :=
     rq_1371 in 
@@ -139,6 +146,7 @@ Definition clist_peek_head
 Definition clist_advance
   (x_1375 : clist_t)
   (rq_1376 : runqueue_id_t)
+  
   : clist_t :=
   let 'RunqueueId (rq_1377) :=
     rq_1376 in 
@@ -156,13 +164,14 @@ Definition clist_advance
 Inductive run_queue_t :=
 | RunQueue : (int32 '× clist_t) -> run_queue_t.
 
-Definition runqueue_new  : run_queue_t :=
+Definition runqueue_new   : run_queue_t :=
   RunQueue ((@repr WORDSIZE32 0, clist_new )).
 
 Definition runqueue_add
   (y_1380 : run_queue_t)
   (n_1381 : thread_id_t)
   (rq_1382 : runqueue_id_t)
+  
   : run_queue_t :=
   let 'RunqueueId (rq_u8_1383) :=
     rq_1382 in 
@@ -179,6 +188,7 @@ Definition runqueue_del
   (y_1386 : run_queue_t)
   (n_1387 : thread_id_t)
   (rq_1388 : runqueue_id_t)
+  
   : run_queue_t :=
   let 'RunqueueId (rq_u8_1389) :=
     rq_1388 in 
@@ -193,10 +203,10 @@ Definition runqueue_del
       (bitcache_1390)) else ((bitcache_1390)) in 
   RunQueue ((bitcache_1390, queues_1392)).
 
-Definition runqueue_ffs (val_1394 : int32) : int32 :=
+Definition runqueue_ffs (val_1394 : int32)  : int32 :=
   (pub_u32 (uint32_bits_v)) .- (pub_uint32_leading_zeros (val_1394)).
 
-Definition runqueue_get_next (y_1395 : run_queue_t) : (option int8) :=
+Definition runqueue_get_next (y_1395 : run_queue_t)  : (option int8) :=
   let 'RunQueue ((bitcache_1396, queues_1397)) :=
     y_1395 in 
   let rq_ffs_1398 : int32 :=
@@ -215,6 +225,7 @@ Definition runqueue_get_next (y_1395 : run_queue_t) : (option int8) :=
 Definition runqueue_advance
   (y_1401 : run_queue_t)
   (rq_1402 : runqueue_id_t)
+  
   : run_queue_t :=
   let 'RunQueue ((bitcache_1403, queues_1404)) :=
     y_1401 in 
