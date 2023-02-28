@@ -1,8 +1,4 @@
 //! This module conveniently exports common subroutines necessary for hacspecs
-//!
-//! ```
-//! use hacspec_lib::prelude::*;
-//! ```
 
 pub use crate::array::*;
 pub use crate::bigint_integers::*;
