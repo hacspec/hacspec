@@ -12,7 +12,7 @@
 They replace Rust vectors, which are not allowed in hacspec.</p>
 <p>See the <a href="seq/index.html">seq</a> module documentation for more details.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">hacspec_lib::prelude</span>::<span class="kw-2">*</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">U128</span><span class="op">&gt;</span><span class="ident">::from_public_slice</span>(<span class="kw-2">&amp;</span>[<span class="number">5</span>, <span class="number">2</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]);
 <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">u128</span><span class="op">&gt;</span><span class="ident">::from_native_slice</span>(<span class="kw-2">&amp;</span>[<span class="number">5</span>, <span class="number">2</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]);
 <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;0388dace60b6a392f328c2b971b2fe78&quot;</span>);</code></pre></div>
@@ -22,12 +22,12 @@ They replace the Rust arrays, which are not allowed in hacspec.</p>
 <p>See the <a href="array/index.html">arrays</a> module documentation for more details.</p>
 <p>To define a new array type with name <code>State</code>, holding <code>16</code> <code>u32</code> run</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">hacspec_lib::prelude</span>::<span class="kw-2">*</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 <span class="macro">array!</span>(<span class="ident">State</span>, <span class="number">16</span>, <span class="ident">u32</span>, <span class="ident">type_for_indexes</span>: <span class="ident">StateIdx</span>);</code></pre></div>
 <p>The <code>type_for_indexes</code> defines the index type for this array as <code>StateIdx</code>.
 Such an array can now be used similarly to regular Rust arrays.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">hacspec_lib::prelude</span>::<span class="kw-2">*</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 <span class="macro">array!</span>(<span class="ident">State</span>, <span class="number">16</span>, <span class="ident">u32</span>, <span class="ident">type_for_indexes</span>: <span class="ident">StateIdx</span>);
 <span class="kw">fn</span> <span class="ident">modify_state</span>(<span class="kw-2">mut</span> <span class="ident">state</span>: <span class="ident">State</span>) -&gt; <span class="ident">State</span> {
     <span class="ident">state</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">state</span>[<span class="number">1</span>] <span class="op">+</span> <span class="ident">state</span>[<span class="number">2</span>];
@@ -40,7 +40,7 @@ Such an array can now be used similarly to regular Rust arrays.</p>
 See the <a href="math_integers/index.html">math integer</a> module documentation for more details.</p>
 <p>The following example defines and uses the type <code>LargeSecretInteger</code> that can hold unsigned integers up to 2^233-1.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">hacspec_lib::prelude</span>::<span class="kw-2">*</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 <span class="macro">unsigned_integer!</span>(<span class="ident">LargeSecretInteger</span>, <span class="number">233</span>);
 <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">LargeSecretInteger::from_literal</span>(<span class="number">1</span>);
 <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">LargeSecretInteger::from_literal</span>(<span class="number">2</span>);

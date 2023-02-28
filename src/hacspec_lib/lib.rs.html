@@ -121,7 +121,7 @@
 <span class="doccomment">//! See the [seq](`mod@seq`) module documentation for more details.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```</span>
-<span class="doccomment">//! use hacspec_lib::prelude::*;</span>
+<span class="doccomment">//! use hacspec_lib::*;</span>
 <span class="doccomment">//! let x = Seq::&lt;U128&gt;::from_public_slice(&amp;[5, 2, 7, 8, 9]);</span>
 <span class="doccomment">//! let x = Seq::&lt;u128&gt;::from_native_slice(&amp;[5, 2, 7, 8, 9]);</span>
 <span class="doccomment">//! let y = ByteSeq::from_hex(&quot;0388dace60b6a392f328c2b971b2fe78&quot;);</span>
@@ -136,7 +136,7 @@
 <span class="doccomment">//! To define a new array type with name `State`, holding `16` `u32` run</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```</span>
-<span class="doccomment">//! use hacspec_lib::prelude::*;</span>
+<span class="doccomment">//! use hacspec_lib::*;</span>
 <span class="doccomment">//! array!(State, 16, u32, type_for_indexes: StateIdx);</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
@@ -144,7 +144,7 @@
 <span class="doccomment">//! Such an array can now be used similarly to regular Rust arrays.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```</span>
-<span class="doccomment">//! use hacspec_lib::prelude::*;</span>
+<span class="doccomment">//! use hacspec_lib::*;</span>
 <span class="doccomment">//! array!(State, 16, u32, type_for_indexes: StateIdx);</span>
 <span class="doccomment">//! fn modify_state(mut state: State) -&gt; State {</span>
 <span class="doccomment">//!     state[1] = state[1] + state[2];</span>
@@ -162,7 +162,7 @@
 <span class="doccomment">//! The following example defines and uses the type `LargeSecretInteger` that can hold unsigned integers up to 2^233-1.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```</span>
-<span class="doccomment">//! use hacspec_lib::prelude::*;</span>
+<span class="doccomment">//! use hacspec_lib::*;</span>
 <span class="doccomment">//! unsigned_integer!(LargeSecretInteger, 233);</span>
 <span class="doccomment">//! let a = LargeSecretInteger::from_literal(1);</span>
 <span class="doccomment">//! let b = LargeSecretInteger::from_literal(2);</span>
