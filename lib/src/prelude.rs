@@ -6,7 +6,7 @@
 
 pub use crate::array::*;
 // pub use crate::bigint_integers::*;
-// pub use crate::buf::*;
+pub use crate::buf::*;
 pub use crate::machine_integers::*;
 pub use crate::math_integers::*;
 pub use crate::math_util::{ct_util::*, *};
@@ -15,8 +15,8 @@ pub use crate::traits::*;
 pub use crate::transmute::*;
 pub use crate::util::*;
 pub use crate::vec_integers::*;
-// pub use crate::vec_integers_public::*;
-// pub use crate::vec_integers_secret::*;
+pub use crate::vec_integers_public::*;
+pub use crate::vec_integers_secret::*;
 pub(crate) use crate::vec_util::*;
 pub use crate::*;
 
@@ -55,12 +55,18 @@ public_bytes!(u128Word, 16);
 
 // pub use creusot_contracts::*; // Re-export
 pub use creusot_contracts::{
-    ensures, predicate, requires, logic, law,
+    ensures, extern_spec, law, logic, pearlite, predicate, requires,
     std::{vec, vec::Vec},
-    trusted, Default as CreusotDefault,
-    DeepModel,
-    OrdLogic,
-    extern_spec, pearlite,
+    trusted, DeepModel, Default as CreusotDefault, OrdLogic,
 };
 
 pub use core::default::Default;
+
+// extern_spec! {
+//     impl CreusotDefault for BigInt {
+//         #[predicate]
+//         fn is_default(self) -> bool {
+//             pearlite!{ true } // TODO
+//         }
+//     }
+// }

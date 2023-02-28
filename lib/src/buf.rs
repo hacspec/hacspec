@@ -81,9 +81,12 @@ impl ByteBuffer {
     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
     pub fn to_bytes(&self) -> Bytes {
         let mut out = Bytes::new(0);
-        for value in self.value.iter() {
-            out = out.concat_owned(value.clone());
+        for i in 0..self.value.len() {
+            out = out.concat_owned(self.value[i].clone())
         }
+        // for value in self.value.iter() {
+        //     out = out.concat_owned(value.clone());
+        // }
         out
     }
 

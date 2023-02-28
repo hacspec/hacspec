@@ -3,7 +3,7 @@ use crate::prelude::*;
 
 impl Integer for BigInt {
     /// `NUM_BITS` is arbitrary for `BigInt`, so this i `0`.
-    const NUM_BITS: usize = 0;
+    fn NUM_BITS() -> usize { 0 }
 
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
@@ -29,6 +29,7 @@ impl Integer for BigInt {
 
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    #[trusted]
     fn from_hex_string(s: &String) -> Self {
         BigInt::from_str(s).unwrap()
     }
@@ -44,6 +45,7 @@ impl Integer for BigInt {
     /// Bit `b` has to be `0` or `1`.
     #[inline]
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
+    #[trusted]
     fn set_bit(self, b: Self, i: usize) -> Self {
         debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
         let tmp1 = Self::from_literal(!(1 << i));
@@ -61,18 +63,85 @@ impl Integer for BigInt {
 
     #[allow(arithmetic_overflow)]
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
+    #[trusted]
     fn rotate_left(self, n: usize) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
-        assert!(n < Self::NUM_BITS, "not {} < {}", n, Self::NUM_BITS);
-        (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+        assert!(n < Self::NUM_BITS()); // TODO: , "not {} < {}", n, Self::NUM_BITS());
+        (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
     }
 
     #[allow(arithmetic_overflow)]
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
+    #[trusted]
     fn rotate_right(self, n: usize) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
-        assert!(n < Self::NUM_BITS);
-        (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+        assert!(n < Self::NUM_BITS());
+        (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
+    }
+}
+// extern_spec! {
+    impl DeepModel for BigInt {
+        type DeepModelTy = creusot_contracts::Int;
+
+        #[logic]
+        #[trusted]
+        // #[ensures(self.shallow_model().len() == result.len())]
+        // #[ensures(forall<i: Int> 0 <= i && i < self.shallow_model().len()
+        //           ==> result[i] == (@self)[i].deep_model())]
+        fn deep_model(self) -> Self::DeepModelTy {
+            pearlite! { absurd }
+        }
+    }
+// }
+impl OrdLogic for BigInt {
+    #[logic]
+    fn cmp_log(self, other: Self) -> Ordering {
+        Ordering::Equal // TODO
+    }
+
+    #[logic]
+    fn cmp_le_log(_: Self, _: Self) {
+        ()
+    }
+
+    #[logic]
+    fn cmp_lt_log(_: Self, _: Self) {
+        ()
+    }
+
+    #[logic]
+    fn cmp_ge_log(_: Self, _: Self) {
+        ()
+    }
+
+    #[logic]
+    fn cmp_gt_log(_: Self, _: Self) {
+        ()
+    }
+
+    #[logic]
+    fn refl(_: Self) {
+        ()
+    }
+
+    #[logic]
+    fn trans(_: Self, _: Self, _: Self, _: Ordering) {
+        ()
+    }
+
+    #[logic]
+    fn antisym1(_: Self, _: Self) {
+        ()
+    }
+
+    #[logic]
+    fn antisym2(_: Self, _: Self) {
+        ()
+    }
+
+    #[logic]
+    fn eq_cmp(_: Self, _: Self) {
+        ()
     }
 }
 impl Numeric for BigInt {
@@ -202,6 +271,7 @@ impl ModNumeric for BigInt {
     }
     /// `|self|`
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    #[trusted]
     fn absolute(self) -> Self {
         self.abs()
     }
