@@ -73,12 +73,12 @@ pub fn expand_message_xmd(msg: &ByteSeq, dst: &ByteSeq, len_in_bytes: usize) -> 
         .concat(&l_i_b_str)
         .concat(&ByteSeq::new(1))
         .concat(&dst_prime); // Z_pad || msg || l_i_b_str || 0 || dst_prime
-    let b_0 = ByteSeq::from_seq(&hash(&msg_prime)); // H(msg_prime)
-    let mut b_i = ByteSeq::from_seq(&hash(&b_0.push(&U8(1u8)).concat(&dst_prime))); // H(b_0 || 1 || dst_prime)
+    let b_0 = ByteSeq::from_seq(&sha256(&msg_prime)); // H(msg_prime)
+    let mut b_i = ByteSeq::from_seq(&sha256(&b_0.push(&U8(1u8)).concat(&dst_prime))); // H(b_0 || 1 || dst_prime)
     let mut uniform_bytes = ByteSeq::from_seq(&b_i);
     for i in 2..(ell + 1) {
         let t = ByteSeq::from_seq(&b_0);
-        b_i = ByteSeq::from_seq(&hash(&(t ^ b_i).push(&U8_from_usize(i)).concat(&dst_prime))); //H((b_0 ^ b_(i-1)) || 1 || dst_prime)
+        b_i = ByteSeq::from_seq(&sha256(&(t ^ b_i).push(&U8_from_usize(i)).concat(&dst_prime))); //H((b_0 ^ b_(i-1)) || 1 || dst_prime)
         uniform_bytes = uniform_bytes.concat(&b_i);
     }
     uniform_bytes.truncate(len_in_bytes)

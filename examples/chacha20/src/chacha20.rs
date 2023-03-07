@@ -1,9 +1,11 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
+const BLOCKSIZE:usize = 64;
+
 array!(State, 16, U32, type_for_indexes: StateIdx);
 array!(Constants, 4, U32, type_for_indexes: ConstantsIdx);
-bytes!(Block, 64);
+bytes!(Block, BLOCKSIZE);
 bytes!(ChaChaNonce, 12);
 bytes!(ChaChaKey, 32);
 
@@ -120,16 +122,16 @@ pub fn chacha20_encrypt_last(st0: State, ctr: U32, plain: &ByteSeq) -> ByteSeq {
 
 pub fn chacha20_update(st0: State, m: &ByteSeq) -> ByteSeq {
     let mut blocks_out = ByteSeq::new(m.len());
-    let n_blocks = m.num_exact_chunks(64);
+    let n_blocks = m.num_exact_chunks(BLOCKSIZE);
     for i in 0..n_blocks {
-        let msg_block = &Block::from_seq(&m.get_exact_chunk(64, i));
+        let msg_block = &Block::from_seq(&m.get_exact_chunk(BLOCKSIZE, i));
         let b = chacha20_encrypt_block(st0, U32(i as u32), msg_block);
-        blocks_out = blocks_out.set_exact_chunk(64, i, &b);
+        blocks_out = blocks_out.set_exact_chunk(BLOCKSIZE, i, &b);
     }
-    let last_block = m.get_remainder_chunk(64);
+    let last_block = m.get_remainder_chunk(BLOCKSIZE);
     if last_block.len() != 0 {
         let b = chacha20_encrypt_last(st0, U32(n_blocks as u32), &last_block);
-        blocks_out = blocks_out.set_chunk(64, n_blocks, &b);
+        blocks_out = blocks_out.set_chunk(BLOCKSIZE, n_blocks, &b);
     }
     blocks_out
 }
