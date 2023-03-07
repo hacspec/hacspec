@@ -489,7 +489,7 @@ fn chacha_encrypt(
     ad: &ByteSeq,
 ) -> Result<ByteSeq, CryptoError> {
     let (ctxt, tag) =
-        chacha20_poly1305_encrypt(ChaChaKey::from_seq(k), ChaChaIV::from_seq(iv), ad, payload);
+        chacha20_poly1305_encrypt(ChaChaKey::from_seq(k), ChaChaNonce::from_seq(iv), ad, payload);
     Result::<ByteSeq, CryptoError>::Ok(ctxt.concat(&tag))
 }
 
@@ -535,7 +535,7 @@ fn chacha_decrypt(
 ) -> Result<ByteSeq, CryptoError> {
     match chacha20_poly1305_decrypt(
         ChaChaKey::from_seq(k),
-        ChaChaIV::from_seq(iv),
+        ChaChaNonce::from_seq(iv),
         ad,
         &ciphertext.slice_range(0..ciphertext.len() - 16),
         Poly1305Tag::from_seq(

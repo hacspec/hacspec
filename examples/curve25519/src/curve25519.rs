@@ -18,8 +18,7 @@ type Point = (X25519FieldElement, X25519FieldElement);
 bytes!(X25519SerializedPoint, 32);
 bytes!(X25519SerializedScalar, 32);
 
-fn mask_scalar(s: X25519SerializedScalar) -> X25519SerializedScalar {
-    let mut k = s;
+fn mask_scalar(mut k: X25519SerializedScalar) -> X25519SerializedScalar {
     k[0] = k[0] & U8(248u8);
     k[31] = k[31] & U8(127u8);
     k[31] = k[31] | U8(64u8);
@@ -43,7 +42,7 @@ fn decode_point(u: X25519SerializedPoint) -> Point {
 fn encode_point(p: Point) -> X25519SerializedPoint {
     let (x, y) = p;
     let b = x * y.inv();
-    X25519SerializedPoint::new().update_start(&b.to_byte_seq_le())
+    X25519SerializedPoint::from_seq(&b.to_byte_seq_le())
 }
 
 fn point_add_and_double(q: Point, np: (Point, Point)) -> (Point, Point) {
@@ -52,7 +51,7 @@ fn point_add_and_double(q: Point, np: (Point, Point)) -> (Point, Point) {
     let (x_2, z_2) = nq;
     let (x_3, z_3) = nqp1;
     let a = x_2 + z_2;
-    let aa = a.pow(2u128);
+    let aa = a * a;
     let b = x_2 - z_2;
     let bb = b * b;
     let e = aa - bb;
@@ -61,16 +60,15 @@ fn point_add_and_double(q: Point, np: (Point, Point)) -> (Point, Point) {
     let da = d * a;
     let cb = c * b;
 
-    let x_3 = (da + cb).pow(2u128);
-    let z_3 = x_1 * ((da - cb).pow(2u128));
+    let x_3 = (da + cb) * (da + cb);
+    let z_3 = x_1 * ((da - cb) * (da - cb));
     let x_2 = aa * bb;
     let e121665 = X25519FieldElement::from_literal(121_665u128);
     let z_2 = e * (aa + (e121665 * e));
     ((x_2, z_2), (x_3, z_3))
 }
 
-fn swap(x: (Point, Point)) -> (Point, Point) {
-    let (x0, x1) = x;
+fn swap((x0,x1): (Point, Point)) -> (Point, Point) {
     (x1, x0)
 }
 
@@ -89,8 +87,7 @@ fn montgomery_ladder(k: Scalar, init: Point) -> Point {
             acc = point_add_and_double(init, acc);
         }
     }
-    let (out, _) = acc;
-    out
+    acc.0
 }
 
 pub fn x25519_scalarmult(
