@@ -9,7 +9,7 @@ fn kat() {
         0x8f, 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d,
         0x9e, 0x9f,
     ]);
-    let iv = ChaChaPolyIV::from_public_slice(&[
+    let nonce = ChaChaPolyNonce::from_public_slice(&[
         0x07, 0x00, 0x00, 0x00, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
     ]);
     let msg = ByteSeq::from_public_slice(&[
@@ -39,10 +39,10 @@ fn kat() {
         0x1a, 0xe1, 0x0b, 0x59, 0x4f, 0x09, 0xe2, 0x6a, 0x7e, 0x90, 0x2e, 0xcb, 0xd0, 0x60, 0x06,
         0x91,
     ]);
-    let (cipher, mac) = chacha20_poly1305_encrypt(k, iv, &aad, &msg);
+    let (cipher, mac) = chacha20_poly1305_encrypt(k, nonce, &aad, &msg);
     assert_bytes_eq!(exp_cipher, cipher);
     assert!(exp_mac.declassify_eq(&mac));
-    let decrypted_msg = match chacha20_poly1305_decrypt(k, iv, &aad, &cipher, mac) {
+    let decrypted_msg = match chacha20_poly1305_decrypt(k, nonce, &aad, &cipher, mac) {
         Ok(m) => m,
         Err(_) => panic!("Error decrypting"),
     };
