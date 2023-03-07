@@ -35,11 +35,11 @@ fn test_block() {
         0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
         0x1e, 0x1f,
     ]);
-    let iv = ChaChaIV::from_public_slice(&[
+    let nonce = ChaChaNonce::from_public_slice(&[
         0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00,
     ]);
     let ctr = U32(1);
-    let state = chacha20_init(key, iv, ctr);
+    let state = chacha20_init(key, ctr, nonce);
     let expected_state = State::from_public_slice(&[
         0x61707865, 0x3320646e, 0x79622d32, 0x6b206574, 0x03020100, 0x07060504, 0x0b0a0908,
         0x0f0e0d0c, 0x13121110, 0x17161514, 0x1b1a1918, 0x1f1e1d1c, 0x00000001, 0x09000000,
@@ -94,7 +94,7 @@ fn test_block() {
     );
 }
 
-fn enc_dec_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaIV) {
+fn enc_dec_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaNonce) {
     let c = chacha20(key, iv, 1u32, &m);
     let m_dec = chacha20(key, iv, 1u32, &c);
     assert_eq!(
@@ -103,7 +103,7 @@ fn enc_dec_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaIV) {
     );
 }
 
-fn kat_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaIV, exp_cipher: ByteSeq) {
+fn kat_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaNonce, exp_cipher: ByteSeq) {
     let enc = chacha20(key, iv, 1u32, &m);
     let c = enc;
     assert_eq!(
@@ -123,7 +123,7 @@ fn kat_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaIV, exp_cipher: ByteSeq) {
 #[test]
 fn test_enc_dec() {
     let key = ChaChaKey::from_public_slice(&random_byte_vec(ChaChaKey::length()));
-    let iv = ChaChaIV::from_public_slice(&random_byte_vec(ChaChaIV::length()));
+    let iv = ChaChaNonce::from_public_slice(&random_byte_vec(ChaChaNonce::length()));
     let m = ByteSeq::from_public_slice(&random_byte_vec(40));
     enc_dec_test(m, key, iv);
 }
@@ -135,7 +135,7 @@ fn test_kat() {
         0x8f, 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d,
         0x9e, 0x9f,
     ]);
-    let iv = ChaChaIV::from_public_slice(&[
+    let iv = ChaChaNonce::from_public_slice(&[
         0x07, 0x00, 0x00, 0x00, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
     ]);
     let m = ByteSeq::from_public_slice(&[

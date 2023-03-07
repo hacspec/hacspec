@@ -12,9 +12,9 @@ fn read_file() -> Vec<u8> {
     data
 }
 
-fn enc_dec_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaIV) {
-    let c = chacha20(key, iv, 0, &m);
-    let m_dec = chacha20(key, iv, 0, &c);
+fn enc_dec_test(m: ByteSeq, key: ChaChaKey, nonce: ChaChaNonce) {
+    let c = chacha20(key, nonce, 0, &m);
+    let m_dec = chacha20(key, nonce, 0, &c);
     assert_eq!(
         m.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
         m_dec.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
@@ -28,7 +28,7 @@ fn main() {
         0x8f, 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d,
         0x9e, 0x9f,
     ]);
-    let nonce = ChaChaIV::from_public_slice(&[
+    let nonce = ChaChaNonce::from_public_slice(&[
         0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb,
     ]);
     enc_dec_test(data, key, nonce);

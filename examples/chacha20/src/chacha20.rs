@@ -4,12 +4,18 @@ use hacspec_lib::*;
 array!(State, 16, U32, type_for_indexes: StateIdx);
 array!(Constants, 4, U32, type_for_indexes: ConstantsIdx);
 bytes!(Block, 64);
-bytes!(ChaChaIV, 12);
+bytes!(ChaChaNonce, 12);
 bytes!(ChaChaKey, 32);
 
-fn chacha20_line(a: StateIdx, b: StateIdx, d: StateIdx, s: usize, m: State) -> State {
-    let mut state = m;
-    // TODO: we can't write += or ^= here right now :(
+// === RFC 8439: ChaCha20 and Poly1305 for IETF Protocols
+// === 2.1.  The ChaCha Quarter Round
+
+///  a += b; d ^= a; d <<<= 16;
+///  c += d; b ^= c; b <<<= 12;
+///  a += b; d ^= a; d <<<= 8;
+///  c += d; b ^= c; b <<<= 7;
+
+fn chacha20_line(a: StateIdx, b: StateIdx, d: StateIdx, s: usize, mut state: State) -> State {
     state[a] = state[a] + state[b];
     state[d] = state[d] ^ state[a];
     state[d] = state[d].rotate_left(s);
@@ -21,57 +27,71 @@ pub fn chacha20_quarter_round(
     b: StateIdx,
     c: StateIdx,
     d: StateIdx,
-    state: State,
+    mut state: State,
 ) -> State {
-    let state = chacha20_line(a, b, d, 16, state);
-    let state = chacha20_line(c, d, b, 12, state);
-    let state = chacha20_line(a, b, d, 8, state);
+    state = chacha20_line(a, b, d, 16, state);
+    state = chacha20_line(c, d, b, 12, state);
+    state = chacha20_line(a, b, d, 8, state);
     chacha20_line(c, d, b, 7, state)
 }
 
-fn chacha20_double_round(state: State) -> State {
-    let state = chacha20_quarter_round(0, 4, 8, 12, state);
-    let state = chacha20_quarter_round(1, 5, 9, 13, state);
-    let state = chacha20_quarter_round(2, 6, 10, 14, state);
-    let state = chacha20_quarter_round(3, 7, 11, 15, state);
+// === 2.3.1.  The ChaCha20 Block Function in Pseudocode
+/// inner_block (state):
+///         Qround(state, 0, 4, 8,12)
+///         Qround(state, 1, 5, 9,13)
+///         Qround(state, 2, 6,10,14)
+///         Qround(state, 3, 7,11,15)
+///         Qround(state, 0, 5,10,15)
+///         Qround(state, 1, 6,11,12)
+///         Qround(state, 2, 7, 8,13)
+///         Qround(state, 3, 4, 9,14)
+///         end
 
-    let state = chacha20_quarter_round(0, 5, 10, 15, state);
-    let state = chacha20_quarter_round(1, 6, 11, 12, state);
-    let state = chacha20_quarter_round(2, 7, 8, 13, state);
+fn inner_block(mut state: State) -> State {
+    state = chacha20_quarter_round(0, 4, 8, 12, state);
+    state = chacha20_quarter_round(1, 5, 9, 13, state);
+    state = chacha20_quarter_round(2, 6, 10, 14, state);
+    state = chacha20_quarter_round(3, 7, 11, 15, state);
+    state = chacha20_quarter_round(0, 5, 10, 15, state);
+    state = chacha20_quarter_round(1, 6, 11, 12, state);
+    state = chacha20_quarter_round(2, 7, 8, 13, state);
     chacha20_quarter_round(3, 4, 9, 14, state)
 }
 
-pub fn chacha20_rounds(state: State) -> State {
-    let mut st = state;
+/// chacha20_block(key, counter, nonce):
+///         state = constants | key | counter | nonce
+///         working_state = state
+///         for i=1 upto 10
+///            inner_block(working_state)
+///            end
+///         state += working_state
+///         return serialize(state)
+///         end
+
+const CHACHA20_CONSTANTS: Constants = Constants(secret_array!(
+    U32,
+    [0x6170_7865u32, 0x3320_646eu32, 0x7962_2d32u32, 0x6b20_6574u32]));
+
+pub fn chacha20_init(key: ChaChaKey, counter: U32, nonce: ChaChaNonce) -> State {
+    let mut state = State::new();
+    state = state.update(0, &CHACHA20_CONSTANTS);
+    state = state.update(4, &key.to_le_U32s());
+    state[12] = counter;
+    state = state.update(13, &nonce.to_le_U32s());
+    state
+}
+
+pub fn chacha20_rounds(mut working_state: State) -> State {
     for _i in 0..10 {
-        st = chacha20_double_round(st);
+        working_state = inner_block(working_state);
     }
-    st
+    working_state
 }
 
-pub fn chacha20_core(ctr: U32, st0: State) -> State {
-    let mut state = st0;
+pub fn chacha20_core(ctr: U32, mut state: State) -> State {
     state[12] = state[12] + ctr;
-    let k = chacha20_rounds(state);
-    k + state
-}
-
-pub fn chacha20_constants_init() -> Constants {
-    let mut constants = Constants::new();
-    constants[0] = U32(0x6170_7865u32);
-    constants[1] = U32(0x3320_646eu32);
-    constants[2] = U32(0x7962_2d32u32);
-    constants[3] = U32(0x6b20_6574u32);
-    constants
-}
-
-pub fn chacha20_init(key: ChaChaKey, iv: ChaChaIV, ctr: U32) -> State {
-    let mut st = State::new();
-    st = st.update(0, &chacha20_constants_init());
-    st = st.update(4, &key.to_le_U32s());
-    st[12] = ctr;
-    st = st.update(13, &iv.to_le_U32s());
-    st
+    let working_state = chacha20_rounds(state);
+    working_state + state
 }
 
 pub fn chacha20_key_block(state: State) -> Block {
@@ -79,16 +99,16 @@ pub fn chacha20_key_block(state: State) -> Block {
     Block::from_seq(&state.to_le_bytes())
 }
 
-pub fn chacha20_key_block0(key: ChaChaKey, iv: ChaChaIV) -> Block {
-    let state = chacha20_init(key, iv, U32(0u32));
+pub fn chacha20_key_block0(key: ChaChaKey, nonce: ChaChaNonce) -> Block {
+    let state = chacha20_init(key, U32(0u32), nonce);
     chacha20_key_block(state)
 }
 
-pub fn chacha20_encrypt_block(st0: State, ctr: U32, plain: &Block) -> Block {
-    let st = chacha20_core(ctr, st0);
+pub fn chacha20_encrypt_block(st0: State, counter: U32, plain: &Block) -> Block {
+    let mut state = chacha20_core(counter, st0);
     let pl = State::from_seq(&plain.to_le_U32s());
-    let st = pl ^ st;
-    Block::from_seq(&st.to_le_bytes())
+    state = pl ^ state;
+    Block::from_seq(&state.to_le_bytes())
 }
 
 pub fn chacha20_encrypt_last(st0: State, ctr: U32, plain: &ByteSeq) -> ByteSeq {
@@ -114,7 +134,7 @@ pub fn chacha20_update(st0: State, m: &ByteSeq) -> ByteSeq {
     blocks_out
 }
 
-pub fn chacha20(key: ChaChaKey, iv: ChaChaIV, ctr: u32, m: &ByteSeq) -> ByteSeq {
-    let state = chacha20_init(key, iv, U32(ctr));
+pub fn chacha20(key: ChaChaKey, nonce: ChaChaNonce, ctr: u32, m: &ByteSeq) -> ByteSeq {
+    let state = chacha20_init(key, U32(ctr), nonce);
     chacha20_update(state, m)
 }
