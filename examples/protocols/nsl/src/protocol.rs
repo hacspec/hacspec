@@ -6,95 +6,111 @@ use crate::*;
 
 /*
 noeq type message =
-  | Msg1: n_a: bytes -> a:string -> message
-  | Msg2: n_a: bytes -> n_b:bytes -> b:string -> message
-  | Msg3: n_b: bytes -> a:string -> message
+  | Msg1: n_a: Bytes -> a:string -> message
+  | Msg2: n_a: Bytes -> n_b:Bytes -> b:string -> message
+  | Msg3: n_b: Bytes -> a:string -> message
 */
 
 #[derive(Clone,Copy)]
 pub enum ProtocolMessage{
-     Msg1 { n_a: nonce, a: principal },
-     Msg2 { n_a: nonce, n_b:nonce, b: principal },
-     Msg3 { n_b: nonce, a: principal },
+     Msg1 { n_a: Nonce, a: Principal },
+     Msg2 { n_a: Nonce, n_b:Nonce, b: Principal },
+     Msg3 { n_b: Nonce, a: Principal },
+}
+
+// I would like to derive the following from a macro without writing it out
+impl Codec for ProtocolMessage {
+    fn encode(self) -> Bytes {
+        match self {
+            ProtocolMessage::Msg1 {n_a,a} => n_a.concat(&a).push(&U8(0)),
+            ProtocolMessage::Msg2 {n_a,n_b,b} => n_a.concat(&n_b).concat(&b).push(&U8(1)),
+            ProtocolMessage::Msg3 {n_b,a} => n_b.concat(&a).push(&U8(2)),
+        }     
+    }
+    fn decode(b:Bytes) -> Option<ProtocolMessage> {
+        if b.len() < 1 {None}
+        else
+         {if b[b.len()-1].declassify() == 0 && b.len() == 65 {
+            Some(ProtocolMessage::Msg1{n_a:Nonce::from_slice(&b,0,32),a:Principal::from_slice(&b,32,32)})}
+          else {if b[b.len()-1].declassify() == 1 && b.len() == 97 {
+                    Some(ProtocolMessage::Msg2{n_a:Nonce::from_slice(&b,0,32),n_b:Nonce::from_slice(&b,32,32),b:Principal::from_slice(&b,64,32)})}
+                else {if b[b.len()-1].declassify() == 2 && b.len() == 65 {
+                            Some(ProtocolMessage::Msg3{n_b:Nonce::from_slice(&b,0,32),a:Principal::from_slice(&b,32,32)})}
+                      else {None}}}}
+    }
 }
 
 /*
 noeq type session_st =
-  |InitiatorSentMsg1: b:principal -> n_a:bytes -> session_st
-  |ResponderSentMsg2: a:principal -> n_a:bytes -> n_b:bytes -> session_st
-  |InitiatorSentMsg3: b:principal -> n_a:bytes -> n_b:bytes -> session_st
-  |ResponderReceivedMsg3: a:principal -> n_b:bytes -> session_st
+  |InitiatorSentMsg1: b:Principal -> n_a:Bytes -> session_st
+  |ResponderSentMsg2: a:Principal -> n_a:Bytes -> n_b:Bytes -> session_st
+  |InitiatorSentMsg3: b:Principal -> n_a:Bytes -> n_b:Bytes -> session_st
+  |ResponderReceivedMsg3: a:Principal -> n_b:Bytes -> session_st
    */
   #[derive(Clone,Copy)]
   pub enum SessionState{
-  PrivateKey {sk_my:privkey},
-  PublicKey {b:principal, pk_b:pubkey},
-  InitiatorSentMsg1 { b: principal, n_a: nonce },
-  ResponderSentMsg2 { a: principal, n_a: nonce, n_b: nonce},
-  InitiatorSentMsg3 { b: principal, n_a: nonce, n_b: nonce },
-  ResponderReceivedMsg3 {a: principal, n_b: nonce}
+    PrivateKey {sk_my:Privkey},
+    PublicKey {b:Principal, pk_b:Pubkey},
+    InitiatorSentMsg1 { b: Principal, n_a: Nonce },
+    ResponderSentMsg2 { a: Principal, n_a: Nonce, n_b: Nonce},
+    InitiatorSentMsg3 { b: Principal, n_a: Nonce, n_b: Nonce },
+    ResponderReceivedMsg3 {a: Principal, n_b: Nonce}
 }
 
+// I would like to derive the following from a macro without writing it out
+impl Codec for SessionState {
+    fn encode(self) -> Bytes {
+        Seq::new(32)
+    }
+    fn decode(b:Bytes) -> Option<SessionState> {
+        None
+    }
+}
 /*
-let initiate (a:principal) (b:principal) (n_a:bytes) : event =
-  ("Initiate",[(string_to_bytes a);(string_to_bytes b);n_a])
-let respond (a:principal) (b:principal) (n_a:bytes) (n_b:bytes) : event =
-  ("Respond",[(string_to_bytes a);(string_to_bytes b);n_a;n_b])
-let finishI (a:principal) (b:principal) (n_a:bytes) (n_b:bytes) : event =
-  ("FinishI",[(string_to_bytes a);(string_to_bytes b);n_a;n_b])
-let finishR (a:principal) (b:principal) (n_a:bytes) (n_b:bytes) : event =
-  ("FinishR",[(string_to_bytes a);(string_to_bytes b);n_a;n_b])
+let initiate (a:Principal) (b:Principal) (n_a:Bytes) : event =
+  ("Initiate",[(string_to_Bytes a);(string_to_Bytes b);n_a])
+let respond (a:Principal) (b:Principal) (n_a:Bytes) (n_b:Bytes) : event =
+  ("Respond",[(string_to_Bytes a);(string_to_Bytes b);n_a;n_b])
+let finishI (a:Principal) (b:Principal) (n_a:Bytes) (n_b:Bytes) : event =
+  ("FinishI",[(string_to_Bytes a);(string_to_Bytes b);n_a;n_b])
+let finishR (a:Principal) (b:Principal) (n_a:Bytes) (n_b:Bytes) : event =
+  ("FinishR",[(string_to_Bytes a);(string_to_Bytes b);n_a;n_b])
    */
   #[derive(Clone,Copy)]
   pub enum ProtocolEvent {
-  Initiate {a:principal, b:principal, n_a:nonce},
-  Respond {a:principal, b:principal, n_a:nonce, n_b:nonce},
-  InitiatorFinished {a:principal, b:principal, n_a:nonce, n_b:nonce},
-  ResponderFinished {a:principal, b:principal, n_a:nonce, n_b:nonce},
+    Initiate {a:Principal, b:Principal, n_a:Nonce},
+    Respond {a:Principal, b:Principal, n_a:Nonce, n_b:Nonce},
+    InitiatorFinished {a:Principal, b:Principal, n_a:Nonce, n_b:Nonce},
+    ResponderFinished {a:Principal, b:Principal, n_a:Nonce, n_b:Nonce},
+    }
+
+// I would like to derive the following from a macro without writing it out
+impl Codec for ProtocolEvent {
+    fn encode(self) -> Bytes {
+        Seq::new(32)
+    }
+    fn decode(b:Bytes) -> Option<ProtocolEvent> {
+        None
+    }
 }
 
 
-/*
-let initiator_send_msg_1 a b =
-  let si = new_session_number #nsl a in
-  let (|t0, n_a|) = rand_gen #nsl (readers [P a; P b]) (nonce_usage "NSL.nonce") in
-  let ev = initiate a b n_a in 
-  trigger_event #nsl a ev;
-  let t1 = global_timestamp () in
-  let new_ss_st = InitiatorSentMsg1 b n_a in
-  let new_ss = serialize_valid_session_st t1 a si 0 new_ss_st in 
-  new_session #nsl #t1 a si 0 new_ss;
-  let t2 = global_timestamp () in
-  let m = Msg1 n_a a in
-  let l = readers [P a; P b] in
-  let msg1' : msg t2 l = serialize_valid_message t2 m l in
-  let msg1'' = restrict msg1' (readers [P b]) in
-  let msg1''' = restrict msg1' (readers [P a]) in
-  assert (get_label nsl_key_usages msg1''' == get_label nsl_key_usages msg1');
-  let pkb = get_public_key #nsl #t2 a b PKE "NSL.key" in 
-  sk_label_lemma nsl_global_usage t2 pkb (readers [P b]);
-  let (|t3,n_pke|) = rand_gen #nsl (readers [P a]) (nonce_usage "PKE_NONCE") in
-  let c_msg1 = pke_enc #nsl_global_usage #t3 #(readers [P a]) pkb n_pke msg1'' in
-  let now = send #nsl #t3 a b c_msg1 in
-  (si, now)
-   */
 
-pub fn get_public_key<T:Trace>(a:principal, b:principal, pk_b_sid: T::session_id, tr:&mut T) -> Option<pubkey> {
-  match tr.read_session(a,pk_b_sid)? {
+pub fn get_public_key<T:Trace>(a:Principal, b:Principal, pk_b_sid: T::SessionId, tr:&mut T) -> Option<Pubkey> {
+  match SessionState::decode(tr.read_session(a,pk_b_sid)?)? {
     SessionState::PublicKey {b:bb,pk_b} => 
       if b.declassify_eq(&bb) {Some (pk_b)} else {None},
     _ => None,
   }
 }
 
-pub fn initiator_send_msg_1<T:Trace>(a:principal, b:principal, pk_b_sid:T::session_id, mut tr:T) -> Option<(T::session_id,T::message_id)> {
+pub fn initiator_send_msg_1<T:Trace>(a:Principal, b:Principal, pk_b_sid:T::SessionId, mut tr:T) -> Option<(T::SessionId,T::MessageId)> {
   let rnd = tr.rand_gen(32);
-  let n_a = nonce::from_seq(&rnd);
-  tr.trigger_event(a, ProtocolEvent::Initiate {a,b,n_a});
-  let sid = tr.new_session(a,SessionState::InitiatorSentMsg1 {b,n_a});
-  let msg1 = ProtocolMessage::Msg1 {a,n_a};
+  let n_a = Nonce::from_seq(&rnd);
+  tr.trigger_event(a, ProtocolEvent::Initiate {a,b,n_a}.encode());
+  let sid = tr.new_session(a,SessionState::InitiatorSentMsg1 {b,n_a}.encode()); 
   let pk_b = get_public_key(a, b, pk_b_sid, &mut tr)?;
-  let c_msg1 = tr.pke_encrypt(pk_b, msg1);
+  let c_msg1 = tr.pke_encrypt(pk_b, ProtocolMessage::Msg1 {a,n_a}.encode());
   let msg_id = tr.send(a,b,c_msg1);
   Some((sid,msg_id))
 } 

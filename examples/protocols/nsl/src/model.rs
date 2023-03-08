@@ -1,21 +1,25 @@
 use hacspec_lib::*;
-pub type bytes = ByteSeq;
-use crate::*;
 
 
-bytes!(nonce,32);
-bytes!(principal,32);
-bytes!(privkey,32);
-bytes!(pubkey,32);
+bytes!(Nonce,32);
+bytes!(Principal,32);
+bytes!(Privkey,32);
+bytes!(Pubkey,32);
+
 pub trait Trace: Sized {
-  type session_id;
-  type message_id;
-  fn rand_gen(&mut self,len:usize) -> bytes;
-  fn trigger_event(&mut self,a:principal,ev:ProtocolEvent);
-  fn new_session(&mut self,a:principal,s:SessionState) -> Self::session_id;
-  fn read_session(&mut self,a:principal,sid:Self::session_id) -> Option<SessionState>;
-  fn update_session(&mut self,a:principal,sid:Self::session_id,s:SessionState);
-  fn send(&mut self,a:principal,b:principal,m:bytes) -> Self::message_id;
-  fn receive(&mut self,a:principal,msgid:Self::message_id) -> Option<(principal,bytes)>;
-  fn pke_encrypt(&mut self,pk_b:pubkey,m:ProtocolMessage) -> bytes;
+  type SessionId;
+  type MessageId;
+  fn rand_gen(&mut self,len:usize) -> Bytes;
+  fn trigger_event(&mut self,a:Principal,ev:Bytes);
+  fn new_session(&mut self,a:Principal,s:Bytes) -> Self::SessionId;
+  fn read_session(&mut self,a:Principal,sid:Self::SessionId) -> Option<Bytes>;
+  fn update_session(&mut self,a:Principal,sid:Self::SessionId,s:Bytes);
+  fn send(&mut self,a:Principal,b:Principal,m:Bytes) -> Self::MessageId;
+  fn receive(&mut self,a:Principal,msgid:Self::MessageId) -> Option<(Principal,Bytes)>;
+  fn pke_encrypt(&mut self,pk_b:Pubkey,m:Bytes) -> Bytes;
+}
+
+pub trait Codec : Sized{
+  fn encode(self) -> Bytes;
+  fn decode(b:Bytes) -> Option<Self>;
 }
