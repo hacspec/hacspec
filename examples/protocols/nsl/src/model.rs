@@ -20,6 +20,6 @@ pub trait Trace: Sized {
 }
 
 pub trait Codec : Sized{
-  fn encode(self) -> Bytes;
-  fn decode(b:Bytes) -> Option<Self>;
-}
+    fn encode(self) -> Bytes;
+    fn decode(b:Bytes) -> Option<Self>;
+  }
