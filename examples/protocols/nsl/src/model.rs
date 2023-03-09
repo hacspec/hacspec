@@ -1,6 +1,5 @@
 use hacspec_lib::*;
 
-
 bytes!(Nonce,32);
 bytes!(Principal,32);
 bytes!(Privkey,32);

@@ -1,7 +1,6 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 use codec::*;
-
 use crate::*;
 
 
@@ -33,43 +32,43 @@ pub enum ProtocolEvent {
     ResponderFinished {a:Principal, b:Principal, n_a:Nonce, n_b:Nonce},
 }
 
-pub fn init_initiator<T:Env>(a:Principal, b:Principal, pk_b_sid:T::SessionId, env:&mut T) 
-    -> Option<T::SessionId> {
-  let sid = T::new_session(a, SessionState::InitiatorInit {b}.encode(), env); 
+pub fn init_initiator<E:Env>(a:Principal, b:Principal, env:&mut E) 
+    -> Option<E::SessionId> {
+  let sid = E::new_session(a, SessionState::InitiatorInit {b}.encode(), env); 
   Some(sid)
 } 
 
-pub fn init_responderr<T:Env>(b:Principal, env:&mut T) 
-    -> Option<T::SessionId> {
-  let sid = T::new_session(b, SessionState::ResponderInit.encode(),env); 
+pub fn init_responderr<E:Env>(b:Principal, env:&mut E) 
+    -> Option<E::SessionId> {
+  let sid = E::new_session(b, SessionState::ResponderInit.encode(),env); 
   Some(sid)
 } 
 
-pub fn initiator_send_msg_1<T:Env>(a:Principal, sid:T::SessionId,  env:&mut T) 
-    -> Option<T::MessageId> {
-  if let SessionState::InitiatorInit { b } = SessionState::decode(T::read_session(a, sid, env)?)? {
-    let n_a = Nonce::from_seq(&T::rand_gen(32,env));
-    T::trigger_event(a, ProtocolEvent::Initiate {a,b,n_a}.encode(),env);
-    T::update_session(a, sid, SessionState::InitiatorSentMsg1 {b,n_a}.encode(),env); 
+pub fn initiator_send_msg_1<E:Env>(a:Principal, sid:E::SessionId,  env:&mut E) 
+    -> Option<E::MessageId> {
+  if let SessionState::InitiatorInit { b } = SessionState::decode(E::read_session(a, sid, env)?)? {
+    let n_a = Nonce::from_seq(&E::rand_gen(32,env));
+    E::trigger_event(a, ProtocolEvent::Initiate {a,b,n_a}.encode(),env);
+    E::update_session(a, sid, SessionState::InitiatorSentMsg1 {b,n_a}.encode(),env); 
     let pk_b = get_public_key(a, b, env)?;
-    let c_msg1 = T::pke_encrypt(pk_b, ProtocolMessage::Msg1 {n_a,a}.encode(),env);
-    let msg_id = T::send(a,b,c_msg1,env);
+    let c_msg1 = E::pke_encrypt(pk_b, ProtocolMessage::Msg1 {n_a,a}.encode(),env);
+    let msg_id = E::send(a,b,c_msg1,env);
     Some(msg_id)
   } else {None}
 } 
 
-pub fn responder_send_msg_2<T:Env>(b: Principal, sid: T::SessionId, msgid: T::MessageId,  env:&mut T)
-    -> Option<T::MessageId> {
-    if let SessionState::ResponderInit = SessionState::decode(T::read_session(b, sid,env)?)? {
+pub fn responder_send_msg_2<E:Env>(b: Principal, sid: E::SessionId, msgid: E::MessageId,  env:&mut E)
+    -> Option<E::MessageId> {
+    if let SessionState::ResponderInit = SessionState::decode(E::read_session(b, sid,env)?)? {
        let sk_b = get_private_key(b, env)?;
-       let (a,msg) = T::receive(b, msgid, env)?;
-       if let ProtocolMessage::Msg1 {n_a,a} = ProtocolMessage::decode(T::pke_decrypt(sk_b,msg,env)?)? {
-        let n_b = Nonce::from_seq(&T::rand_gen(32,env));
-        T::trigger_event(a, ProtocolEvent::Respond {a,b,n_a,n_b}.encode(),env);
-        T::update_session(a, sid, SessionState::ResponderSentMsg2 {a,n_a,n_b}.encode(),env); 
+       let (a,msg) = E::receive(b, msgid, env)?;
+       if let ProtocolMessage::Msg1 {n_a,a} = ProtocolMessage::decode(E::pke_decrypt(sk_b,msg,env)?)? {
+        let n_b = Nonce::from_seq(&E::rand_gen(32,env));
+        E::trigger_event(a, ProtocolEvent::Respond {a,b,n_a,n_b}.encode(),env);
+        E::update_session(a, sid, SessionState::ResponderSentMsg2 {a,n_a,n_b}.encode(),env); 
         let pk_b = get_public_key(b, a, env)?;
-        let c_msg1 = T::pke_encrypt(pk_b, ProtocolMessage::Msg2 {n_a,n_b,b}.encode(),env);
-        let msg_id = T::send(a,b,c_msg1,env);
+        let c_msg1 = E::pke_encrypt(pk_b, ProtocolMessage::Msg2 {n_a,n_b,b}.encode(),env);
+        let msg_id = E::send(a,b,c_msg1,env);
         Some(msg_id)
        } else {None}
     } else {None}
