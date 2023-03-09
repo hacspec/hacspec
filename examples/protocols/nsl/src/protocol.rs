@@ -1,5 +1,6 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
+use runtime::model::*;
 use codec::*;
 use crate::*;
 

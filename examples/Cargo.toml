@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "protocols/tls_cryptolib",
-    "protocols/nsl/codec",
+    "protocols/runtime/codec",
+    "protocols/runtime",
     "protocols/nsl",
     "curve25519",
     "chacha20",

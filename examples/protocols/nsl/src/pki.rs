@@ -1,10 +1,11 @@
 // This is where the PKI stuff should go
 use hacspec_lib::*;
+use runtime::model::*;
 use crate::*;
 
 // Would be nice to separate out the PKI state over here
 
-pub fn get_public_key(a:Principal, b:Principal, env:&mut impl Env) -> Option<Pubkey> {
+pub fn get_public_key(a:Principals, b:Principal, env:&mut impl Env) -> Option<Pubkey> {
     let filter = |st| (
       match SessionState::decode(st) {
           Some(SessionState::PublicKey {b:bb,pk_b}) => 
