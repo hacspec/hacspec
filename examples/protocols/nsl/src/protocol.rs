@@ -15,7 +15,9 @@ pub enum ProtocolMessage{
 #[derive(Clone,Copy,Codec)]
 pub enum SessionState{
     PrivateKey {sk_my:Privkey},
-    PublicKey {b:Principal, pk_b:Pubkey},
+    PublicKey {b: Principal, pk_b:Pubkey},
+    InitiatorInit{b: Principal},
+    ResponderInit,
     InitiatorSentMsg1 { b: Principal, n_a: Nonce },
     ResponderSentMsg2 { a: Principal, n_a: Nonce, n_b: Nonce},
     InitiatorSentMsg3 { b: Principal, n_a: Nonce, n_b: Nonce },
@@ -29,26 +31,67 @@ pub enum ProtocolEvent {
     Respond {a:Principal, b:Principal, n_a:Nonce, n_b:Nonce},
     InitiatorFinished {a:Principal, b:Principal, n_a:Nonce, n_b:Nonce},
     ResponderFinished {a:Principal, b:Principal, n_a:Nonce, n_b:Nonce},
-    }
-
-
-
-pub fn get_public_key<T:Trace>(a:Principal, b:Principal, pk_b_sid: T::SessionId, tr:&mut T) -> Option<Pubkey> {
-  match SessionState::decode(tr.read_session(a,pk_b_sid)?)? {
-    SessionState::PublicKey {b:bb,pk_b} => 
-      if b.declassify_eq(&bb) {Some (pk_b)} else {None},
-    _ => None,
-  }
 }
 
-pub fn initiator_send_msg_1<T:Trace>(a:Principal, b:Principal, pk_b_sid:T::SessionId, mut tr:T) -> Option<(T::SessionId,T::MessageId)> {
-  let rnd = tr.rand_gen(32);
-  let n_a = Nonce::from_seq(&rnd);
-  tr.trigger_event(a, ProtocolEvent::Initiate {a,b,n_a}.encode());
-  let sid = tr.new_session(a,SessionState::InitiatorSentMsg1 {b,n_a}.encode()); 
-  let pk_b = get_public_key(a, b, pk_b_sid, &mut tr)?;
-  let c_msg1 = tr.pke_encrypt(pk_b, ProtocolMessage::Msg1 {a,n_a}.encode());
-  let msg_id = tr.send(a,b,c_msg1);
-  Some((sid,msg_id))
+pub fn init_initiator<T:Env>(a:Principal, b:Principal, pk_b_sid:T::SessionId, env:&mut T) 
+    -> Option<T::SessionId> {
+  let sid = T::new_session(a, SessionState::InitiatorInit {b}.encode(), env); 
+  Some(sid)
 } 
 
+pub fn init_responderr<T:Env>(b:Principal, env:&mut T) 
+    -> Option<T::SessionId> {
+  let sid = T::new_session(b, SessionState::ResponderInit.encode(),env); 
+  Some(sid)
+} 
+
+pub fn initiator_send_msg_1<T:Env>(a:Principal, sid:T::SessionId,  env:&mut T) 
+    -> Option<T::MessageId> {
+  if let SessionState::InitiatorInit { b } = SessionState::decode(T::read_session(a, sid, env)?)? {
+    let n_a = Nonce::from_seq(&T::rand_gen(32,env));
+    T::trigger_event(a, ProtocolEvent::Initiate {a,b,n_a}.encode(),env);
+    T::update_session(a, sid, SessionState::InitiatorSentMsg1 {b,n_a}.encode(),env); 
+    let pk_b = get_public_key(a, b, env)?;
+    let c_msg1 = T::pke_encrypt(pk_b, ProtocolMessage::Msg1 {n_a,a}.encode(),env);
+    let msg_id = T::send(a,b,c_msg1,env);
+    Some(msg_id)
+  } else {None}
+} 
+
+pub fn responder_send_msg_2<T:Env>(b: Principal, sid: T::SessionId, msgid: T::MessageId,  env:&mut T)
+    -> Option<T::MessageId> {
+    if let SessionState::ResponderInit = SessionState::decode(T::read_session(b, sid,env)?)? {
+       let sk_b = get_private_key(b, env)?;
+       let (a,msg) = T::receive(b, msgid, env)?;
+       if let ProtocolMessage::Msg1 {n_a,a} = ProtocolMessage::decode(T::pke_decrypt(sk_b,msg,env)?)? {
+        let n_b = Nonce::from_seq(&T::rand_gen(32,env));
+        T::trigger_event(a, ProtocolEvent::Respond {a,b,n_a,n_b}.encode(),env);
+        T::update_session(a, sid, SessionState::ResponderSentMsg2 {a,n_a,n_b}.encode(),env); 
+        let pk_b = get_public_key(b, a, env)?;
+        let c_msg1 = T::pke_encrypt(pk_b, ProtocolMessage::Msg2 {n_a,n_b,b}.encode(),env);
+        let msg_id = T::send(a,b,c_msg1,env);
+        Some(msg_id)
+       } else {None}
+    } else {None}
+}
+
+
+/* 
+let responder_send_msg_2 b msg_idx =
+  let (|now,_,c_msg1|) = receive_i #nsl msg_idx b in
+  let (|_, skb|) = get_private_key #nsl #now b PKE "NSL.key" in
+  let (a, n_a) = responder_receive_msg_1_helper #now b c_msg1 skb in
+  let pka = get_public_key #nsl #now b a PKE "NSL.key" in
+  let (|t0, n_b|) = rand_gen #nsl (readers [P a; P b]) (nonce_usage "NSL.nonce") in
+  let ev = respond a b n_a n_b in
+  trigger_event #nsl b ev;
+  let t1 = global_timestamp () in
+  let si = new_session_number #nsl b in
+  let new_ss_st = ResponderSentMsg2 a n_a n_b in
+  let new_ss = serialize_valid_session_st t1 b si 0 new_ss_st in
+  new_session #nsl #t1 b si 0 new_ss;
+  let (|t2,n_pke|) = rand_gen #nsl (readers [P b]) (nonce_usage "PKE_NONCE") in
+  let c_msg2 = responder_send_msg_2_helper #t2 b a pka n_a n_b n_pke in
+  let now = send #nsl #t2 b a c_msg2 in
+  (si, now)
+*/
