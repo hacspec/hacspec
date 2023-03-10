@@ -7,14 +7,14 @@ use codec::*;
 use crate::*;
 
 
-#[derive(Clone,Codec)]
+#[derive(Clone,Copy,Codec)]
 pub enum ProtocolMessage{
      Msg1 { n_a: Nonce, a: Principal },
      Msg2 { n_a: Nonce, n_b:Nonce, b: Principal },
      Msg3 { n_b: Nonce },
 }
 
-#[derive(Clone,Codec)]
+#[derive(Clone,Copy,Codec)]
 pub enum SessionState{
     PrivateKey {sk_my:Privkey},
     PublicKey {b: Principal, pk_b:Pubkey},
@@ -27,7 +27,7 @@ pub enum SessionState{
 }
 
 
-#[derive(Clone,Codec)]
+#[derive(Clone,Copy,Codec)]
 pub enum ProtocolEvent {
     Initiate {a:Principal, b:Principal, n_a:Nonce},
     Respond {a:Principal, b:Principal, n_a:Nonce, n_b:Nonce},
