@@ -11,7 +11,7 @@ pub fn derive_codec_impl(input: TokenStream) -> TokenStream {
     let impl_block = quote! {
         impl Codec for #name {
             fn encode(self) -> Bytes {
-                Seq::new(32)
+                Bytes::new(32)
             }
             fn decode(b:Bytes) -> Option<#name> {
                 None

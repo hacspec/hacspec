@@ -10,7 +10,7 @@ pub fn get_public_key(a:Principal, b:Principal, env:&mut Env) -> Option<Pubkey> 
     let filter = |st:&Bytes| (
       match SessionState::decode(st.clone()) {
           Some(SessionState::PublicKey {b:bb,pk_b:_}) => 
-               if b.declassify_eq(&bb) {true} else {false},
+               if b.eq(&bb) {true} else {false},
           _ => false, 
       } 
     );

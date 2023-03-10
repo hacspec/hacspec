@@ -958,6 +958,7 @@ macro_rules! public_bytes {
     };
 }
 
+
 #[macro_export]
 macro_rules! secret_array {
     ( $int_type: ident, [ $( $x:expr ),+ ] ) => {

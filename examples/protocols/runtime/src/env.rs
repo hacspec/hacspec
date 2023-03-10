@@ -2,7 +2,7 @@ use hacspec_lib::*;
 use crate::*;
 use rand::prelude::*;
 use rand_chacha::ChaCha20Rng;
-use std::collections::HashMap;
+
 
 // This is a naive implementation of a Protocol Runtime.
 // We should be using better data structures and avoiding so many clones/copies
@@ -28,8 +28,8 @@ pub fn init_env() -> Env {
 }
 
 pub fn rand_gen(len:usize,env:&mut Env) -> Bytes{
-    let random_bytes: Vec<U8> = (0..len).map(|_| { U8(env.rng.gen::<u8>()) }).collect();
-    Seq::from_vec(random_bytes)
+    let random_bytes: Vec<u8> = (0..len).map(|_| { env.rng.gen::<u8>()}).collect();
+    Bytes::from_vec(random_bytes)
 }
 
 pub fn trigger_event(a:Principal,ev:Bytes,env:&mut Env) {
@@ -46,7 +46,7 @@ pub fn read_session(a:Principal,sid:SessionId,env:&mut Env) -> Option<Bytes> {
     if sid >= env.sessions.len() {None}
     else {
         let (aa,st) = env.sessions[sid].clone();
-        if a.declassify_eq(&aa) {
+        if a.eq(&aa) {
             Some(st)
         } else {None}   
     }
@@ -55,8 +55,8 @@ pub fn read_session(a:Principal,sid:SessionId,env:&mut Env) -> Option<Bytes> {
 pub fn update_session(a:Principal,sid:SessionId,s:Bytes,env:&mut Env) -> Option<()> {
     if sid >= env.sessions.len() {None}
     else {
-        let (aa,_) = env.sessions[sid];
-        if a.declassify_eq(&aa) {
+        let (aa,_) = env.sessions[sid].clone();
+        if a.eq(&aa) {
             env.sessions[sid] = (a,s);
             Some(())
         } else {None}  
@@ -68,7 +68,7 @@ pub fn find_session<F>(a:Principal,filter:F,env:&mut Env) -> Option<Bytes>
     let mut st = None;
     for i in 0..env.sessions.len() {
         let (aa,pst) = env.sessions[i].clone(); 
-        if a.declassify_eq(&aa) && filter(&pst) {
+        if a.eq(&aa) && filter(&pst) {
                 st = Some(pst.clone());
                 break;
         } else {}
@@ -86,7 +86,7 @@ pub fn receive_next(b:Principal,env:&mut Env) -> Option<(Principal,Bytes)> {
     if env.msgs_in.len() == 0 {None}
     else {
         let ((aa,bb,m),msgs) = env.msgs_in.clone().pop();
-        if b.declassify_eq(&bb) {
+        if b.eq(&bb) {
             env.msgs_in = msgs;
             Some((aa,m.clone()))
         } else {None}   
@@ -98,7 +98,7 @@ pub fn receive(b:Principal,msgid:MessageId,env:&mut Env) -> Option<(Principal,By
     else {
         let (msgs0,msgs1) = env.msgs_in.clone().split_off(msgid);
         let ((aa,bb,m),msgs1) = msgs1.pop();
-        if b.declassify_eq(&bb) {
+        if b.eq(&bb) {
             env.msgs_in = msgs0.concat(&msgs1);
             Some((aa,m))
         } else {None}   

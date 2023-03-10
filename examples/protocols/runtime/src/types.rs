@@ -1,17 +1,18 @@
 use hacspec_lib::*;
 
-bytes!(Nonce,32);
-bytes!(Principal,32);
-bytes!(Privkey,32);
-bytes!(Pubkey,32);
+public_bytes!(Principal,32);
+pub type Nonce = Bytes;
+pub type Pubkey = Bytes;
+pub type Privkey = Bytes;
 
+/*
 impl PartialEq for Principal {
   fn eq(&self,other:&Self)->bool {
     self.declassify_eq(other)
   }
 }
 impl Eq for Principal {}
-
+*/
 
 pub trait Codec : Sized{
   fn encode(self) -> Bytes;
