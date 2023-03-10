@@ -37,7 +37,7 @@ pub fn pke_encrypt(pk_b:Pubkey,m:Bytes,env:&mut Env) -> Bytes {
 }
 
 // TODO: Use HPKE decrypt
-pub fn pke_decrypt(sk_b:Privkey,m:Bytes,env:&mut Env) -> Option<Bytes> {
+pub fn pke_decrypt(sk_b:Privkey,m:Bytes,_env:&mut Env) -> Option<Bytes> {
     if m.len() < 4 {None}
     else {
         let (lenb,rest) = m.split_off(4);

@@ -80,7 +80,6 @@ pub fn responder_send_msg_2(b: Principal, sid: SessionId, msgid: MessageId,  env
 pub fn initiator_send_msg_3(a:Principal, sid:SessionId, msgid:MessageId, env:&mut Env) 
     -> Option<MessageId> {
   if let SessionState::InitiatorSentMsg1 { b,n_a } = SessionState::decode(read_session(a, sid, env)?)? {
-    let n_a = Nonce::from_seq(&rand_gen(32,env));
     let sk_a = get_private_key(a, env)?;
     let (_b,msg) = receive(b, msgid, env)?;
     if let ProtocolMessage::Msg2 {n_a:recv_n_a,n_b,b:recv_b} = ProtocolMessage::decode(pke_decrypt(sk_a,msg,env)?)? {

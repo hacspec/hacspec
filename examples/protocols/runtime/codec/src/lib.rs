@@ -5,7 +5,7 @@ use syn::{parse_macro_input, DeriveInput, FieldsNamed, Type};
 
 #[proc_macro_derive(Codec)]
 pub fn derive_codec_impl(input: TokenStream) -> TokenStream {
-    let mut input = parse_macro_input!(input as DeriveInput);
+    let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident;
 
     let impl_block = quote! {
