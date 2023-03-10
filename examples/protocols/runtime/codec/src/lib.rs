@@ -13,8 +13,8 @@ pub fn derive_codec_impl(input: TokenStream) -> TokenStream {
             fn encode(self) -> Bytes {
                 Bytes::new(32)
             }
-            fn decode(b:Bytes) -> Option<#name> {
-                None
+            fn decode(b:Bytes) -> Result<#name,Error> {
+                Err(Error::ParseError)
             }
         }
     };

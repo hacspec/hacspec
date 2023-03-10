@@ -37,8 +37,8 @@ pub fn pke_encrypt(pk_b:Pubkey,m:Bytes,env:&mut Env) -> Bytes {
 }
 
 // TODO: Use HPKE decrypt
-pub fn pke_decrypt(sk_b:Privkey,m:Bytes,_env:&mut Env) -> Option<Bytes> {
-    if m.len() < 4 {None}
+pub fn pke_decrypt(sk_b:Privkey,m:Bytes,_env:&mut Env) -> Result<Bytes,Error> {
+    if m.len() < 4 {Err(Error::CryptoError)}
     else {
         let (lenb,rest) = m.split_off(4);
         let lena = [lenb[0],lenb[1],lenb[2],lenb[3]];
@@ -67,8 +67,8 @@ pub fn pke_decrypt(sk_b:Privkey,m:Bytes,_env:&mut Env) -> Option<Bytes> {
             None,
         );
         match decrypted_ptxt {
-            Ok(p) => Some(p),
-            _ => None
+            Ok(p) => Ok(p),
+            _ => Err(Error::CryptoError)
         }
     }
 }

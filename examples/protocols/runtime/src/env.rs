@@ -42,34 +42,34 @@ pub fn new_session(a:Principal,s:Bytes,env:&mut Env) -> SessionId {
     sid    
 }
 
-pub fn read_session(a:Principal,sid:SessionId,env:&mut Env) -> Option<Bytes> {
-    if sid >= env.sessions.len() {None}
+pub fn read_session(a:Principal,sid:SessionId,env:&mut Env) -> Result<Bytes,Error> {
+    if sid >= env.sessions.len() {Err(Error::SessionNotFound)}
     else {
         let (aa,st) = env.sessions[sid].clone();
         if a.eq(&aa) {
-            Some(st)
-        } else {None}   
+            Ok(st)
+        } else {Err(Error::SessionNotFound)}   
     }
 }
 
-pub fn update_session(a:Principal,sid:SessionId,s:Bytes,env:&mut Env) -> Option<()> {
-    if sid >= env.sessions.len() {None}
+pub fn update_session(a:Principal,sid:SessionId,s:Bytes,env:&mut Env) -> Result<(),Error> {
+    if sid >= env.sessions.len() {Err(Error::SessionNotFound)}
     else {
         let (aa,_) = env.sessions[sid].clone();
         if a.eq(&aa) {
             env.sessions[sid] = (a,s);
-            Some(())
-        } else {None}  
+            Ok(())
+        } else {Err(Error::SessionNotFound)}  
     }
 }
 
-pub fn find_session<F>(a:Principal,filter:F,env:&mut Env) -> Option<Bytes>
+pub fn find_session<F>(a:Principal,filter:F,env:&mut Env) -> Result<Bytes,Error>
                  where F: Fn (&Bytes) -> bool {
-    let mut st = None;
+    let mut st = Err(Error::SessionNotFound);
     for i in 0..env.sessions.len() {
         let (aa,pst) = env.sessions[i].clone(); 
         if a.eq(&aa) && filter(&pst) {
-                st = Some(pst.clone());
+                st = Ok(pst.clone());
                 break;
         } else {}
     }
@@ -82,26 +82,26 @@ pub fn send(a:Principal,b:Principal,m:Bytes,env:&mut Env) -> MessageId {
     msgid 
 }
 
-pub fn receive_next(b:Principal,env:&mut Env) -> Option<(Principal,Bytes)> {
-    if env.msgs_in.len() == 0 {None}
+pub fn receive_next(b:Principal,env:&mut Env) -> Result<(Principal,Bytes),Error> {
+    if env.msgs_in.len() == 0 {Err(Error::MessageNotFound)}
     else {
         let ((aa,bb,m),msgs) = env.msgs_in.clone().pop();
         if b.eq(&bb) {
             env.msgs_in = msgs;
-            Some((aa,m.clone()))
-        } else {None}   
+            Ok((aa,m.clone()))
+        } else {Err(Error::MessageNotFound)}   
     }
 }
 
-pub fn receive(b:Principal,msgid:MessageId,env:&mut Env) -> Option<(Principal,Bytes)> {
-    if env.msgs_in.len() <= msgid {None}
+pub fn receive(b:Principal,msgid:MessageId,env:&mut Env) -> Result<(Principal,Bytes),Error> {
+    if env.msgs_in.len() <= msgid {Err(Error::MessageNotFound)}
     else {
         let (msgs0,msgs1) = env.msgs_in.clone().split_off(msgid);
         let ((aa,bb,m),msgs1) = msgs1.pop();
         if b.eq(&bb) {
             env.msgs_in = msgs0.concat(&msgs1);
-            Some((aa,m))
-        } else {None}   
+            Ok((aa,m))
+        } else {Err(Error::MessageNotFound)}   
     }
 }
 

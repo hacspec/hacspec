@@ -1,4 +1,5 @@
 use hacspec_lib::*;
+use crate::*;
 
 array!(Principal,32,Byte);
 array!(Nonce,32,Byte);
@@ -15,11 +16,6 @@ impl PartialEq for Principal {
 impl Eq for Principal {}
 */
 
-pub trait Codec : Sized{
-  fn encode(self) -> Bytes;
-  fn decode(b:Bytes) -> Option<Self>;
-}
-
 
 pub trait Protocol {
     type Config: Copy+Clone+Codec;
@@ -32,4 +28,17 @@ pub trait Protocol {
         -> Result<Option<Self::Message>,usize>;
     fn process_msg(st:Self::Session, in_msg:Self::Message, env:&mut Self::Env) 
         -> Result<Option<Self::Message>,usize>;
+}
+
+pub enum Error {
+  CryptoError,
+  SessionNotFound,
+  MessageNotFound,
+  ParseError,
+  IncorrectState
+}
+
+pub trait Codec : Sized{
+  fn encode(self) -> Bytes;
+  fn decode(b:Bytes) -> Result<Self,Error>;
 }
