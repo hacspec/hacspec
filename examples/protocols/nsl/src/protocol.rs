@@ -51,8 +51,8 @@ pub fn initiator_send_msg_1(a:Principal, sid:SessionId,  env:&mut Env)
     -> Option<MessageId> {
   if let SessionState::InitiatorInit { b } = SessionState::decode(read_session(a, sid, env)?)? {
     let n_a = Nonce::from_seq(&rand_gen(32,env));
-    trigger_event(a, ProtocolEvent::Initiate {a,b,n_a:n_a.clone()}.encode(),env);
-    update_session(a, sid, SessionState::InitiatorSentMsg1 {b,n_a:n_a.clone()}.encode(),env); 
+    trigger_event(a, ProtocolEvent::Initiate {a,b,n_a}.encode(),env);
+    update_session(a, sid, SessionState::InitiatorSentMsg1 {b,n_a}.encode(),env); 
     let pk_b = get_public_key(a, b, env)?;
     let c_msg1 = pke_encrypt(pk_b, ProtocolMessage::Msg1 {n_a,a}.encode(),env);
     let msg_id = send(a,b,c_msg1,env);
@@ -67,8 +67,8 @@ pub fn responder_send_msg_2(b: Principal, sid: SessionId, msgid: MessageId,  env
        let (_a,msg) = receive(b, msgid, env)?;
        if let ProtocolMessage::Msg1 {n_a,a} = ProtocolMessage::decode(pke_decrypt(sk_b,msg,env)?)? {
         let n_b = Nonce::from_seq(&rand_gen(32,env));
-        trigger_event(a, ProtocolEvent::Respond {a,b,n_a:n_a.clone(),n_b:n_b.clone()}.encode(),env);
-        update_session(a, sid, SessionState::ResponderSentMsg2 {a,n_a:n_a.clone(),n_b:n_b.clone()}.encode(),env); 
+        trigger_event(a, ProtocolEvent::Respond {a,b,n_a,n_b}.encode(),env);
+        update_session(a, sid, SessionState::ResponderSentMsg2 {a,n_a,n_b}.encode(),env); 
         let pk_b = get_public_key(b, a, env)?;
         let c_msg1 = pke_encrypt(pk_b, ProtocolMessage::Msg2 {n_a,n_b,b}.encode(),env);
         let msg_id = send(a,b,c_msg1,env);
@@ -85,8 +85,8 @@ pub fn initiator_send_msg_3(a:Principal, sid:SessionId, msgid:MessageId, env:&mu
     let (_b,msg) = receive(b, msgid, env)?;
     if let ProtocolMessage::Msg2 {n_a:recv_n_a,n_b,b:recv_b} = ProtocolMessage::decode(pke_decrypt(sk_a,msg,env)?)? {
        if b.eq(&recv_b) && n_a.eq(&recv_n_a) {
-         trigger_event(a, ProtocolEvent::InitiatorFinished {a,b,n_a:n_a.clone(),n_b:n_b.clone()}.encode(),env);
-         update_session(a, sid, SessionState::InitiatorSentMsg3 {b,n_a:n_a.clone(),n_b:n_b.clone()}.encode(),env); 
+         trigger_event(a, ProtocolEvent::InitiatorFinished {a,b,n_a,n_b}.encode(),env);
+         update_session(a, sid, SessionState::InitiatorSentMsg3 {b,n_a,n_b}.encode(),env); 
         let pk_b = get_public_key(a, b, env)?;
         let c_msg3 = pke_encrypt(pk_b, ProtocolMessage::Msg3 {n_b}.encode(),env);
         let msg_id = send(a,b,c_msg3,env);
@@ -104,7 +104,7 @@ pub fn responder_receive_msg3(b: Principal, sid: SessionId, msgid: MessageId,  e
        let (_a,msg) = receive(b, msgid, env)?;
        if let ProtocolMessage::Msg3 {n_b:recv_n_b} = ProtocolMessage::decode(pke_decrypt(sk_b,msg,env)?)? {
         if n_b.eq(&recv_n_b) {
-            trigger_event(a, ProtocolEvent::ResponderFinished {a,b,n_a,n_b:n_b.clone()}.encode(),env);
+            trigger_event(a, ProtocolEvent::ResponderFinished {a,b,n_a,n_b}.encode(),env);
             update_session(a, sid, SessionState::ResponderReceivedMsg3 {a,n_b}.encode(),env); 
             Some(())
         } else {None}

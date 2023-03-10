@@ -1,9 +1,10 @@
 use hacspec_lib::*;
 
-public_bytes!(Principal,32);
-pub type Nonce = Bytes;
-pub type Pubkey = Bytes;
-pub type Privkey = Bytes;
+array!(Principal,32,Byte);
+array!(Nonce,32,Byte);
+array!(Pubkey,32,Byte);
+array!(Privkey,32,Byte);
+
 
 /*
 impl PartialEq for Principal {
