@@ -87,7 +87,7 @@ pub fn init_initiator(a: Principal, b: Principal, env: &mut Env) -> Result<Sessi
     Ok(sid)
 }
 
-pub fn init_responderr(b: Principal, env: &mut Env) -> Result<SessionId,Error> {
+pub fn init_responder(b: Principal, env: &mut Env) -> Result<SessionId,Error> {
     let sid = new_session(b, SessionState::ResponderInit.encode(), env);
     Ok(sid)
 }
