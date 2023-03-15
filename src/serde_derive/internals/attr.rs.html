@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_derive-1.0.152/src/internals/attr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>attr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../serde_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_derive-1.0.156/src/internals/attr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>attr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../serde_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../serde_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
@@ -1910,65 +1910,19 @@
 <span id="1904">1904</span>
 <span id="1905">1905</span>
 <span id="1906">1906</span>
-<span id="1907">1907</span>
-<span id="1908">1908</span>
-<span id="1909">1909</span>
-<span id="1910">1910</span>
-<span id="1911">1911</span>
-<span id="1912">1912</span>
-<span id="1913">1913</span>
-<span id="1914">1914</span>
-<span id="1915">1915</span>
-<span id="1916">1916</span>
-<span id="1917">1917</span>
-<span id="1918">1918</span>
-<span id="1919">1919</span>
-<span id="1920">1920</span>
-<span id="1921">1921</span>
-<span id="1922">1922</span>
-<span id="1923">1923</span>
-<span id="1924">1924</span>
-<span id="1925">1925</span>
-<span id="1926">1926</span>
-<span id="1927">1927</span>
-<span id="1928">1928</span>
-<span id="1929">1929</span>
-<span id="1930">1930</span>
-<span id="1931">1931</span>
-<span id="1932">1932</span>
-<span id="1933">1933</span>
-<span id="1934">1934</span>
-<span id="1935">1935</span>
-<span id="1936">1936</span>
-<span id="1937">1937</span>
-<span id="1938">1938</span>
-<span id="1939">1939</span>
-<span id="1940">1940</span>
-<span id="1941">1941</span>
-<span id="1942">1942</span>
-<span id="1943">1943</span>
-<span id="1944">1944</span>
-<span id="1945">1945</span>
-<span id="1946">1946</span>
-<span id="1947">1947</span>
-<span id="1948">1948</span>
-<span id="1949">1949</span>
-<span id="1950">1950</span>
-<span id="1951">1951</span>
-<span id="1952">1952</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">internals::respan::respan</span>;
-<span class="kw">use</span> <span class="ident">internals::symbol</span>::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">internals::symbol</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">internals</span>::{<span class="ident">ungroup</span>, <span class="ident">Ctxt</span>};
 <span class="kw">use</span> <span class="ident">proc_macro2</span>::{<span class="ident">Spacing</span>, <span class="ident">Span</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenTree</span>};
 <span class="kw">use</span> <span class="ident">quote::ToTokens</span>;
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
+<span class="kw">use</span> <span class="ident">std::iter::FromIterator</span>;
 <span class="kw">use</span> <span class="ident">syn</span>;
-<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="self">self</span>, <span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">syn::parse::ParseStream</span>;
 <span class="kw">use</span> <span class="ident">syn::punctuated::Punctuated</span>;
-<span class="kw">use</span> <span class="ident">syn::Ident</span>;
 <span class="kw">use</span> <span class="ident">syn::Meta</span>::{<span class="ident">List</span>, <span class="ident">NameValue</span>, <span class="ident">Path</span>};
 <span class="kw">use</span> <span class="ident">syn::NestedMeta</span>::{<span class="ident">Lit</span>, <span class="ident">Meta</span>};
+<span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">Ident</span>, <span class="ident">Lifetime</span>};
 
 <span class="comment">// This module handles parsing of `#[serde(...)]` attributes. The entrypoints</span>
 <span class="comment">// are `attr::Container::from_ast`, `attr::Variant::from_ast`, and</span>
@@ -2099,12 +2053,8 @@
     <span class="ident">deserialize_aliases</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
 <span class="kw">fn</span> <span class="ident">unraw</span>(<span class="ident">ident</span>: <span class="kw-2">&amp;</span><span class="ident">Ident</span>) -&gt; <span class="ident">String</span> {
-    <span class="comment">// str::trim_start_matches was added in 1.30, trim_left_matches deprecated</span>
-    <span class="comment">// in 1.33. We currently support rustc back to 1.15 so we need to continue</span>
-    <span class="comment">// to use the deprecated one.</span>
-    <span class="ident">ident</span>.<span class="ident">to_string</span>().<span class="ident">trim_left_matches</span>(<span class="string">&quot;r#&quot;</span>).<span class="ident">to_owned</span>()
+    <span class="ident">ident</span>.<span class="ident">to_string</span>().<span class="ident">trim_start_matches</span>(<span class="string">&quot;r#&quot;</span>).<span class="ident">to_owned</span>()
 }
 
 <span class="kw">impl</span> <span class="ident">Name</span> {
@@ -2337,48 +2287,43 @@
                         <span class="ident">syn::Fields::Named</span>(<span class="kw">_</span>) =&gt; {
                             <span class="ident">default</span>.<span class="ident">set</span>(<span class="ident">word</span>, <span class="ident">Default::Default</span>);
                         }
-                        <span class="ident">syn::Fields::Unnamed</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">syn::Fields::Unit</span> =&gt; <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                            <span class="ident">fields</span>,
-                            <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>,
-                        ),
+                        <span class="ident">syn::Fields::Unnamed</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">syn::Fields::Unit</span> =&gt; {
+                            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span>
+                                <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>;
+                            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">fields</span>, <span class="ident">msg</span>);
+                        }
                     },
-                    <span class="ident">syn::Data::Enum</span>(<span class="ident">syn::DataEnum</span> { <span class="ident">enum_token</span>, .. }) =&gt; <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                        <span class="ident">enum_token</span>,
-                        <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>,
-                    ),
-                    <span class="ident">syn::Data::Union</span>(<span class="ident">syn::DataUnion</span> { <span class="ident">union_token</span>, .. }) =&gt; <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                        <span class="ident">union_token</span>,
-                        <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>,
-                    ),
+                    <span class="ident">syn::Data::Enum</span>(<span class="ident">syn::DataEnum</span> { <span class="ident">enum_token</span>, .. }) =&gt; {
+                        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>;
+                        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">enum_token</span>, <span class="ident">msg</span>);
+                    }
+                    <span class="ident">syn::Data::Union</span>(<span class="ident">syn::DataUnion</span> { <span class="ident">union_token</span>, .. }) =&gt; {
+                        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(default)] can only be used on structs with named fields&quot;</span>;
+                        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">union_token</span>, <span class="ident">msg</span>);
+                    }
                 },
 
                 <span class="comment">// Parse `#[serde(default = &quot;...&quot;)]`</span>
                 <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>)) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">DEFAULT</span> =&gt; {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">path</span>) <span class="op">=</span> <span class="ident">parse_lit_into_expr_path</span>(<span class="ident">cx</span>, <span class="ident">DEFAULT</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
                         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">data</span> {
-                            <span class="ident">syn::Data::Struct</span>(<span class="ident">syn::DataStruct</span> { <span class="ident">fields</span>, .. }) =&gt; {
-                                <span class="kw">match</span> <span class="ident">fields</span> {
-                                    <span class="ident">syn::Fields::Named</span>(<span class="kw">_</span>) =&gt; {
-                                        <span class="ident">default</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">Default::Path</span>(<span class="ident">path</span>));
-                                    }
-                                    <span class="ident">syn::Fields::Unnamed</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">syn::Fields::Unit</span> =&gt; <span class="ident">cx</span>
-                                        .<span class="ident">error_spanned_by</span>(
-                                            <span class="ident">fields</span>,
-                                            <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>,
-                                        ),
+                            <span class="ident">syn::Data::Struct</span>(<span class="ident">syn::DataStruct</span> { <span class="ident">fields</span>, .. }) =&gt; <span class="kw">match</span> <span class="ident">fields</span> {
+                                <span class="ident">syn::Fields::Named</span>(<span class="kw">_</span>) =&gt; {
+                                    <span class="ident">default</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">Default::Path</span>(<span class="ident">path</span>));
                                 }
+                                <span class="ident">syn::Fields::Unnamed</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">syn::Fields::Unit</span> =&gt; {
+                                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>;
+                                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">fields</span>, <span class="ident">msg</span>);
+                                }
+                            },
+                            <span class="ident">syn::Data::Enum</span>(<span class="ident">syn::DataEnum</span> { <span class="ident">enum_token</span>, .. }) =&gt; {
+                                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>;
+                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">enum_token</span>, <span class="ident">msg</span>);
                             }
-                            <span class="ident">syn::Data::Enum</span>(<span class="ident">syn::DataEnum</span> { <span class="ident">enum_token</span>, .. }) =&gt; <span class="ident">cx</span>
-                                .<span class="ident">error_spanned_by</span>(
-                                    <span class="ident">enum_token</span>,
-                                    <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>,
-                                ),
-                            <span class="ident">syn::Data::Union</span>(<span class="ident">syn::DataUnion</span> {
-                                <span class="ident">union_token</span>, ..
-                            }) =&gt; <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                                <span class="ident">union_token</span>,
-                                <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>,
-                            ),
+                            <span class="ident">syn::Data::Union</span>(<span class="ident">syn::DataUnion</span> { <span class="ident">union_token</span>, .. }) =&gt; {
+                                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(default = \&quot;...\&quot;)] can only be used on structs with named fields&quot;</span>;
+                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">union_token</span>, <span class="ident">msg</span>);
+                            }
                         }
                     }
                 }
@@ -2405,16 +2350,12 @@
                         <span class="ident">untagged</span>.<span class="ident">set_true</span>(<span class="ident">word</span>);
                     }
                     <span class="ident">syn::Data::Struct</span>(<span class="ident">syn::DataStruct</span> { <span class="ident">struct_token</span>, .. }) =&gt; {
-                        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                            <span class="ident">struct_token</span>,
-                            <span class="string">&quot;#[serde(untagged)] can only be used on enums&quot;</span>,
-                        );
+                        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(untagged)] can only be used on enums&quot;</span>;
+                        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">struct_token</span>, <span class="ident">msg</span>);
                     }
                     <span class="ident">syn::Data::Union</span>(<span class="ident">syn::DataUnion</span> { <span class="ident">union_token</span>, .. }) =&gt; {
-                        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                            <span class="ident">union_token</span>,
-                            <span class="string">&quot;#[serde(untagged)] can only be used on enums&quot;</span>,
-                        );
+                        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(untagged)] can only be used on enums&quot;</span>;
+                        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">union_token</span>, <span class="ident">msg</span>);
                     }
                 },
 
@@ -2430,17 +2371,13 @@
                                     <span class="ident">internal_tag</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">s</span>.<span class="ident">value</span>());
                                 }
                                 <span class="ident">syn::Fields::Unnamed</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">syn::Fields::Unit</span> =&gt; {
-                                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                                            <span class="ident">fields</span>,
-                                            <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] can only be used on enums and structs with named fields&quot;</span>,
-                                        );
+                                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] can only be used on enums and structs with named fields&quot;</span>;
+                                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">fields</span>, <span class="ident">msg</span>);
                                 }
                             },
                             <span class="ident">syn::Data::Union</span>(<span class="ident">syn::DataUnion</span> { <span class="ident">union_token</span>, .. }) =&gt; {
-                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                                    <span class="ident">union_token</span>,
-                                    <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] can only be used on enums and structs with named fields&quot;</span>,
-                                );
+                                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] can only be used on enums and structs with named fields&quot;</span>;
+                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">union_token</span>, <span class="ident">msg</span>);
                             }
                         }
                     }
@@ -2454,36 +2391,32 @@
                                 <span class="ident">content</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">s</span>.<span class="ident">value</span>());
                             }
                             <span class="ident">syn::Data::Struct</span>(<span class="ident">syn::DataStruct</span> { <span class="ident">struct_token</span>, .. }) =&gt; {
-                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                                    <span class="ident">struct_token</span>,
-                                    <span class="string">&quot;#[serde(content = \&quot;...\&quot;)] can only be used on enums&quot;</span>,
-                                );
+                                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(content = \&quot;...\&quot;)] can only be used on enums&quot;</span>;
+                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">struct_token</span>, <span class="ident">msg</span>);
                             }
                             <span class="ident">syn::Data::Union</span>(<span class="ident">syn::DataUnion</span> { <span class="ident">union_token</span>, .. }) =&gt; {
-                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                                    <span class="ident">union_token</span>,
-                                    <span class="string">&quot;#[serde(content = \&quot;...\&quot;)] can only be used on enums&quot;</span>,
-                                );
+                                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(content = \&quot;...\&quot;)] can only be used on enums&quot;</span>;
+                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">union_token</span>, <span class="ident">msg</span>);
                             }
                         }
                     }
                 }
 
-                <span class="comment">// Parse `#[serde(from = &quot;Type&quot;)]</span>
+                <span class="comment">// Parse `#[serde(from = &quot;Type&quot;)]`</span>
                 <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>)) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">FROM</span> =&gt; {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">from_ty</span>) <span class="op">=</span> <span class="ident">parse_lit_into_ty</span>(<span class="ident">cx</span>, <span class="ident">FROM</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
                         <span class="ident">type_from</span>.<span class="ident">set_opt</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="prelude-val">Some</span>(<span class="ident">from_ty</span>));
                     }
                 }
 
-                <span class="comment">// Parse `#[serde(try_from = &quot;Type&quot;)]</span>
+                <span class="comment">// Parse `#[serde(try_from = &quot;Type&quot;)]`</span>
                 <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>)) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">TRY_FROM</span> =&gt; {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">try_from_ty</span>) <span class="op">=</span> <span class="ident">parse_lit_into_ty</span>(<span class="ident">cx</span>, <span class="ident">TRY_FROM</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
                         <span class="ident">type_try_from</span>.<span class="ident">set_opt</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="prelude-val">Some</span>(<span class="ident">try_from_ty</span>));
                     }
                 }
 
-                <span class="comment">// Parse `#[serde(into = &quot;Type&quot;)]</span>
+                <span class="comment">// Parse `#[serde(into = &quot;Type&quot;)]`</span>
                 <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>)) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">INTO</span> =&gt; {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">into_ty</span>) <span class="op">=</span> <span class="ident">parse_lit_into_ty</span>(<span class="ident">cx</span>, <span class="ident">INTO</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
                         <span class="ident">type_into</span>.<span class="ident">set_opt</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="prelude-val">Some</span>(<span class="ident">into_ty</span>));
@@ -2531,21 +2464,20 @@
                         .<span class="ident">into_token_stream</span>()
                         .<span class="ident">to_string</span>()
                         .<span class="ident">replace</span>(<span class="string">&#39; &#39;</span>, <span class="string">&quot;&quot;</span>);
-                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                        <span class="ident">meta_item</span>.<span class="ident">path</span>(),
-                        <span class="macro">format!</span>(<span class="string">&quot;unknown serde container attribute `{}`&quot;</span>, <span class="ident">path</span>),
-                    );
+                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;unknown serde container attribute `{}`&quot;</span>, <span class="ident">path</span>);
+                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">meta_item</span>.<span class="ident">path</span>(), <span class="ident">msg</span>);
                 }
 
                 <span class="ident">Lit</span>(<span class="ident">lit</span>) =&gt; {
-                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="string">&quot;unexpected literal in serde container attribute&quot;</span>);
+                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;unexpected literal in serde container attribute&quot;</span>;
+                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
                 }
             }
         }
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_packed</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="kw">for</span> <span class="ident">attr</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">attrs</span> {
-            <span class="kw">if</span> <span class="ident">attr</span>.<span class="ident">path</span>.<span class="ident">is_ident</span>(<span class="string">&quot;repr&quot;</span>) {
+            <span class="kw">if</span> <span class="ident">attr</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">REPR</span> {
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">attr</span>.<span class="ident">parse_args_with</span>(<span class="op">|</span><span class="ident">input</span>: <span class="ident">ParseStream</span><span class="op">|</span> {
                     <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">token</span>) <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span> {
                         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TokenTree::Ident</span>(<span class="ident">ident</span>) <span class="op">=</span> <span class="ident">token</span> {
@@ -2683,10 +2615,9 @@
                         <span class="ident">syn::Fields::Named</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">syn::Fields::Unit</span> =&gt; {}
                         <span class="ident">syn::Fields::Unnamed</span>(<span class="ident">fields</span>) =&gt; {
                             <span class="kw">if</span> <span class="ident">fields</span>.<span class="ident">unnamed</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
-                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                                    <span class="ident">variant</span>,
-                                    <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] cannot be used with tuple variants&quot;</span>,
-                                );
+                                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span>
+                                    <span class="string">&quot;#[serde(tag = \&quot;...\&quot;)] cannot be used with tuple variants&quot;</span>;
+                                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">variant</span>, <span class="ident">msg</span>);
                                 <span class="kw">break</span>;
                             }
                         }
@@ -2696,48 +2627,28 @@
             <span class="ident">TagType::Internal</span> { <span class="ident">tag</span> }
         }
         (<span class="prelude-val">Some</span>((<span class="ident">untagged_tokens</span>, <span class="kw">_</span>)), <span class="prelude-val">Some</span>((<span class="ident">tag_tokens</span>, <span class="kw">_</span>)), <span class="prelude-val">None</span>) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">untagged_tokens</span>,
-                <span class="string">&quot;enum cannot be both untagged and internally tagged&quot;</span>,
-            );
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">tag_tokens</span>,
-                <span class="string">&quot;enum cannot be both untagged and internally tagged&quot;</span>,
-            );
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;enum cannot be both untagged and internally tagged&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">untagged_tokens</span>, <span class="ident">msg</span>);
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">tag_tokens</span>, <span class="ident">msg</span>);
             <span class="ident">TagType::External</span> <span class="comment">// doesn&#39;t matter, will error</span>
         }
         (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>((<span class="ident">content_tokens</span>, <span class="kw">_</span>))) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">content_tokens</span>,
-                <span class="string">&quot;#[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)] must be used together&quot;</span>,
-            );
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)] must be used together&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">content_tokens</span>, <span class="ident">msg</span>);
             <span class="ident">TagType::External</span>
         }
         (<span class="prelude-val">Some</span>((<span class="ident">untagged_tokens</span>, <span class="kw">_</span>)), <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>((<span class="ident">content_tokens</span>, <span class="kw">_</span>))) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">untagged_tokens</span>,
-                <span class="string">&quot;untagged enum cannot have #[serde(content = \&quot;...\&quot;)]&quot;</span>,
-            );
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">content_tokens</span>,
-                <span class="string">&quot;untagged enum cannot have #[serde(content = \&quot;...\&quot;)]&quot;</span>,
-            );
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;untagged enum cannot have #[serde(content = \&quot;...\&quot;)]&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">untagged_tokens</span>, <span class="ident">msg</span>);
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">content_tokens</span>, <span class="ident">msg</span>);
             <span class="ident">TagType::External</span>
         }
         (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">tag</span>)), <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">content</span>))) =&gt; <span class="ident">TagType::Adjacent</span> { <span class="ident">tag</span>, <span class="ident">content</span> },
         (<span class="prelude-val">Some</span>((<span class="ident">untagged_tokens</span>, <span class="kw">_</span>)), <span class="prelude-val">Some</span>((<span class="ident">tag_tokens</span>, <span class="kw">_</span>)), <span class="prelude-val">Some</span>((<span class="ident">content_tokens</span>, <span class="kw">_</span>))) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">untagged_tokens</span>,
-                <span class="string">&quot;untagged enum cannot have #[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)]&quot;</span>,
-            );
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">tag_tokens</span>,
-                <span class="string">&quot;untagged enum cannot have #[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)]&quot;</span>,
-            );
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">content_tokens</span>,
-                <span class="string">&quot;untagged enum cannot have #[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)]&quot;</span>,
-            );
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;untagged enum cannot have #[serde(tag = \&quot;...\&quot;, content = \&quot;...\&quot;)]&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">untagged_tokens</span>, <span class="ident">msg</span>);
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">tag_tokens</span>, <span class="ident">msg</span>);
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">content_tokens</span>, <span class="ident">msg</span>);
             <span class="ident">TagType::External</span>
         }
     }
@@ -2756,44 +2667,32 @@
     ) {
         (<span class="kw">_</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="ident">Identifier::No</span>,
         (<span class="kw">_</span>, <span class="prelude-val">Some</span>((<span class="ident">field_identifier_tokens</span>, <span class="kw">_</span>)), <span class="prelude-val">Some</span>((<span class="ident">variant_identifier_tokens</span>, <span class="kw">_</span>))) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">field_identifier_tokens</span>,
-                <span class="string">&quot;#[serde(field_identifier)] and #[serde(variant_identifier)] cannot both be set&quot;</span>,
-            );
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">variant_identifier_tokens</span>,
-                <span class="string">&quot;#[serde(field_identifier)] and #[serde(variant_identifier)] cannot both be set&quot;</span>,
-            );
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span>
+                <span class="string">&quot;#[serde(field_identifier)] and #[serde(variant_identifier)] cannot both be set&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">field_identifier_tokens</span>, <span class="ident">msg</span>);
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">variant_identifier_tokens</span>, <span class="ident">msg</span>);
             <span class="ident">Identifier::No</span>
         }
         (<span class="ident">syn::Data::Enum</span>(<span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; <span class="ident">Identifier::Field</span>,
         (<span class="ident">syn::Data::Enum</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="ident">Identifier::Variant</span>,
         (<span class="ident">syn::Data::Struct</span>(<span class="ident">syn::DataStruct</span> { <span class="ident">struct_token</span>, .. }), <span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">struct_token</span>,
-                <span class="string">&quot;#[serde(field_identifier)] can only be used on an enum&quot;</span>,
-            );
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(field_identifier)] can only be used on an enum&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">struct_token</span>, <span class="ident">msg</span>);
             <span class="ident">Identifier::No</span>
         }
         (<span class="ident">syn::Data::Union</span>(<span class="ident">syn::DataUnion</span> { <span class="ident">union_token</span>, .. }), <span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">union_token</span>,
-                <span class="string">&quot;#[serde(field_identifier)] can only be used on an enum&quot;</span>,
-            );
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(field_identifier)] can only be used on an enum&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">union_token</span>, <span class="ident">msg</span>);
             <span class="ident">Identifier::No</span>
         }
         (<span class="ident">syn::Data::Struct</span>(<span class="ident">syn::DataStruct</span> { <span class="ident">struct_token</span>, .. }), <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">struct_token</span>,
-                <span class="string">&quot;#[serde(variant_identifier)] can only be used on an enum&quot;</span>,
-            );
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(variant_identifier)] can only be used on an enum&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">struct_token</span>, <span class="ident">msg</span>);
             <span class="ident">Identifier::No</span>
         }
         (<span class="ident">syn::Data::Union</span>(<span class="ident">syn::DataUnion</span> { <span class="ident">union_token</span>, .. }), <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">union_token</span>,
-                <span class="string">&quot;#[serde(variant_identifier)] can only be used on an enum&quot;</span>,
-            );
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(variant_identifier)] can only be used on an enum&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">union_token</span>, <span class="ident">msg</span>);
             <span class="ident">Identifier::No</span>
         }
     }
@@ -2810,7 +2709,12 @@
     <span class="ident">other</span>: <span class="ident">bool</span>,
     <span class="ident">serialize_with</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::ExprPath</span><span class="op">&gt;</span>,
     <span class="ident">deserialize_with</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::ExprPath</span><span class="op">&gt;</span>,
-    <span class="ident">borrow</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::Meta</span><span class="op">&gt;</span>,
+    <span class="ident">borrow</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BorrowAttribute</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">struct</span> <span class="ident">BorrowAttribute</span> {
+    <span class="ident">path</span>: <span class="ident">syn::Path</span>,
+    <span class="ident">lifetimes</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">syn::Lifetime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Variant</span> {
@@ -2963,16 +2867,39 @@
                     }
                 }
 
-                <span class="comment">// Defer `#[serde(borrow)]` and `#[serde(borrow = &quot;&#39;a + &#39;b&quot;)]`</span>
-                <span class="ident">Meta</span>(<span class="ident">m</span>) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span>() <span class="op">==</span> <span class="ident">BORROW</span> =&gt; <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">variant</span>.<span class="ident">fields</span> {
+                <span class="comment">// Parse `#[serde(borrow)]`</span>
+                <span class="ident">Meta</span>(<span class="ident">Path</span>(<span class="ident">word</span>)) <span class="kw">if</span> <span class="ident">word</span> <span class="op">==</span> <span class="ident">BORROW</span> =&gt; <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">variant</span>.<span class="ident">fields</span> {
                     <span class="ident">syn::Fields::Unnamed</span>(<span class="ident">fields</span>) <span class="kw">if</span> <span class="ident">fields</span>.<span class="ident">unnamed</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> =&gt; {
-                        <span class="ident">borrow</span>.<span class="ident">set</span>(<span class="ident">m</span>.<span class="ident">path</span>(), <span class="ident">m</span>.<span class="ident">clone</span>());
+                        <span class="ident">borrow</span>.<span class="ident">set</span>(
+                            <span class="ident">word</span>,
+                            <span class="ident">BorrowAttribute</span> {
+                                <span class="ident">path</span>: <span class="ident">word</span>.<span class="ident">clone</span>(),
+                                <span class="ident">lifetimes</span>: <span class="prelude-val">None</span>,
+                            },
+                        );
                     }
                     <span class="kw">_</span> =&gt; {
-                        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                            <span class="ident">variant</span>,
-                            <span class="string">&quot;#[serde(borrow)] may only be used on newtype variants&quot;</span>,
-                        );
+                        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(borrow)] may only be used on newtype variants&quot;</span>;
+                        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">variant</span>, <span class="ident">msg</span>);
+                    }
+                },
+
+                <span class="comment">// Parse `#[serde(borrow = &quot;&#39;a + &#39;b&quot;)]`</span>
+                <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>)) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">BORROW</span> =&gt; <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">variant</span>.<span class="ident">fields</span> {
+                    <span class="ident">syn::Fields::Unnamed</span>(<span class="ident">fields</span>) <span class="kw">if</span> <span class="ident">fields</span>.<span class="ident">unnamed</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> =&gt; {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">lifetimes</span>) <span class="op">=</span> <span class="ident">parse_lit_into_lifetimes</span>(<span class="ident">cx</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
+                            <span class="ident">borrow</span>.<span class="ident">set</span>(
+                                <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>,
+                                <span class="ident">BorrowAttribute</span> {
+                                    <span class="ident">path</span>: <span class="ident">m</span>.<span class="ident">path</span>.<span class="ident">clone</span>(),
+                                    <span class="ident">lifetimes</span>: <span class="prelude-val">Some</span>(<span class="ident">lifetimes</span>),
+                                },
+                            );
+                        }
+                    }
+                    <span class="kw">_</span> =&gt; {
+                        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;#[serde(borrow)] may only be used on newtype variants&quot;</span>;
+                        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">variant</span>, <span class="ident">msg</span>);
                     }
                 },
 
@@ -2982,14 +2909,13 @@
                         .<span class="ident">into_token_stream</span>()
                         .<span class="ident">to_string</span>()
                         .<span class="ident">replace</span>(<span class="string">&#39; &#39;</span>, <span class="string">&quot;&quot;</span>);
-                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                        <span class="ident">meta_item</span>.<span class="ident">path</span>(),
-                        <span class="macro">format!</span>(<span class="string">&quot;unknown serde variant attribute `{}`&quot;</span>, <span class="ident">path</span>),
-                    );
+                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;unknown serde variant attribute `{}`&quot;</span>, <span class="ident">path</span>);
+                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">meta_item</span>.<span class="ident">path</span>(), <span class="ident">msg</span>);
                 }
 
                 <span class="ident">Lit</span>(<span class="ident">lit</span>) =&gt; {
-                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="string">&quot;unexpected literal in serde variant attribute&quot;</span>);
+                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;unexpected literal in serde variant attribute&quot;</span>;
+                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
                 }
             }
         }
@@ -3126,16 +3052,28 @@
             <span class="prelude-val">None</span> =&gt; <span class="ident">index</span>.<span class="ident">to_string</span>(),
         };
 
-        <span class="kw">let</span> <span class="ident">variant_borrow</span> <span class="op">=</span> <span class="ident">attrs</span>
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">variant</span><span class="op">|</span> <span class="ident">variant</span>.<span class="ident">borrow</span>.<span class="ident">as_ref</span>())
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">borrow</span><span class="op">|</span> <span class="ident">Meta</span>(<span class="ident">borrow</span>.<span class="ident">clone</span>()));
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">borrow_attribute</span>) <span class="op">=</span> <span class="ident">attrs</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">variant</span><span class="op">|</span> <span class="ident">variant</span>.<span class="ident">borrow</span>.<span class="ident">as_ref</span>()) {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">borrowable</span>) <span class="op">=</span> <span class="ident">borrowable_lifetimes</span>(<span class="ident">cx</span>, <span class="kw-2">&amp;</span><span class="ident">ident</span>, <span class="ident">field</span>) {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lifetimes</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">borrow_attribute</span>.<span class="ident">lifetimes</span> {
+                    <span class="kw">for</span> <span class="ident">lifetime</span> <span class="kw">in</span> <span class="ident">lifetimes</span> {
+                        <span class="kw">if</span> <span class="op">!</span><span class="ident">borrowable</span>.<span class="ident">contains</span>(<span class="ident">lifetime</span>) {
+                            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span>
+                                <span class="macro">format!</span>(<span class="string">&quot;field `{}` does not have lifetime {}&quot;</span>, <span class="ident">ident</span>, <span class="ident">lifetime</span>);
+                            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">field</span>, <span class="ident">msg</span>);
+                        }
+                    }
+                    <span class="ident">borrowed_lifetimes</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">borrow_attribute</span>.<span class="ident">path</span>, <span class="ident">lifetimes</span>.<span class="ident">clone</span>());
+                } <span class="kw">else</span> {
+                    <span class="ident">borrowed_lifetimes</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">borrow_attribute</span>.<span class="ident">path</span>, <span class="ident">borrowable</span>);
+                }
+            }
+        }
 
         <span class="kw">for</span> <span class="ident">meta_item</span> <span class="kw">in</span> <span class="ident">field</span>
             .<span class="ident">attrs</span>
             .<span class="ident">iter</span>()
             .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> <span class="ident">get_serde_meta_items</span>(<span class="ident">cx</span>, <span class="ident">attr</span>))
             .<span class="ident">flatten</span>()
-            .<span class="ident">chain</span>(<span class="ident">variant_borrow</span>)
         {
             <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">meta_item</span> {
                 <span class="comment">// Parse `#[serde(rename = &quot;foo&quot;)]`</span>
@@ -3257,17 +3195,15 @@
 
                 <span class="comment">// Parse `#[serde(borrow = &quot;&#39;a + &#39;b&quot;)]`</span>
                 <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>)) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">BORROW</span> =&gt; {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">lifetimes</span>) <span class="op">=</span> <span class="ident">parse_lit_into_lifetimes</span>(<span class="ident">cx</span>, <span class="ident">BORROW</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">lifetimes</span>) <span class="op">=</span> <span class="ident">parse_lit_into_lifetimes</span>(<span class="ident">cx</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
                         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">borrowable</span>) <span class="op">=</span> <span class="ident">borrowable_lifetimes</span>(<span class="ident">cx</span>, <span class="kw-2">&amp;</span><span class="ident">ident</span>, <span class="ident">field</span>) {
                             <span class="kw">for</span> <span class="ident">lifetime</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">lifetimes</span> {
                                 <span class="kw">if</span> <span class="op">!</span><span class="ident">borrowable</span>.<span class="ident">contains</span>(<span class="ident">lifetime</span>) {
-                                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                                        <span class="ident">field</span>,
-                                        <span class="macro">format!</span>(
-                                            <span class="string">&quot;field `{}` does not have lifetime {}&quot;</span>,
-                                            <span class="ident">ident</span>, <span class="ident">lifetime</span>
-                                        ),
+                                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(
+                                        <span class="string">&quot;field `{}` does not have lifetime {}&quot;</span>,
+                                        <span class="ident">ident</span>, <span class="ident">lifetime</span>,
                                     );
+                                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">field</span>, <span class="ident">msg</span>);
                                 }
                             }
                             <span class="ident">borrowed_lifetimes</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">lifetimes</span>);
@@ -3293,14 +3229,13 @@
                         .<span class="ident">into_token_stream</span>()
                         .<span class="ident">to_string</span>()
                         .<span class="ident">replace</span>(<span class="string">&#39; &#39;</span>, <span class="string">&quot;&quot;</span>);
-                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                        <span class="ident">meta_item</span>.<span class="ident">path</span>(),
-                        <span class="macro">format!</span>(<span class="string">&quot;unknown serde field attribute `{}`&quot;</span>, <span class="ident">path</span>),
-                    );
+                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;unknown serde field attribute `{}`&quot;</span>, <span class="ident">path</span>);
+                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">meta_item</span>.<span class="ident">path</span>(), <span class="ident">msg</span>);
                 }
 
                 <span class="ident">Lit</span>(<span class="ident">lit</span>) =&gt; {
-                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="string">&quot;unexpected literal in serde field attribute&quot;</span>);
+                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;unexpected literal in serde field attribute&quot;</span>;
+                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
                 }
             }
         }
@@ -3483,13 +3418,11 @@
             }
 
             <span class="kw">_</span> =&gt; {
-                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                    <span class="ident">meta</span>,
-                    <span class="macro">format!</span>(
-                        <span class="string">&quot;malformed {0} attribute, expected `{0}(serialize = ..., deserialize = ...)`&quot;</span>,
-                        <span class="ident">attr_name</span>
-                    ),
+                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(
+                    <span class="string">&quot;malformed {0} attribute, expected `{0}(serialize = ..., deserialize = ...)`&quot;</span>,
+                    <span class="ident">attr_name</span>,
                 );
+                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">meta</span>, <span class="ident">msg</span>);
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(());
             }
         }
@@ -3553,21 +3486,20 @@
     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">syn::Lit::Str</span>(<span class="ident">lit</span>) <span class="op">=</span> <span class="ident">lit</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">lit</span>)
     } <span class="kw">else</span> {
-        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-            <span class="ident">lit</span>,
-            <span class="macro">format!</span>(
-                <span class="string">&quot;expected serde {} attribute to be a string: `{} = \&quot;...\&quot;`&quot;</span>,
-                <span class="ident">attr_name</span>, <span class="ident">meta_item_name</span>
-            ),
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(
+            <span class="string">&quot;expected serde {} attribute to be a string: `{} = \&quot;...\&quot;`&quot;</span>,
+            <span class="ident">attr_name</span>, <span class="ident">meta_item_name</span>,
         );
+        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
         <span class="prelude-val">Err</span>(())
     }
 }
 
 <span class="kw">fn</span> <span class="ident">parse_lit_into_path</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">Ctxt</span>, <span class="ident">attr_name</span>: <span class="ident">Symbol</span>, <span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Lit</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">syn::Path</span>, ()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">get_lit_str</span>(<span class="ident">cx</span>, <span class="ident">attr_name</span>, <span class="ident">lit</span>)<span class="question-mark">?</span>;
-    <span class="ident">parse_lit_str</span>(<span class="ident">string</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="macro">format!</span>(<span class="string">&quot;failed to parse path: {:?}&quot;</span>, <span class="ident">string</span>.<span class="ident">value</span>()));
+    <span class="ident">string</span>.<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;failed to parse path: {:?}&quot;</span>, <span class="ident">string</span>.<span class="ident">value</span>());
+        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
     })
 }
 
@@ -3577,8 +3509,9 @@
     <span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Lit</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">syn::ExprPath</span>, ()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">get_lit_str</span>(<span class="ident">cx</span>, <span class="ident">attr_name</span>, <span class="ident">lit</span>)<span class="question-mark">?</span>;
-    <span class="ident">parse_lit_str</span>(<span class="ident">string</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="macro">format!</span>(<span class="string">&quot;failed to parse path: {:?}&quot;</span>, <span class="ident">string</span>.<span class="ident">value</span>()));
+    <span class="ident">string</span>.<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;failed to parse path: {:?}&quot;</span>, <span class="ident">string</span>.<span class="ident">value</span>());
+        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
     })
 }
 
@@ -3589,63 +3522,53 @@
     <span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Lit</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">syn::WherePredicate</span><span class="op">&gt;</span>, ()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">get_lit_str2</span>(<span class="ident">cx</span>, <span class="ident">attr_name</span>, <span class="ident">meta_item_name</span>, <span class="ident">lit</span>)<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="ident">string</span>.<span class="ident">value</span>().<span class="ident">is_empty</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Vec::new</span>());
-    }
 
-    <span class="kw">let</span> <span class="ident">where_string</span> <span class="op">=</span> <span class="ident">syn::LitStr::new</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;where {}&quot;</span>, <span class="ident">string</span>.<span class="ident">value</span>()), <span class="ident">string</span>.<span class="ident">span</span>());
-
-    <span class="ident">parse_lit_str</span>::<span class="op">&lt;</span><span class="ident">syn::WhereClause</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">where_string</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">wh</span><span class="op">|</span> <span class="ident">wh</span>.<span class="ident">predicates</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>())
+    <span class="ident">string</span>
+        .<span class="ident">parse_with</span>(<span class="ident">Punctuated</span>::<span class="op">&lt;</span><span class="ident">syn::WherePredicate</span>, <span class="macro">Token!</span>[,]<span class="op">&gt;</span><span class="ident">::parse_terminated</span>)
+        .<span class="ident">map</span>(<span class="ident">Vec::from_iter</span>)
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">err</span>))
 }
 
 <span class="kw">fn</span> <span class="ident">parse_lit_into_ty</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">Ctxt</span>, <span class="ident">attr_name</span>: <span class="ident">Symbol</span>, <span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Lit</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">syn::Type</span>, ()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">get_lit_str</span>(<span class="ident">cx</span>, <span class="ident">attr_name</span>, <span class="ident">lit</span>)<span class="question-mark">?</span>;
 
-    <span class="ident">parse_lit_str</span>(<span class="ident">string</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-            <span class="ident">lit</span>,
-            <span class="macro">format!</span>(<span class="string">&quot;failed to parse type: {} = {:?}&quot;</span>, <span class="ident">attr_name</span>, <span class="ident">string</span>.<span class="ident">value</span>()),
-        );
+    <span class="ident">string</span>.<span class="ident">parse</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;failed to parse type: {} = {:?}&quot;</span>, <span class="ident">attr_name</span>, <span class="ident">string</span>.<span class="ident">value</span>());
+        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
     })
 }
 
 <span class="comment">// Parses a string literal like &quot;&#39;a + &#39;b + &#39;c&quot; containing a nonempty list of</span>
 <span class="comment">// lifetimes separated by `+`.</span>
-<span class="kw">fn</span> <span class="ident">parse_lit_into_lifetimes</span>(
-    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">Ctxt</span>,
-    <span class="ident">attr_name</span>: <span class="ident">Symbol</span>,
-    <span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Lit</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">syn::Lifetime</span><span class="op">&gt;</span>, ()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">get_lit_str</span>(<span class="ident">cx</span>, <span class="ident">attr_name</span>, <span class="ident">lit</span>)<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="ident">string</span>.<span class="ident">value</span>().<span class="ident">is_empty</span>() {
-        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="string">&quot;at least one lifetime must be borrowed&quot;</span>);
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(());
-    }
+<span class="kw">fn</span> <span class="ident">parse_lit_into_lifetimes</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">Ctxt</span>, <span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Lit</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">syn::Lifetime</span><span class="op">&gt;</span>, ()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">get_lit_str</span>(<span class="ident">cx</span>, <span class="ident">BORROW</span>, <span class="ident">lit</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">struct</span> <span class="ident">BorrowedLifetimes</span>(<span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">syn::Lifetime</span>, <span class="macro">Token!</span>[<span class="op">+</span>]<span class="op">&gt;</span>);
-
-    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">BorrowedLifetimes</span> {
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) -&gt; <span class="ident">parse::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="ident">Punctuated::parse_separated_nonempty</span>(<span class="ident">input</span>).<span class="ident">map</span>(<span class="ident">BorrowedLifetimes</span>)
-        }
-    }
-
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">BorrowedLifetimes</span>(<span class="ident">lifetimes</span>)) <span class="op">=</span> <span class="ident">parse_lit_str</span>(<span class="ident">string</span>) {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">lifetimes</span>) <span class="op">=</span> <span class="ident">string</span>.<span class="ident">parse_with</span>(<span class="op">|</span><span class="ident">input</span>: <span class="ident">ParseStream</span><span class="op">|</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">set</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
-        <span class="kw">for</span> <span class="ident">lifetime</span> <span class="kw">in</span> <span class="ident">lifetimes</span> {
+        <span class="kw">while</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">is_empty</span>() {
+            <span class="kw">let</span> <span class="ident">lifetime</span>: <span class="ident">Lifetime</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="op">!</span><span class="ident">set</span>.<span class="ident">insert</span>(<span class="ident">lifetime</span>.<span class="ident">clone</span>()) {
-                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="macro">format!</span>(<span class="string">&quot;duplicate borrowed lifetime `{}`&quot;</span>, <span class="ident">lifetime</span>));
+                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;duplicate borrowed lifetime `{}`&quot;</span>, <span class="ident">lifetime</span>);
+                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
             }
+            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">is_empty</span>() {
+                <span class="kw">break</span>;
+            }
+            <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">Token!</span>[<span class="op">+</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
         }
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">set</span>);
+        <span class="prelude-val">Ok</span>(<span class="ident">set</span>)
+    }) {
+        <span class="kw">return</span> <span class="kw">if</span> <span class="ident">lifetimes</span>.<span class="ident">is_empty</span>() {
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;at least one lifetime must be borrowed&quot;</span>;
+            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
+            <span class="prelude-val">Err</span>(())
+        } <span class="kw">else</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">lifetimes</span>)
+        };
     }
 
-    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-        <span class="ident">lit</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;failed to parse borrowed lifetimes: {:?}&quot;</span>, <span class="ident">string</span>.<span class="ident">value</span>()),
-    );
+    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;failed to parse borrowed lifetimes: {:?}&quot;</span>, <span class="ident">string</span>.<span class="ident">value</span>());
+    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="ident">msg</span>);
     <span class="prelude-val">Err</span>(())
 }
 
@@ -3800,10 +3723,8 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lifetimes</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
     <span class="ident">collect_lifetimes</span>(<span class="kw-2">&amp;</span><span class="ident">field</span>.<span class="ident">ty</span>, <span class="kw-2">&amp;mut</span> <span class="ident">lifetimes</span>);
     <span class="kw">if</span> <span class="ident">lifetimes</span>.<span class="ident">is_empty</span>() {
-        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-            <span class="ident">field</span>,
-            <span class="macro">format!</span>(<span class="string">&quot;field `{}` has no lifetimes to borrow&quot;</span>, <span class="ident">name</span>),
-        );
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;field `{}` has no lifetimes to borrow&quot;</span>, <span class="ident">name</span>);
+        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">field</span>, <span class="ident">msg</span>);
         <span class="prelude-val">Err</span>(())
     } <span class="kw">else</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">lifetimes</span>)
@@ -3894,19 +3815,6 @@
             <span class="kw">_</span> =&gt; {}
         }
     }
-}
-
-<span class="kw">fn</span> <span class="ident">parse_lit_str</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">syn::LitStr</span>) -&gt; <span class="ident">parse::Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Parse</span>,
-{
-    <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">spanned_tokens</span>(<span class="ident">s</span>)<span class="question-mark">?</span>;
-    <span class="ident">syn::parse2</span>(<span class="ident">tokens</span>)
-}
-
-<span class="kw">fn</span> <span class="ident">spanned_tokens</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">syn::LitStr</span>) -&gt; <span class="ident">parse::Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">syn::parse_str</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">value</span>())<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(<span class="ident">respan</span>(<span class="ident">stream</span>, <span class="ident">s</span>.<span class="ident">span</span>()))
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde_derive" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (495b21669 2022-07-03)" ></div>
