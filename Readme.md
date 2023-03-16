@@ -92,6 +92,7 @@ cargo +nightly-2021-11-14 hacspec -o <coq-name>.v <crate-name>
 ## Publications & Other material
 
 * [📕 Tech report](https://hal.inria.fr/hal-03176482)
+* [📕 HACSpec: A gateway to high-assurance cryptography](https://github.com/hacspec/hacspec/blob/master/rwc2023-abstract.pdf)
 * [📕 Original hacspec paper](https://www.franziskuskiefer.de/publications/hacspec-ssr18-paper.pdf)
 
 ### Secondary literature, using hacspec:
