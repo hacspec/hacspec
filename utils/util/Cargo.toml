@@ -10,4 +10,4 @@ repository = "https://github.com/hacspec/hacspec"
 
 [dependencies]
 serde = {version = "=1.0.156", features = ["derive"]}
-syn = { version = "1.0.17", features= ["full", "visit"] }
+syn = { version = "2.0.10", features= ["full", "visit"] }
