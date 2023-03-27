@@ -28,15 +28,16 @@ serde_json = "1.0"
 heck = "0.3.1"
 regex = "1.3.9"
 glob = "*"
-serde = { version = "1.0.125", features = ["derive"] }
+serde = { version = "=1.0.156", features = ["derive"] }
 log = "0.4"
 pretty_env_logger = "0.4"
 backtrace = { version = "0.3", optional = true }
 num = "0.4"
 
-pearlite-syn = { git = "https://github.com/xldenis/creusot", rev = "ebe88ac51dc9ceba3d18ede3351ccee4c4b121bd" } # branch = "master"
+# pearlite-syn = { git = "https://github.com/xldenis/creusot", rev = "ebe88ac51dc9ceba3d18ede3351ccee4c4b121bd" } # branch = "master"
+pearlite-syn = { git = "https://github.com/hacspec/creusot", branch = "franziskus/pin-syn" }
 
-syn = { version = "*", features = ["full", "extra-traits"] }
+syn = { version = "1", features = ["full", "extra-traits"] }
 quote = "*"
 proc-macro2 = "*"
 

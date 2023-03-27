@@ -9,5 +9,5 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/hacspec/hacspec"
 
 [dependencies]
-serde = {version = "1.0", features = ["derive"]}
+serde = {version = "=1.0.156", features = ["derive"]}
 syn = { version = "1.0.17", features= ["full", "visit"] }

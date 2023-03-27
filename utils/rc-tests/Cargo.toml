@@ -13,4 +13,4 @@ evercrypt-provider = { path = "../evercrypt-provider" }
 hacspec-provider = { path = "../../provider" }
 chacha20poly1305 = "0.9"
 serde_json = "1.0"
-serde = {version = "1.0", features = ["derive"]}
+serde = {version = "=1.0.156", features = ["derive"]}
