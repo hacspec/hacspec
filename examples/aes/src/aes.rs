@@ -54,13 +54,13 @@ const RCON: RCon = RCon(secret_bytes!([
     0xd8u8, 0xabu8, 0x4du8
 ]));
 
-fn sub_bytes(state: Block) -> Block {
-    let mut st = state;
-    for i in 0..BLOCKSIZE {
-        st[i] = SBOX[U8::declassify(state[i])];
+    fn sub_bytes(state: Block) -> Block {
+	let mut st = state;
+	for i in 0..BLOCKSIZE {
+            st[i] = SBOX[U8::declassify(state[i])];
+	}
+	st
     }
-    st
-}
 
 fn shift_row(i: usize, shift: usize, state: Block) -> Block {
     let mut out = state;

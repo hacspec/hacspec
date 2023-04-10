@@ -6,7 +6,7 @@ use crate::*;
 
 // Would be nice to separate out the PKI state over here
 
-pub fn get_public_key(a:Principal, b:Principal, env:&mut Env) -> Result<Pubkey,Error> {
+pub fn get_public_key(a:Principal, b:Principal, env:Env) -> EnvResult<Pubkey> {
     let filter = |st:&Bytes| (
       match SessionState::decode(st.clone()) {
           Ok(SessionState::PublicKey {b:bb,pk_b:_}) => 
@@ -14,21 +14,23 @@ pub fn get_public_key(a:Principal, b:Principal, env:&mut Env) -> Result<Pubkey,E
           _ => false, 
       } 
     );
-    match SessionState::decode(find_session(a,filter,env)?)? {
-      SessionState::PublicKey {b:_,pk_b} => Ok (pk_b),
+    let (st,env) = find_session(a,filter,env)?;
+    match SessionState::decode(st)? {
+      SessionState::PublicKey {b:_,pk_b} => Ok ((pk_b,env)),
       _ => Err(Error::SessionNotFound),
     }
   }
 
-pub fn get_private_key(a:Principal, env:&mut Env) -> Result<Privkey,Error> {
+pub fn get_private_key(a:Principal, env:Env) -> EnvResult<Privkey> {
     let filter = |st:&Bytes| (
       match SessionState::decode(st.clone()) {
           Ok(SessionState::PrivateKey {sk_my:_}) => true,
           _ => false, 
       } 
     );
-    match SessionState::decode(find_session(a,filter,env)?)? {
-      SessionState::PrivateKey {sk_my} => Ok (sk_my),
+    let (st,env) = find_session(a,filter,env)?;
+    match SessionState::decode(st)? {
+      SessionState::PrivateKey {sk_my} => Ok ((sk_my,env)),
       _ => Err(Error::SessionNotFound),
     } 
 }

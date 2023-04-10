@@ -17,12 +17,13 @@ bytes!(ChaChaKey, 32);
 ///  a += b; d ^= a; d <<<= 8;
 ///  c += d; b ^= c; b <<<= 7;
 
-fn chacha20_line(a: StateIdx, b: StateIdx, d: StateIdx, s: usize, mut state: State) -> State {
-    state[a] = state[a] + state[b];
-    state[d] = state[d] ^ state[a];
-    state[d] = state[d].rotate_left(s);
-    state
-}
+    fn chacha20_line(a: StateIdx, b: StateIdx, d: StateIdx,
+		     s: usize, mut state: State) -> State {
+	state[a] = state[a] + state[b];
+	state[d] = state[d] ^ state[a];
+	state[d] = state[d].rotate_left(s);
+	state
+    }
 
 pub fn chacha20_quarter_round(
     a: StateIdx,
@@ -49,16 +50,17 @@ pub fn chacha20_quarter_round(
 ///         Qround(state, 3, 4, 9,14)
 ///         end
 
-fn inner_block(mut state: State) -> State {
-    state = chacha20_quarter_round(0, 4, 8, 12, state);
-    state = chacha20_quarter_round(1, 5, 9, 13, state);
-    state = chacha20_quarter_round(2, 6, 10, 14, state);
-    state = chacha20_quarter_round(3, 7, 11, 15, state);
-    state = chacha20_quarter_round(0, 5, 10, 15, state);
-    state = chacha20_quarter_round(1, 6, 11, 12, state);
-    state = chacha20_quarter_round(2, 7, 8, 13, state);
-    chacha20_quarter_round(3, 4, 9, 14, state)
-}
+    fn inner_block(st: State) -> State {
+       let mut state = st;
+       state = chacha20_quarter_round(0, 4, 8, 12, state);
+       state = chacha20_quarter_round(1, 5, 9, 13, state);
+       state = chacha20_quarter_round(2, 6, 10, 14, state);
+       state = chacha20_quarter_round(3, 7, 11, 15, state);
+       state = chacha20_quarter_round(0, 5, 10, 15, state);
+       state = chacha20_quarter_round(1, 6, 11, 12, state);
+       state = chacha20_quarter_round(2, 7, 8, 13, state);
+       chacha20_quarter_round(3, 4, 9, 14, state)
+    }
 
 /// chacha20_block(key, counter, nonce):
 ///         state = constants | key | counter | nonce

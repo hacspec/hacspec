@@ -9,7 +9,7 @@ use libcrux::hpke::{Mode::*, *};
 // This is a partial implementation of a crypto API
 // All functions should connect to libcrux
 
-pub fn pke_encrypt(pk_b:Pubkey,m:Bytes,env:&mut Env) -> Bytes {
+pub fn pke_encrypt(pk_b:Pubkey,m:Bytes,env:Env) -> EnvResult<Bytes> {
     let config = HPKEConfig(
         mode_base,
         DHKEM_X25519_HKDF_SHA256,
@@ -21,23 +21,26 @@ pub fn pke_encrypt(pk_b:Pubkey,m:Bytes,env:&mut Env) -> Bytes {
     let info = Bytes::new(0);
     let aad = Bytes::new(0);
     
-    let randomness = rand_gen(64,env);
+    let (randomness,env) = rand_gen(64,env)?;
 
-    let HPKECiphertext(enc, ct) = HpkeSeal(
+    let ciphertext = HpkeSeal(
         config, &pk_r, &info, &aad, &m, None, None, None, randomness,
-    )
-    .expect("Error in hpke seal");
-    let mut res = Bytes::new(4);
-    let enclen = enc.len();
-    res[0] = enclen as u8;
-    res[1] = (enclen >> 8) as u8;
-    res[2] = (enclen >> 16) as u8;
-    res[3] = (enclen >> 24) as u8;
-    res.concat(&enc).concat(&ct)
+    );
+
+    match ciphertext {
+	Ok(HPKECiphertext(enc, ct)) => {
+	    let mut res = Bytes::new(4);
+	    let enclen = enc.len();
+	    res[0] = enclen as u8;
+	    res[1] = (enclen >> 8) as u8;
+	    res[2] = (enclen >> 16) as u8;
+	    res[3] = (enclen >> 24) as u8;
+	    Ok((res.concat(&enc).concat(&ct),env))},
+	_ => Err(Error::CryptoError)
+    }
 }
 
-// TODO: Use HPKE decrypt
-pub fn pke_decrypt(sk_b:Privkey,m:Bytes,_env:&mut Env) -> Result<Bytes,Error> {
+pub fn pke_decrypt(sk_b:Privkey,m:Bytes,env:Env) -> EnvResult<Bytes> {
     if m.len() < 4 {Err(Error::CryptoError)}
     else {
         let (lenb,rest) = m.split_off(4);
@@ -67,7 +70,7 @@ pub fn pke_decrypt(sk_b:Privkey,m:Bytes,_env:&mut Env) -> Result<Bytes,Error> {
             None,
         );
         match decrypted_ptxt {
-            Ok(p) => Ok(p),
+            Ok(p) => Ok((p,env)),
             _ => Err(Error::CryptoError)
         }
     }
