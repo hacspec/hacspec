@@ -2,9 +2,9 @@
 
 <img src="https://raw.githubusercontent.com/hacspec/hacspec/master/img/mascot.png" width=100 style="float: left;"> A specification language for crypto primitives in Rust.
 
-_This is the successor of https://github.com/HACS-workshop/hacspec._
+_This is the successor of https://github.com/HACS-workshop/hacspes but a predecessor of https://github.com/hacspec/hacspec-v2. **Development in this repository has mostly stopped**, see hacspec-v2 instead._
 
-For a quick intro, you can look at the [presentation slides](./presentation_slides.pdf). 
+For a quick intro, you can look at the [presentation slides](./presentation_slides.pdf).
 More information is available in the [book](https://hacspec.github.io/book/index.html).
 Also, see the Publications below.
 
