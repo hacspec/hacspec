@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/num-bigint-0.4.3/src/bigint/convert.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>convert.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../num_bigint/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/num-bigint-0.4.4/src/bigint/convert.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>convert.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../num_bigint/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../num_bigint/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
@@ -473,6 +473,16 @@
 <span id="467">467</span>
 <span id="468">468</span>
 <span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Sign</span>::{<span class="self">self</span>, <span class="ident">Minus</span>, <span class="ident">NoSign</span>, <span class="ident">Plus</span>};
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BigInt</span>, <span class="ident">ToBigInt</span>};
 
@@ -485,7 +495,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_try_from</span>)]</span>
 <span class="kw">use</span> <span class="ident">core::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">core::str</span>::{<span class="self">self</span>, <span class="ident">FromStr</span>};
-<span class="kw">use</span> <span class="ident">num_traits</span>::{<span class="ident">FromPrimitive</span>, <span class="ident">Num</span>, <span class="ident">ToPrimitive</span>, <span class="ident">Zero</span>};
+<span class="kw">use</span> <span class="ident">num_traits</span>::{<span class="ident">FromPrimitive</span>, <span class="ident">Num</span>, <span class="ident">One</span>, <span class="ident">ToPrimitive</span>, <span class="ident">Zero</span>};
 
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">BigInt</span> {
     <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">ParseBigIntError</span>;
@@ -499,7 +509,7 @@
 <span class="kw">impl</span> <span class="ident">Num</span> <span class="kw">for</span> <span class="ident">BigInt</span> {
     <span class="kw">type</span> <span class="ident">FromStrRadixErr</span> <span class="op">=</span> <span class="ident">ParseBigIntError</span>;
 
-    <span class="doccomment">/// Creates and initializes a BigInt.</span>
+    <span class="doccomment">/// Creates and initializes a [`BigInt`].</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">from_str_radix</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">radix</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BigInt</span>, <span class="ident">ParseBigIntError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sign</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&#39;-&#39;</span>) {
@@ -842,6 +852,16 @@
 <span class="macro">impl_to_bigint!</span>(<span class="ident">f32</span>, <span class="ident">FromPrimitive::from_f32</span>);
 <span class="macro">impl_to_bigint!</span>(<span class="ident">f64</span>, <span class="ident">FromPrimitive::from_f64</span>);
 
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BigInt</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
+        <span class="kw">if</span> <span class="ident">x</span> {
+            <span class="ident">One::one</span>()
+        } <span class="kw">else</span> {
+            <span class="ident">Zero::zero</span>()
+        }
+    }
+}
+
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">from_signed_bytes_be</span>(<span class="ident">digits</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">BigInt</span> {
     <span class="kw">let</span> <span class="ident">sign</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">digits</span>.<span class="ident">first</span>() {
@@ -854,7 +874,7 @@
         <span class="comment">// two&#39;s-complement the content to retrieve the magnitude</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">digits</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="ident">digits</span>);
         <span class="ident">twos_complement_be</span>(<span class="kw-2">&amp;mut</span> <span class="ident">digits</span>);
-        <span class="ident">BigInt::from_biguint</span>(<span class="ident">sign</span>, <span class="ident">BigUint::from_bytes_be</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">digits</span>))
+        <span class="ident">BigInt::from_biguint</span>(<span class="ident">sign</span>, <span class="ident">BigUint::from_bytes_be</span>(<span class="kw-2">&amp;</span><span class="ident">digits</span>))
     } <span class="kw">else</span> {
         <span class="ident">BigInt::from_biguint</span>(<span class="ident">sign</span>, <span class="ident">BigUint::from_bytes_be</span>(<span class="ident">digits</span>))
     }
@@ -872,7 +892,7 @@
         <span class="comment">// two&#39;s-complement the content to retrieve the magnitude</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">digits</span> <span class="op">=</span> <span class="ident">Vec::from</span>(<span class="ident">digits</span>);
         <span class="ident">twos_complement_le</span>(<span class="kw-2">&amp;mut</span> <span class="ident">digits</span>);
-        <span class="ident">BigInt::from_biguint</span>(<span class="ident">sign</span>, <span class="ident">BigUint::from_bytes_le</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">digits</span>))
+        <span class="ident">BigInt::from_biguint</span>(<span class="ident">sign</span>, <span class="ident">BigUint::from_bytes_le</span>(<span class="kw-2">&amp;</span><span class="ident">digits</span>))
     } <span class="kw">else</span> {
         <span class="ident">BigInt::from_biguint</span>(<span class="ident">sign</span>, <span class="ident">BigUint::from_bytes_le</span>(<span class="ident">digits</span>))
     }

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.140/src/unix/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libc/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.149/src/unix/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../libc/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../libc/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
@@ -1629,6 +1629,11 @@
 <span id="1623">1623</span>
 <span id="1624">1624</span>
 <span id="1625">1625</span>
+<span id="1626">1626</span>
+<span id="1627">1627</span>
+<span id="1628">1628</span>
+<span id="1629">1629</span>
+<span id="1630">1630</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Definitions found commonly among almost all Unix derivatives</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! More functions and definitions can be found in the more specific modules</span>
@@ -1660,7 +1665,7 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">cc_t</span> <span class="op">=</span> <span class="ident">::c_uchar</span>;
 
 <span class="macro">cfg_if!</span> {
-    <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;espidf&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;horizon&quot;</span>))]</span> {
+    <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;espidf&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;horizon&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;vita&quot;</span>))]</span> {
         <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">uid_t</span> <span class="op">=</span> <span class="ident">::c_ushort</span>;
         <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">gid_t</span> <span class="op">=</span> <span class="ident">::c_ushort</span>;
     } <span class="kw">else</span> <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;nto&quot;</span>)]</span> {
@@ -2018,11 +2023,6 @@
     } <span class="kw">else</span> <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_env</span> <span class="op">=</span> <span class="string">&quot;newlib&quot;</span>)]</span> {
         <span class="attribute">#[<span class="ident">link</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;c&quot;</span>)]</span>
         <span class="attribute">#[<span class="ident">link</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;m&quot;</span>)]</span>
-        <span class="kw">extern</span> {}
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;hermit&quot;</span>)]</span> {
-        <span class="comment">// no_default_libraries is set to false for HermitCore, so only a link</span>
-        <span class="comment">// to &quot;pthread&quot; needs to be added.</span>
-        <span class="attribute">#[<span class="ident">link</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;pthread&quot;</span>)]</span>
         <span class="kw">extern</span> {}
     } <span class="kw">else</span> <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_env</span> <span class="op">=</span> <span class="string">&quot;illumos&quot;</span>)]</span> {
         <span class="attribute">#[<span class="ident">link</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;c&quot;</span>)]</span>
@@ -2679,6 +2679,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symlink</span>(<span class="ident">path1</span>: <span class="kw-2">*const</span> <span class="ident">c_char</span>, <span class="ident">path2</span>: <span class="kw-2">*const</span> <span class="ident">c_char</span>) -&gt; <span class="ident">::c_int</span>;
 
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">truncate</span>(<span class="ident">path</span>: <span class="kw-2">*const</span> <span class="ident">c_char</span>, <span class="ident">length</span>: <span class="ident">off_t</span>) -&gt; <span class="ident">::c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ftruncate</span>(<span class="ident">fd</span>: <span class="ident">::c_int</span>, <span class="ident">length</span>: <span class="ident">off_t</span>) -&gt; <span class="ident">::c_int</span>;
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">signal</span>(<span class="ident">signum</span>: <span class="ident">::c_int</span>, <span class="ident">handler</span>: <span class="ident">sighandler_t</span>) -&gt; <span class="ident">sighandler_t</span>;
@@ -2711,6 +2712,10 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pthread_exit</span>(<span class="ident">value</span>: <span class="kw-2">*mut</span> <span class="ident">::c_void</span>) -&gt; <span class="op">!</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pthread_attr_init</span>(<span class="ident">attr</span>: <span class="kw-2">*mut</span> <span class="ident">::pthread_attr_t</span>) -&gt; <span class="ident">::c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pthread_attr_destroy</span>(<span class="ident">attr</span>: <span class="kw-2">*mut</span> <span class="ident">::pthread_attr_t</span>) -&gt; <span class="ident">::c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pthread_attr_getstacksize</span>(
+        <span class="ident">attr</span>: <span class="kw-2">*const</span> <span class="ident">::pthread_attr_t</span>,
+        <span class="ident">stacksize</span>: <span class="kw-2">*mut</span> <span class="ident">::size_t</span>,
+    ) -&gt; <span class="ident">::c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pthread_attr_setstacksize</span>(<span class="ident">attr</span>: <span class="kw-2">*mut</span> <span class="ident">::pthread_attr_t</span>, <span class="ident">stack_size</span>: <span class="ident">::size_t</span>) -&gt; <span class="ident">::c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pthread_attr_setdetachstate</span>(<span class="ident">attr</span>: <span class="kw-2">*mut</span> <span class="ident">::pthread_attr_t</span>, <span class="ident">state</span>: <span class="ident">::c_int</span>) -&gt; <span class="ident">::c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pthread_detach</span>(<span class="ident">thread</span>: <span class="ident">::pthread_t</span>) -&gt; <span class="ident">::c_int</span>;
@@ -3043,6 +3048,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lockf</span>(<span class="ident">fd</span>: <span class="ident">::c_int</span>, <span class="ident">cmd</span>: <span class="ident">::c_int</span>, <span class="ident">len</span>: <span class="ident">::off_t</span>) -&gt; <span class="ident">::c_int</span>;
 
 }
+
 <span class="macro">cfg_if!</span> {
     <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>,
                      <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>,
@@ -3078,7 +3084,6 @@
     <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>))]</span> {
         <span class="kw">extern</span> {
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">getsid</span>(<span class="ident">pid</span>: <span class="ident">pid_t</span>) -&gt; <span class="ident">pid_t</span>;
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">truncate</span>(<span class="ident">path</span>: <span class="kw-2">*const</span> <span class="ident">c_char</span>, <span class="ident">length</span>: <span class="ident">off_t</span>) -&gt; <span class="ident">::c_int</span>;
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>),
                        <span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;pause$UNIX2003&quot;</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pause</span>() -&gt; <span class="ident">::c_int</span>;
@@ -3129,6 +3134,11 @@
                 <span class="ident">errorfds</span>: <span class="kw-2">*mut</span> <span class="ident">fd_set</span>,
                 <span class="ident">timeout</span>: <span class="kw-2">*mut</span> <span class="ident">timespec</span>,
                 <span class="ident">sigmask</span>: <span class="kw-2">*const</span> <span class="ident">sigset_t</span>,
+            ) -&gt; <span class="ident">::c_int</span>;
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sigaction</span>(
+                <span class="ident">signum</span>: <span class="ident">::c_int</span>,
+                <span class="ident">act</span>: <span class="kw-2">*const</span> <span class="ident">sigaction</span>,
+                <span class="ident">oldact</span>: <span class="kw-2">*mut</span> <span class="ident">sigaction</span>
             ) -&gt; <span class="ident">::c_int</span>;
         }
     } <span class="kw">else</span> {
@@ -3208,9 +3218,6 @@
     } <span class="kw">else</span> <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;haiku&quot;</span>)]</span> {
         <span class="kw">mod</span> <span class="ident">haiku</span>;
         <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::haiku</span>::<span class="kw-2">*</span>;
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;hermit&quot;</span>)]</span> {
-        <span class="kw">mod</span> <span class="ident">hermit</span>;
-        <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::hermit</span>::<span class="kw-2">*</span>;
     } <span class="kw">else</span> <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>)]</span> {
         <span class="kw">mod</span> <span class="ident">redox</span>;
         <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::redox</span>::<span class="kw-2">*</span>;
@@ -3220,6 +3227,9 @@
     } <span class="kw">else</span> <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;aix&quot;</span>)]</span> {
         <span class="kw">mod</span> <span class="ident">aix</span>;
         <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::aix</span>::<span class="kw-2">*</span>;
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;hurd&quot;</span>)]</span> {
+        <span class="kw">mod</span> <span class="ident">hurd</span>;
+        <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::hurd</span>::<span class="kw-2">*</span>;
     } <span class="kw">else</span> {
         <span class="comment">// Unknown target_os</span>
     }

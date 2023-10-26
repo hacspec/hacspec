@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.140/src/unix/linux_like/linux/gnu/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../../../storage.js"></script><script defer src="../../../../../../source-script.js"></script><script defer src="../../../../../../source-files.js"></script><script defer src="../../../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../../../libc/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.149/src/unix/linux_like/linux/gnu/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../../../storage.js"></script><script defer src="../../../../../../source-script.js"></script><script defer src="../../../../../../source-files.js"></script><script defer src="../../../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../../../libc/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../../../../libc/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../../../rust-logo.svg" alt="logo"></div>
@@ -1435,6 +1435,18 @@
 <span id="1429">1429</span>
 <span id="1430">1430</span>
 <span id="1431">1431</span>
+<span id="1432">1432</span>
+<span id="1433">1433</span>
+<span id="1434">1434</span>
+<span id="1435">1435</span>
+<span id="1436">1436</span>
+<span id="1437">1437</span>
+<span id="1438">1438</span>
+<span id="1439">1439</span>
+<span id="1440">1440</span>
+<span id="1441">1441</span>
+<span id="1442">1442</span>
+<span id="1443">1443</span>
 </pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">type</span> <span class="ident">pthread_t</span> <span class="op">=</span> <span class="ident">c_ulong</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">__priority_which_t</span> <span class="op">=</span> <span class="ident">::c_uint</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">__rlimit_resource_t</span> <span class="op">=</span> <span class="ident">::c_uint</span>;
@@ -1553,13 +1565,17 @@
             <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;sparc&quot;</span>,
             <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;sparc64&quot;</span>,
             <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips&quot;</span>,
-            <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64&quot;</span>)))]</span>
+            <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips32r6&quot;</span>,
+            <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64&quot;</span>,
+            <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64r6&quot;</span>)))]</span>
         <span class="kw">pub</span> <span class="ident">c_ispeed</span>: <span class="ident">::speed_t</span>,
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(
             <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;sparc&quot;</span>,
             <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;sparc64&quot;</span>,
             <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips&quot;</span>,
-            <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64&quot;</span>)))]</span>
+            <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips32r6&quot;</span>,
+            <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64&quot;</span>,
+            <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64r6&quot;</span>)))]</span>
         <span class="kw">pub</span> <span class="ident">c_ospeed</span>: <span class="ident">::speed_t</span>,
     }
 
@@ -2167,27 +2183,6 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_VSOCK</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="ident">AF_VSOCK</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_XDP</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="ident">AF_XDP</span>;
 
-<span class="comment">/* DCCP socket options */</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_PACKET_SIZE</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_SERVICE</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_CHANGE_L</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_CHANGE_R</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_GET_CUR_MPS</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">5</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_SERVER_TIMEWAIT</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">6</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_SEND_CSCOV</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">10</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_RECV_CSCOV</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">11</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_AVAILABLE_CCIDS</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">12</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_CCID</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">13</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_TX_CCID</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">14</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_RX_CCID</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">15</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_QPOLICY_ID</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">16</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_QPOLICY_TXQLEN</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">17</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_CCID_RX_INFO</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">128</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SOCKOPT_CCID_TX_INFO</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">192</span>;
-
-<span class="doccomment">/// maximum number of services provided on the same listening port</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DCCP_SERVICE_LIST_MAX_LEN</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">32</span>;
-
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SIGEV_THREAD_ID</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">4</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BUFSIZ</span>: <span class="ident">::c_uint</span> <span class="op">=</span> <span class="number">8192</span>;
@@ -2412,7 +2407,10 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">KEYCTL_SUPPORTS_SIGN</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x04</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">KEYCTL_SUPPORTS_VERIFY</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x08</span>;
 <span class="macro">cfg_if!</span> {
-    <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;mips&quot;</span>, <span class="ident">target_arch</span><span class="op">=</span><span class="string">&quot;mips64&quot;</span>)))]</span> {
+    <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips&quot;</span>,
+                     <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips32r6&quot;</span>,
+                     <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64&quot;</span>,
+                     <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64r6&quot;</span>)))]</span> {
         <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">KEYCTL_MOVE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">30</span>;
         <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">KEYCTL_CAPABILITIES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">31</span>;
 
@@ -2533,6 +2531,18 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIME_ERROR</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">5</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIME_BAD</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="ident">TIME_ERROR</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAXTC</span>: <span class="ident">::c_long</span> <span class="op">=</span> <span class="number">6</span>;
+
+<span class="comment">// Portable GLOB_* flags are defined at the `linux_like` level.</span>
+<span class="comment">// The following are GNU extensions.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GLOB_PERIOD</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GLOB_ALTDIRFUNC</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GLOB_BRACE</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GLOB_NOMAGIC</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">11</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GLOB_TILDE</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GLOB_ONLYDIR</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">13</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GLOB_TILDE_CHECK</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">14</span>;
+
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MADV_COLLAPSE</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">25</span>;
 
 <span class="macro">cfg_if!</span> {
     <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(
@@ -2698,9 +2708,6 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reallocarray</span>(<span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">::c_void</span>, <span class="ident">nmemb</span>: <span class="ident">::size_t</span>, <span class="ident">size</span>: <span class="ident">::size_t</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">::c_void</span>;
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ctermid</span>(<span class="ident">s</span>: <span class="kw-2">*mut</span> <span class="ident">::c_char</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">::c_char</span>;
-}
-
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ioctl</span>(<span class="ident">fd</span>: <span class="ident">::c_int</span>, <span class="ident">request</span>: <span class="ident">::c_ulong</span>, ...) -&gt; <span class="ident">::c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">backtrace</span>(<span class="ident">buf</span>: <span class="kw-2">*mut</span> <span class="kw-2">*mut</span> <span class="ident">::c_void</span>, <span class="ident">sz</span>: <span class="ident">::c_int</span>) -&gt; <span class="ident">::c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">glob64</span>(
@@ -2763,6 +2770,9 @@
         <span class="ident">result</span>: <span class="kw-2">*mut</span> <span class="kw-2">*mut</span> <span class="ident">::group</span>,
     ) -&gt; <span class="ident">::c_int</span>;
 
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">putpwent</span>(<span class="ident">p</span>: <span class="kw-2">*const</span> <span class="ident">::passwd</span>, <span class="ident">stream</span>: <span class="kw-2">*mut</span> <span class="ident">::FILE</span>) -&gt; <span class="ident">::c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">putgrent</span>(<span class="ident">grp</span>: <span class="kw-2">*const</span> <span class="ident">::group</span>, <span class="ident">stream</span>: <span class="kw-2">*mut</span> <span class="ident">::FILE</span>) -&gt; <span class="ident">::c_int</span>;
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sethostid</span>(<span class="ident">hostid</span>: <span class="ident">::c_long</span>) -&gt; <span class="ident">::c_int</span>;
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">memfd_create</span>(<span class="ident">name</span>: <span class="kw-2">*const</span> <span class="ident">::c_char</span>, <span class="ident">flags</span>: <span class="ident">::c_uint</span>) -&gt; <span class="ident">::c_int</span>;
@@ -2789,9 +2799,6 @@
     <span class="doccomment">/// GNU version of `basename(3)`, defined in `string.h`.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;basename&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gnu_basename</span>(<span class="ident">path</span>: <span class="kw-2">*const</span> <span class="ident">::c_char</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">::c_char</span>;
-}
-
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dlmopen</span>(<span class="ident">lmid</span>: <span class="ident">Lmid_t</span>, <span class="ident">filename</span>: <span class="kw-2">*const</span> <span class="ident">::c_char</span>, <span class="ident">flag</span>: <span class="ident">::c_int</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">::c_void</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dlinfo</span>(<span class="ident">handle</span>: <span class="kw-2">*mut</span> <span class="ident">::c_void</span>, <span class="ident">request</span>: <span class="ident">::c_int</span>, <span class="ident">info</span>: <span class="kw-2">*mut</span> <span class="ident">::c_void</span>) -&gt; <span class="ident">::c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dladdr1</span>(
@@ -2801,15 +2808,10 @@
         <span class="ident">flags</span>: <span class="ident">::c_int</span>,
     ) -&gt; <span class="ident">::c_int</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">malloc_trim</span>(<span class="ident">__pad</span>: <span class="ident">::size_t</span>) -&gt; <span class="ident">::c_int</span>;
-}
-
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gnu_get_libc_release</span>() -&gt; <span class="kw-2">*const</span> <span class="ident">::c_char</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gnu_get_libc_version</span>() -&gt; <span class="kw-2">*const</span> <span class="ident">::c_char</span>;
-}
 
-<span class="comment">// posix/spawn.h</span>
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
+    <span class="comment">// posix/spawn.h</span>
     <span class="comment">// Added in `glibc` 2.29</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">posix_spawn_file_actions_addchdir_np</span>(
         <span class="ident">actions</span>: <span class="kw-2">*mut</span> <span class="ident">::posix_spawn_file_actions_t</span>,
@@ -2830,13 +2832,34 @@
         <span class="ident">actions</span>: <span class="kw-2">*mut</span> <span class="ident">::posix_spawn_file_actions_t</span>,
         <span class="ident">tcfd</span>: <span class="ident">::c_int</span>,
     ) -&gt; <span class="ident">::c_int</span>;
+
+    <span class="comment">// mntent.h</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">getmntent_r</span>(
+        <span class="ident">stream</span>: <span class="kw-2">*mut</span> <span class="ident">::FILE</span>,
+        <span class="ident">mntbuf</span>: <span class="kw-2">*mut</span> <span class="ident">::mntent</span>,
+        <span class="ident">buf</span>: <span class="kw-2">*mut</span> <span class="ident">::c_char</span>,
+        <span class="ident">buflen</span>: <span class="ident">::c_int</span>,
+    ) -&gt; <span class="kw-2">*mut</span> <span class="ident">::mntent</span>;
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">execveat</span>(
+        <span class="ident">dirfd</span>: <span class="ident">::c_int</span>,
+        <span class="ident">pathname</span>: <span class="kw-2">*const</span> <span class="ident">::c_char</span>,
+        <span class="ident">argv</span>: <span class="kw-2">*const</span> <span class="kw-2">*mut</span> <span class="ident">c_char</span>,
+        <span class="ident">envp</span>: <span class="kw-2">*const</span> <span class="kw-2">*mut</span> <span class="ident">c_char</span>,
+        <span class="ident">flags</span>: <span class="ident">::c_int</span>,
+    ) -&gt; <span class="ident">::c_int</span>;
+
+    <span class="comment">// Added in `glibc` 2.34</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close_range</span>(<span class="ident">first</span>: <span class="ident">::c_uint</span>, <span class="ident">last</span>: <span class="ident">::c_uint</span>, <span class="ident">flags</span>: <span class="ident">::c_int</span>) -&gt; <span class="ident">::c_int</span>;
 }
 
 <span class="macro">cfg_if!</span> {
     <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>,
                  <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>,
                  <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;m68k&quot;</span>,
+                 <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;csky&quot;</span>,
                  <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips&quot;</span>,
+                 <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips32r6&quot;</span>,
                  <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;powerpc&quot;</span>,
                  <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;sparc&quot;</span>,
                  <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;riscv32&quot;</span>))]</span> {
@@ -2846,6 +2869,7 @@
                         <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>,
                         <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;powerpc64&quot;</span>,
                         <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64&quot;</span>,
+                        <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;mips64r6&quot;</span>,
                         <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;s390x&quot;</span>,
                         <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;sparc64&quot;</span>,
                         <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;riscv64&quot;</span>,

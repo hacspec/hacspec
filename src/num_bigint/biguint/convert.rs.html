@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/num-bigint-0.4.3/src/biguint/convert.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>convert.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../num_bigint/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/num-bigint-0.4.4/src/biguint/convert.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>convert.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../num_bigint/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../num_bigint/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
@@ -788,7 +788,46 @@
 <span id="782">782</span>
 <span id="783">783</span>
 <span id="784">784</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">biguint_from_vec</span>, <span class="ident">BigUint</span>, <span class="ident">ToBigUint</span>};
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+</pre><pre class="rust"><code><span class="comment">// This uses stdlib features higher than the MSRV</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::manual_range_contains</span>)]</span> <span class="comment">// 1.35</span>
+
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">biguint_from_vec</span>, <span class="ident">BigUint</span>, <span class="ident">ToBigUint</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::addition::add2</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::division::div_rem_digit</span>;
@@ -807,7 +846,7 @@
 <span class="kw">use</span> <span class="ident">core::str::FromStr</span>;
 <span class="kw">use</span> <span class="ident">num_integer</span>::{<span class="ident">Integer</span>, <span class="ident">Roots</span>};
 <span class="kw">use</span> <span class="ident">num_traits::float::FloatCore</span>;
-<span class="kw">use</span> <span class="ident">num_traits</span>::{<span class="ident">FromPrimitive</span>, <span class="ident">Num</span>, <span class="ident">PrimInt</span>, <span class="ident">ToPrimitive</span>, <span class="ident">Zero</span>};
+<span class="kw">use</span> <span class="ident">num_traits</span>::{<span class="ident">FromPrimitive</span>, <span class="ident">Num</span>, <span class="ident">One</span>, <span class="ident">PrimInt</span>, <span class="ident">ToPrimitive</span>, <span class="ident">Zero</span>};
 
 <span class="doccomment">/// Find last set bit</span>
 <span class="doccomment">/// fls(0) == 0, fls(u32::MAX) == 32</span>
@@ -892,14 +931,20 @@
     <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">v</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">radix</span>.<span class="ident">is_power_of_two</span>());
     <span class="macro">debug_assert!</span>(<span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">u32::from</span>(<span class="ident">c</span>) <span class="op">&lt;</span> <span class="ident">radix</span>));
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">let</span> <span class="ident">radix_log2</span> <span class="op">=</span> <span class="ident">f64::from</span>(<span class="ident">radix</span>).<span class="ident">log2</span>();
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>))]</span>
-    <span class="kw">let</span> <span class="ident">radix_log2</span> <span class="op">=</span> <span class="ident">ilog2</span>(<span class="ident">radix</span>.<span class="ident">next_power_of_two</span>()) <span class="kw">as</span> <span class="ident">f64</span>;
-
     <span class="comment">// Estimate how big the result will be, so we can pre-allocate it.</span>
-    <span class="kw">let</span> <span class="ident">bits</span> <span class="op">=</span> <span class="ident">radix_log2</span> <span class="op">*</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">f64</span>;
-    <span class="kw">let</span> <span class="ident">big_digits</span> <span class="op">=</span> (<span class="ident">bits</span> <span class="op">/</span> <span class="ident">big_digit::BITS</span> <span class="kw">as</span> <span class="ident">f64</span>).<span class="ident">ceil</span>();
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
+    <span class="kw">let</span> <span class="ident">big_digits</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="ident">radix_log2</span> <span class="op">=</span> <span class="ident">f64::from</span>(<span class="ident">radix</span>).<span class="ident">log2</span>();
+        <span class="kw">let</span> <span class="ident">bits</span> <span class="op">=</span> <span class="ident">radix_log2</span> <span class="op">*</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">f64</span>;
+        (<span class="ident">bits</span> <span class="op">/</span> <span class="ident">big_digit::BITS</span> <span class="kw">as</span> <span class="ident">f64</span>).<span class="ident">ceil</span>()
+    };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>))]</span>
+    <span class="kw">let</span> <span class="ident">big_digits</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="ident">radix_log2</span> <span class="op">=</span> <span class="ident">ilog2</span>(<span class="ident">radix</span>.<span class="ident">next_power_of_two</span>()) <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="kw">let</span> <span class="ident">bits</span> <span class="op">=</span> <span class="ident">radix_log2</span> <span class="op">*</span> <span class="ident">v</span>.<span class="ident">len</span>();
+        (<span class="ident">bits</span> <span class="op">/</span> <span class="ident">big_digit::BITS</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">+</span> <span class="number">1</span>
+    };
+
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">big_digits</span>.<span class="ident">to_usize</span>().<span class="ident">unwrap_or</span>(<span class="number">0</span>));
 
     <span class="kw">let</span> (<span class="ident">base</span>, <span class="ident">power</span>) <span class="op">=</span> <span class="ident">get_radix_base</span>(<span class="ident">radix</span>, <span class="ident">big_digit::BITS</span>);
@@ -1071,19 +1116,31 @@
                 <span class="kw">let</span> <span class="ident">digit_bits</span> <span class="op">=</span> (<span class="ident">bits</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">%</span> <span class="ident">u64::from</span>(<span class="ident">big_digit::BITS</span>) <span class="op">+</span> <span class="number">1</span>;
                 <span class="kw">let</span> <span class="ident">bits_want</span> <span class="op">=</span> <span class="ident">Ord::min</span>(<span class="number">64</span> <span class="op">-</span> <span class="ident">ret_bits</span>, <span class="ident">digit_bits</span>);
 
-                <span class="kw">if</span> <span class="ident">bits_want</span> <span class="op">!</span><span class="op">=</span> <span class="number">64</span> {
-                    <span class="ident">ret</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="ident">bits_want</span>;
+                <span class="kw">if</span> <span class="ident">bits_want</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+                    <span class="kw">if</span> <span class="ident">bits_want</span> <span class="op">!</span><span class="op">=</span> <span class="number">64</span> {
+                        <span class="ident">ret</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="ident">bits_want</span>;
+                    }
+                    <span class="comment">// XXX Conversion is useless if already 64-bit.</span>
+                    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::useless_conversion</span>)]</span>
+                    <span class="kw">let</span> <span class="ident">d0</span> <span class="op">=</span> <span class="ident">u64::from</span>(<span class="kw-2">*</span><span class="ident">d</span>) <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="ident">digit_bits</span> <span class="op">-</span> <span class="ident">bits_want</span>);
+                    <span class="ident">ret</span> <span class="op">|</span><span class="op">=</span> <span class="ident">d0</span>;
                 }
-                <span class="comment">// XXX Conversion is useless if already 64-bit.</span>
-                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::useless_conversion</span>)]</span>
-                <span class="kw">let</span> <span class="ident">d0</span> <span class="op">=</span> <span class="ident">u64::from</span>(<span class="kw-2">*</span><span class="ident">d</span>) <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="ident">digit_bits</span> <span class="op">-</span> <span class="ident">bits_want</span>);
-                <span class="ident">ret</span> <span class="op">|</span><span class="op">=</span> <span class="ident">d0</span>;
+
+                <span class="comment">// Implement round-to-odd: If any lower bits are 1, set LSB to 1</span>
+                <span class="comment">// so that rounding again to floating point value using</span>
+                <span class="comment">// nearest-ties-to-even is correct.</span>
+                <span class="comment">//</span>
+                <span class="comment">// See: https://en.wikipedia.org/wiki/Rounding#Rounding_to_prepare_for_shorter_precision</span>
+
+                <span class="kw">if</span> <span class="ident">digit_bits</span> <span class="op">-</span> <span class="ident">bits_want</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+                    <span class="comment">// XXX Conversion is useless if already 64-bit.</span>
+                    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::useless_conversion</span>)]</span>
+                    <span class="kw">let</span> <span class="ident">masked</span> <span class="op">=</span> <span class="ident">u64::from</span>(<span class="kw-2">*</span><span class="ident">d</span>) <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">64</span> <span class="op">-</span> (<span class="ident">digit_bits</span> <span class="op">-</span> <span class="ident">bits_want</span>) <span class="kw">as</span> <span class="ident">u32</span>);
+                    <span class="ident">ret</span> <span class="op">|</span><span class="op">=</span> (<span class="ident">masked</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u64</span>;
+                }
+
                 <span class="ident">ret_bits</span> <span class="op">+</span><span class="op">=</span> <span class="ident">bits_want</span>;
                 <span class="ident">bits</span> <span class="op">-</span><span class="op">=</span> <span class="ident">bits_want</span>;
-
-                <span class="kw">if</span> <span class="ident">ret_bits</span> <span class="op">==</span> <span class="number">64</span> {
-                    <span class="kw">break</span>;
-                }
             }
 
             <span class="ident">ret</span>
@@ -1362,6 +1419,16 @@
 <span class="macro">impl_to_biguint!</span>(<span class="ident">f32</span>, <span class="ident">FromPrimitive::from_f32</span>);
 <span class="macro">impl_to_biguint!</span>(<span class="ident">f64</span>, <span class="ident">FromPrimitive::from_f64</span>);
 
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BigUint</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
+        <span class="kw">if</span> <span class="ident">x</span> {
+            <span class="ident">One::one</span>()
+        } <span class="kw">else</span> {
+            <span class="ident">Zero::zero</span>()
+        }
+    }
+}
+
 <span class="comment">// Extract bitwise digits that evenly divide BigDigit</span>
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">to_bitwise_digits_le</span>(<span class="ident">u</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>, <span class="ident">bits</span>: <span class="ident">u8</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
     <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">u</span>.<span class="ident">is_zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">bits</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">8</span> <span class="op">&amp;&amp;</span> <span class="ident">big_digit::BITS</span> <span class="op">%</span> <span class="ident">bits</span> <span class="op">==</span> <span class="number">0</span>);
@@ -1437,12 +1504,17 @@
     <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">u</span>.<span class="ident">is_zero</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">radix</span>.<span class="ident">is_power_of_two</span>());
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">let</span> <span class="ident">radix_log2</span> <span class="op">=</span> <span class="ident">f64::from</span>(<span class="ident">radix</span>).<span class="ident">log2</span>();
+    <span class="kw">let</span> <span class="ident">radix_digits</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="ident">radix_log2</span> <span class="op">=</span> <span class="ident">f64::from</span>(<span class="ident">radix</span>).<span class="ident">log2</span>();
+        ((<span class="ident">u</span>.<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> <span class="ident">radix_log2</span>).<span class="ident">ceil</span>()
+    };
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>))]</span>
-    <span class="kw">let</span> <span class="ident">radix_log2</span> <span class="op">=</span> <span class="ident">ilog2</span>(<span class="ident">radix</span>) <span class="kw">as</span> <span class="ident">f64</span>;
+    <span class="kw">let</span> <span class="ident">radix_digits</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="ident">radix_log2</span> <span class="op">=</span> <span class="ident">ilog2</span>(<span class="ident">radix</span>) <span class="kw">as</span> <span class="ident">usize</span>;
+        ((<span class="ident">u</span>.<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">/</span> <span class="ident">radix_log2</span>) <span class="op">+</span> <span class="number">1</span>
+    };
 
     <span class="comment">// Estimate how big the result will be, so we can pre-allocate it.</span>
-    <span class="kw">let</span> <span class="ident">radix_digits</span> <span class="op">=</span> ((<span class="ident">u</span>.<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> <span class="ident">radix_log2</span>).<span class="ident">ceil</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">radix_digits</span>.<span class="ident">to_usize</span>().<span class="ident">unwrap_or</span>(<span class="number">0</span>));
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">digits</span> <span class="op">=</span> <span class="ident">u</span>.<span class="ident">clone</span>();

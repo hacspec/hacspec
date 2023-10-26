@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.54/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../proc_macro2/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.69/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../proc_macro2/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../proc_macro2/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
@@ -1322,23 +1322,6 @@
 <span id="1316">1316</span>
 <span id="1317">1317</span>
 <span id="1318">1318</span>
-<span id="1319">1319</span>
-<span id="1320">1320</span>
-<span id="1321">1321</span>
-<span id="1322">1322</span>
-<span id="1323">1323</span>
-<span id="1324">1324</span>
-<span id="1325">1325</span>
-<span id="1326">1326</span>
-<span id="1327">1327</span>
-<span id="1328">1328</span>
-<span id="1329">1329</span>
-<span id="1330">1330</span>
-<span id="1331">1331</span>
-<span id="1332">1332</span>
-<span id="1333">1333</span>
-<span id="1334">1334</span>
-<span id="1335">1335</span>
 </pre><pre class="rust"><code><span class="doccomment">//! [![github]](https://github.com/dtolnay/proc-macro2)&amp;ensp;[![crates-io]](https://crates.io/crates/proc-macro2)&amp;ensp;[![docs-rs]](crate)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [github]: https://img.shields.io/badge/github-8da0cb?style=for-the-badge&amp;labelColor=555555&amp;logo=github</span>
@@ -1396,7 +1379,7 @@
 <span class="doccomment">//! If parsing with [Syn], you&#39;ll use [`parse_macro_input!`] instead to</span>
 <span class="doccomment">//! propagate parse errors correctly back to the compiler when parsing fails.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! [`parse_macro_input!`]: https://docs.rs/syn/1.0/syn/macro.parse_macro_input.html</span>
+<span class="doccomment">//! [`parse_macro_input!`]: https://docs.rs/syn/2.0/syn/macro.parse_macro_input.html</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Unstable features</span>
 <span class="doccomment">//!</span>
@@ -1406,7 +1389,7 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! To opt into the additional APIs available in the most recent nightly</span>
 <span class="doccomment">//! compiler, the `procmacro2_semver_exempt` config flag must be passed to</span>
-<span class="doccomment">//! rustc. We will polyfill those nightly-only APIs back to Rust 1.31.0. As</span>
+<span class="doccomment">//! rustc. We will polyfill those nightly-only APIs back to Rust 1.56.0. As</span>
 <span class="doccomment">//! these are unstable APIs that track the nightly compiler, minor versions of</span>
 <span class="doccomment">//! proc-macro2 may make breaking changes to them at any time.</span>
 <span class="doccomment">//!</span>
@@ -1427,11 +1410,8 @@
 <span class="doccomment">//! a different thread.</span>
 
 <span class="comment">// Proc-macro2 types in rustdoc of other crates get linked to here.</span>
-<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.rs/proc-macro2/1.0.54&quot;</span>)]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(
-    <span class="ident">any</span>(<span class="ident">proc_macro_span</span>, <span class="ident">super_unstable</span>),
-    <span class="ident">feature</span>(<span class="ident">proc_macro_span</span>, <span class="ident">proc_macro_span_shrink</span>)
-)]</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.rs/proc-macro2/1.0.69&quot;</span>)]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">proc_macro_span</span>, <span class="ident">super_unstable</span>), <span class="ident">feature</span>(<span class="ident">proc_macro_span</span>))]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">super_unstable</span>, <span class="ident">feature</span>(<span class="ident">proc_macro_def_site</span>))]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">feature</span>(<span class="ident">doc_cfg</span>))]</span>
 <span class="attribute">#![<span class="ident">allow</span>(
@@ -1439,10 +1419,14 @@
     <span class="ident">clippy::cast_possible_truncation</span>,
     <span class="ident">clippy::doc_markdown</span>,
     <span class="ident">clippy::items_after_statements</span>,
+    <span class="ident">clippy::iter_without_into_iter</span>,
     <span class="ident">clippy::let_underscore_untyped</span>,
     <span class="ident">clippy::manual_assert</span>,
+    <span class="ident">clippy::manual_range_contains</span>,
+    <span class="ident">clippy::missing_safety_doc</span>,
     <span class="ident">clippy::must_use_candidate</span>,
     <span class="ident">clippy::needless_doctest_main</span>,
+    <span class="ident">clippy::new_without_default</span>,
     <span class="ident">clippy::return_self_not_must_use</span>,
     <span class="ident">clippy::shadow_unrelated</span>,
     <span class="ident">clippy::trivially_copy_pass_by_ref</span>,
@@ -1460,7 +1444,9 @@
     build script as well.
 &quot;</span>}
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">use_proc_macro</span>)]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;proc-macro&quot;</span>)]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">proc_macro</span>;
 
 <span class="kw">mod</span> <span class="ident">marker</span>;
@@ -1491,7 +1477,6 @@
 <span class="kw">use</span> <span class="ident">core::cmp::Ordering</span>;
 <span class="kw">use</span> <span class="ident">core::fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Display</span>};
 <span class="kw">use</span> <span class="ident">core::hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
-<span class="kw">use</span> <span class="ident">core::iter::FromIterator</span>;
 <span class="kw">use</span> <span class="ident">core::ops::RangeBounds</span>;
 <span class="kw">use</span> <span class="ident">core::str::FromStr</span>;
 <span class="kw">use</span> <span class="ident">std::error::Error</span>;
@@ -1574,14 +1559,16 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">use_proc_macro</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;proc-macro&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;proc-macro&quot;</span>)))]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">proc_macro::TokenStream</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TokenStream</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">inner</span>: <span class="ident">proc_macro::TokenStream</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">TokenStream::_new</span>(<span class="ident">inner</span>.<span class="ident">into</span>())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">use_proc_macro</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;proc-macro&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;proc-macro&quot;</span>)))]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">proc_macro::TokenStream</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">inner</span>: <span class="ident">TokenStream</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">inner</span>.<span class="ident">inner</span>.<span class="ident">into</span>()
@@ -1741,9 +1728,6 @@
     <span class="doccomment">/// The span located at the invocation of the procedural macro, but with</span>
     <span class="doccomment">/// local variables, labels, and `$crate` resolved at the definition site</span>
     <span class="doccomment">/// of the macro. This is the same hygiene behavior as `macro_rules`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function requires Rust 1.45 or later.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">no_hygiene</span>))]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mixed_site</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Span::_new</span>(<span class="ident">imp::Span::mixed_site</span>())
     }
@@ -1828,24 +1812,6 @@
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;span-locations&quot;</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">LineColumn</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">end</span>()
-    }
-
-    <span class="doccomment">/// Creates an empty span pointing to directly before this span.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This method is semver exempt and not exposed by default.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">procmacro2_semver_exempt</span>, <span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">wrap_proc_macro</span>), <span class="ident">super_unstable</span>)))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">procmacro2_semver_exempt</span>)))]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">before</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Span</span> {
-        <span class="ident">Span::_new</span>(<span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">before</span>())
-    }
-
-    <span class="doccomment">/// Creates an empty span pointing to directly after this span.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This method is semver exempt and not exposed by default.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">procmacro2_semver_exempt</span>, <span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">wrap_proc_macro</span>), <span class="ident">super_unstable</span>)))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">procmacro2_semver_exempt</span>)))]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">after</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Span</span> {
-        <span class="ident">Span::_new</span>(<span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">after</span>())
     }
 
     <span class="doccomment">/// Create a new span encompassing `self` and `other`.</span>
@@ -2212,7 +2178,7 @@
 <span class="doccomment">/// Rust keywords. Use `input.call(Ident::parse_any)` when parsing to match the</span>
 <span class="doccomment">/// behaviour of `Ident::new`.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [`Parse`]: https://docs.rs/syn/1.0/syn/parse/trait.Parse.html</span>
+<span class="doccomment">/// [`Parse`]: https://docs.rs/syn/2.0/syn/parse/trait.Parse.html</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">///</span>
@@ -2303,7 +2269,7 @@
     <span class="doccomment">/// Panics if the input string is neither a keyword nor a legal variable</span>
     <span class="doccomment">/// name. If you are not sure whether the string contains an identifier and</span>
     <span class="doccomment">/// need to handle an error case, use</span>
-    <span class="doccomment">/// &lt;a href=&quot;https://docs.rs/syn/1.0/syn/fn.parse_str.html&quot;&gt;&lt;code</span>
+    <span class="doccomment">/// &lt;a href=&quot;https://docs.rs/syn/2.0/syn/fn.parse_str.html&quot;&gt;&lt;code</span>
     <span class="doccomment">///   style=&quot;padding-right:0;&quot;&gt;syn::parse_str&lt;/code&gt;&lt;/a&gt;&lt;code</span>
     <span class="doccomment">///   style=&quot;padding-left:0;&quot;&gt;::&amp;lt;Ident&amp;gt;&lt;/code&gt;</span>
     <span class="doccomment">/// rather than `Ident::new`.</span>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/num-traits-0.2.15/src/cast.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cast.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../num_traits/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/num-traits-0.2.17/src/cast.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cast.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../num_traits/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../num_traits/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
@@ -782,49 +782,11 @@
 <span id="776">776</span>
 <span id="777">777</span>
 <span id="778">778</span>
-<span id="779">779</span>
-<span id="780">780</span>
-<span id="781">781</span>
-<span id="782">782</span>
-<span id="783">783</span>
-<span id="784">784</span>
-<span id="785">785</span>
-<span id="786">786</span>
-<span id="787">787</span>
-<span id="788">788</span>
-<span id="789">789</span>
-<span id="790">790</span>
-<span id="791">791</span>
-<span id="792">792</span>
-<span id="793">793</span>
-<span id="794">794</span>
-<span id="795">795</span>
-<span id="796">796</span>
-<span id="797">797</span>
-<span id="798">798</span>
-<span id="799">799</span>
-<span id="800">800</span>
-<span id="801">801</span>
-<span id="802">802</span>
-<span id="803">803</span>
-<span id="804">804</span>
-<span id="805">805</span>
-<span id="806">806</span>
-<span id="807">807</span>
-<span id="808">808</span>
-<span id="809">809</span>
-<span id="810">810</span>
-<span id="811">811</span>
-<span id="812">812</span>
-<span id="813">813</span>
-<span id="814">814</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::mem::size_of</span>;
 <span class="kw">use</span> <span class="ident">core::num::Wrapping</span>;
 <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">f32</span>, <span class="ident">f64</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
-<span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">i128</span>, <span class="ident">u128</span>};
-<span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">i16</span>, <span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">i8</span>, <span class="ident">isize</span>};
-<span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">u16</span>, <span class="ident">u32</span>, <span class="ident">u64</span>, <span class="ident">u8</span>, <span class="ident">usize</span>};
+<span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">i128</span>, <span class="ident">i16</span>, <span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">i8</span>, <span class="ident">isize</span>};
+<span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">u128</span>, <span class="ident">u16</span>, <span class="ident">u32</span>, <span class="ident">u64</span>, <span class="ident">u8</span>, <span class="ident">usize</span>};
 
 <span class="doccomment">/// A generic trait for converting a value to a number.</span>
 <span class="doccomment">///</span>
@@ -873,12 +835,9 @@
     <span class="doccomment">/// represented by an `i128` (`i64` under the default implementation), then</span>
     <span class="doccomment">/// `None` is returned.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This method is only available with feature `i128` enabled on Rust &gt;= 1.26.</span>
-    <span class="doccomment">///</span>
     <span class="doccomment">/// The default implementation converts through `to_i64()`. Types implementing</span>
     <span class="doccomment">/// this trait should override this method if they can represent a greater range.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
     <span class="kw">fn</span> <span class="ident">to_i128</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i128</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">to_i64</span>().<span class="ident">map</span>(<span class="ident">From::from</span>)
     }
@@ -919,12 +878,9 @@
     <span class="doccomment">/// represented by a `u128` (`u64` under the default implementation), then</span>
     <span class="doccomment">/// `None` is returned.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This method is only available with feature `i128` enabled on Rust &gt;= 1.26.</span>
-    <span class="doccomment">///</span>
     <span class="doccomment">/// The default implementation converts through `to_u64()`. Types implementing</span>
     <span class="doccomment">/// this trait should override this method if they can represent a greater range.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
     <span class="kw">fn</span> <span class="ident">to_u128</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u128</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">to_u64</span>().<span class="ident">map</span>(<span class="ident">From::from</span>)
     }
@@ -993,7 +949,6 @@
                 <span class="kw">fn</span> <span class="ident">to_i16</span> -&gt; <span class="ident">i16</span>;
                 <span class="kw">fn</span> <span class="ident">to_i32</span> -&gt; <span class="ident">i32</span>;
                 <span class="kw">fn</span> <span class="ident">to_i64</span> -&gt; <span class="ident">i64</span>;
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
                 <span class="kw">fn</span> <span class="ident">to_i128</span> -&gt; <span class="ident">i128</span>;
             }
 
@@ -1003,7 +958,6 @@
                 <span class="kw">fn</span> <span class="ident">to_u16</span> -&gt; <span class="ident">u16</span>;
                 <span class="kw">fn</span> <span class="ident">to_u32</span> -&gt; <span class="ident">u32</span>;
                 <span class="kw">fn</span> <span class="ident">to_u64</span> -&gt; <span class="ident">u64</span>;
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
                 <span class="kw">fn</span> <span class="ident">to_u128</span> -&gt; <span class="ident">u128</span>;
             }
 
@@ -1024,7 +978,6 @@
 <span class="macro">impl_to_primitive_int!</span>(<span class="ident">i16</span>);
 <span class="macro">impl_to_primitive_int!</span>(<span class="ident">i32</span>);
 <span class="macro">impl_to_primitive_int!</span>(<span class="ident">i64</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
 <span class="macro">impl_to_primitive_int!</span>(<span class="ident">i128</span>);
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_to_primitive_uint_to_int</span> {
@@ -1066,7 +1019,6 @@
                 <span class="kw">fn</span> <span class="ident">to_i16</span> -&gt; <span class="ident">i16</span>;
                 <span class="kw">fn</span> <span class="ident">to_i32</span> -&gt; <span class="ident">i32</span>;
                 <span class="kw">fn</span> <span class="ident">to_i64</span> -&gt; <span class="ident">i64</span>;
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
                 <span class="kw">fn</span> <span class="ident">to_i128</span> -&gt; <span class="ident">i128</span>;
             }
 
@@ -1076,7 +1028,6 @@
                 <span class="kw">fn</span> <span class="ident">to_u16</span> -&gt; <span class="ident">u16</span>;
                 <span class="kw">fn</span> <span class="ident">to_u32</span> -&gt; <span class="ident">u32</span>;
                 <span class="kw">fn</span> <span class="ident">to_u64</span> -&gt; <span class="ident">u64</span>;
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
                 <span class="kw">fn</span> <span class="ident">to_u128</span> -&gt; <span class="ident">u128</span>;
             }
 
@@ -1097,7 +1048,6 @@
 <span class="macro">impl_to_primitive_uint!</span>(<span class="ident">u16</span>);
 <span class="macro">impl_to_primitive_uint!</span>(<span class="ident">u32</span>);
 <span class="macro">impl_to_primitive_uint!</span>(<span class="ident">u64</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
 <span class="macro">impl_to_primitive_uint!</span>(<span class="ident">u128</span>);
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_to_primitive_float_to_float</span> {
@@ -1193,7 +1143,6 @@
                 <span class="kw">fn</span> <span class="ident">to_i16</span> -&gt; <span class="ident">i16</span>;
                 <span class="kw">fn</span> <span class="ident">to_i32</span> -&gt; <span class="ident">i32</span>;
                 <span class="kw">fn</span> <span class="ident">to_i64</span> -&gt; <span class="ident">i64</span>;
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
                 <span class="kw">fn</span> <span class="ident">to_i128</span> -&gt; <span class="ident">i128</span>;
             }
 
@@ -1203,7 +1152,6 @@
                 <span class="kw">fn</span> <span class="ident">to_u16</span> -&gt; <span class="ident">u16</span>;
                 <span class="kw">fn</span> <span class="ident">to_u32</span> -&gt; <span class="ident">u32</span>;
                 <span class="kw">fn</span> <span class="ident">to_u64</span> -&gt; <span class="ident">u64</span>;
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
                 <span class="kw">fn</span> <span class="ident">to_u128</span> -&gt; <span class="ident">u128</span>;
             }
 
@@ -1264,12 +1212,9 @@
     <span class="doccomment">/// Converts an `i128` to return an optional value of this type. If the</span>
     <span class="doccomment">/// value cannot be represented by this type, then `None` is returned.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This method is only available with feature `i128` enabled on Rust &gt;= 1.26.</span>
-    <span class="doccomment">///</span>
     <span class="doccomment">/// The default implementation converts through `from_i64()`. Types implementing</span>
     <span class="doccomment">/// this trait should override this method if they can represent a greater range.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
     <span class="kw">fn</span> <span class="ident">from_i128</span>(<span class="ident">n</span>: <span class="ident">i128</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">n</span>.<span class="ident">to_i64</span>().<span class="ident">and_then</span>(<span class="ident">FromPrimitive::from_i64</span>)
     }
@@ -1309,12 +1254,9 @@
     <span class="doccomment">/// Converts an `u128` to return an optional value of this type. If the</span>
     <span class="doccomment">/// value cannot be represented by this type, then `None` is returned.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This method is only available with feature `i128` enabled on Rust &gt;= 1.26.</span>
-    <span class="doccomment">///</span>
     <span class="doccomment">/// The default implementation converts through `from_u64()`. Types implementing</span>
     <span class="doccomment">/// this trait should override this method if they can represent a greater range.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
     <span class="kw">fn</span> <span class="ident">from_u128</span>(<span class="ident">n</span>: <span class="ident">u128</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">n</span>.<span class="ident">to_u64</span>().<span class="ident">and_then</span>(<span class="ident">FromPrimitive::from_u64</span>)
     }
@@ -1365,7 +1307,6 @@
             <span class="kw">fn</span> <span class="ident">from_i64</span>(<span class="ident">n</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span><span class="op">&gt;</span> {
                 <span class="ident">n</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">to_ty</span>()
             }
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
             <span class="kw">fn</span> <span class="ident">from_i128</span>(<span class="ident">n</span>: <span class="ident">i128</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span><span class="op">&gt;</span> {
                 <span class="ident">n</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">to_ty</span>()
@@ -1391,7 +1332,6 @@
             <span class="kw">fn</span> <span class="ident">from_u64</span>(<span class="ident">n</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span><span class="op">&gt;</span> {
                 <span class="ident">n</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">to_ty</span>()
             }
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
             <span class="kw">fn</span> <span class="ident">from_u128</span>(<span class="ident">n</span>: <span class="ident">u128</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span><span class="op">&gt;</span> {
                 <span class="ident">n</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">to_ty</span>()
@@ -1414,14 +1354,12 @@
 <span class="macro">impl_from_primitive!</span>(<span class="ident">i16</span>, <span class="ident">to_i16</span>);
 <span class="macro">impl_from_primitive!</span>(<span class="ident">i32</span>, <span class="ident">to_i32</span>);
 <span class="macro">impl_from_primitive!</span>(<span class="ident">i64</span>, <span class="ident">to_i64</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
 <span class="macro">impl_from_primitive!</span>(<span class="ident">i128</span>, <span class="ident">to_i128</span>);
 <span class="macro">impl_from_primitive!</span>(<span class="ident">usize</span>, <span class="ident">to_usize</span>);
 <span class="macro">impl_from_primitive!</span>(<span class="ident">u8</span>, <span class="ident">to_u8</span>);
 <span class="macro">impl_from_primitive!</span>(<span class="ident">u16</span>, <span class="ident">to_u16</span>);
 <span class="macro">impl_from_primitive!</span>(<span class="ident">u32</span>, <span class="ident">to_u32</span>);
 <span class="macro">impl_from_primitive!</span>(<span class="ident">u64</span>, <span class="ident">to_u64</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
 <span class="macro">impl_from_primitive!</span>(<span class="ident">u128</span>, <span class="ident">to_u128</span>);
 <span class="macro">impl_from_primitive!</span>(<span class="ident">f32</span>, <span class="ident">to_f32</span>);
 <span class="macro">impl_from_primitive!</span>(<span class="ident">f64</span>, <span class="ident">to_f64</span>);
@@ -1443,7 +1381,6 @@
         <span class="kw">fn</span> <span class="ident">to_i16</span> -&gt; <span class="ident">i16</span>;
         <span class="kw">fn</span> <span class="ident">to_i32</span> -&gt; <span class="ident">i32</span>;
         <span class="kw">fn</span> <span class="ident">to_i64</span> -&gt; <span class="ident">i64</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
         <span class="kw">fn</span> <span class="ident">to_i128</span> -&gt; <span class="ident">i128</span>;
 
         <span class="kw">fn</span> <span class="ident">to_usize</span> -&gt; <span class="ident">usize</span>;
@@ -1451,7 +1388,6 @@
         <span class="kw">fn</span> <span class="ident">to_u16</span> -&gt; <span class="ident">u16</span>;
         <span class="kw">fn</span> <span class="ident">to_u32</span> -&gt; <span class="ident">u32</span>;
         <span class="kw">fn</span> <span class="ident">to_u64</span> -&gt; <span class="ident">u64</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
         <span class="kw">fn</span> <span class="ident">to_u128</span> -&gt; <span class="ident">u128</span>;
 
         <span class="kw">fn</span> <span class="ident">to_f32</span> -&gt; <span class="ident">f32</span>;
@@ -1476,7 +1412,6 @@
         <span class="kw">fn</span> <span class="ident">from_i16</span>(<span class="ident">i16</span>);
         <span class="kw">fn</span> <span class="ident">from_i32</span>(<span class="ident">i32</span>);
         <span class="kw">fn</span> <span class="ident">from_i64</span>(<span class="ident">i64</span>);
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
         <span class="kw">fn</span> <span class="ident">from_i128</span>(<span class="ident">i128</span>);
 
         <span class="kw">fn</span> <span class="ident">from_usize</span>(<span class="ident">usize</span>);
@@ -1484,7 +1419,6 @@
         <span class="kw">fn</span> <span class="ident">from_u16</span>(<span class="ident">u16</span>);
         <span class="kw">fn</span> <span class="ident">from_u32</span>(<span class="ident">u32</span>);
         <span class="kw">fn</span> <span class="ident">from_u64</span>(<span class="ident">u64</span>);
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
         <span class="kw">fn</span> <span class="ident">from_u128</span>(<span class="ident">u128</span>);
 
         <span class="kw">fn</span> <span class="ident">from_f32</span>(<span class="ident">f32</span>);
@@ -1542,14 +1476,12 @@
 <span class="macro">impl_num_cast!</span>(<span class="ident">u16</span>, <span class="ident">to_u16</span>);
 <span class="macro">impl_num_cast!</span>(<span class="ident">u32</span>, <span class="ident">to_u32</span>);
 <span class="macro">impl_num_cast!</span>(<span class="ident">u64</span>, <span class="ident">to_u64</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
 <span class="macro">impl_num_cast!</span>(<span class="ident">u128</span>, <span class="ident">to_u128</span>);
 <span class="macro">impl_num_cast!</span>(<span class="ident">usize</span>, <span class="ident">to_usize</span>);
 <span class="macro">impl_num_cast!</span>(<span class="ident">i8</span>, <span class="ident">to_i8</span>);
 <span class="macro">impl_num_cast!</span>(<span class="ident">i16</span>, <span class="ident">to_i16</span>);
 <span class="macro">impl_num_cast!</span>(<span class="ident">i32</span>, <span class="ident">to_i32</span>);
 <span class="macro">impl_num_cast!</span>(<span class="ident">i64</span>, <span class="ident">to_i64</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
 <span class="macro">impl_num_cast!</span>(<span class="ident">i128</span>, <span class="ident">to_i128</span>);
 <span class="macro">impl_num_cast!</span>(<span class="ident">isize</span>, <span class="ident">to_isize</span>);
 <span class="macro">impl_num_cast!</span>(<span class="ident">f32</span>, <span class="ident">to_f32</span>);
@@ -1607,10 +1539,8 @@
     )<span class="kw-2">*</span>};
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>: <span class="ident">ty</span> =&gt; { $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">U</span>: <span class="ident">ty</span> ),<span class="op">*</span> } ) =&gt; {
         <span class="macro">impl_as_primitive!</span>(@ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> =&gt; { $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">U</span> ),<span class="op">*</span> });
-        <span class="macro">impl_as_primitive!</span>(@ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> =&gt; { <span class="ident">u8</span>, <span class="ident">u16</span>, <span class="ident">u32</span>, <span class="ident">u64</span>, <span class="ident">usize</span> });
-        <span class="macro">impl_as_primitive!</span>(@ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> =&gt; <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span> <span class="kw">impl</span> <span class="ident">u128</span>);
-        <span class="macro">impl_as_primitive!</span>(@ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> =&gt; { <span class="ident">i8</span>, <span class="ident">i16</span>, <span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">isize</span> });
-        <span class="macro">impl_as_primitive!</span>(@ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> =&gt; <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span> <span class="kw">impl</span> <span class="ident">i128</span>);
+        <span class="macro">impl_as_primitive!</span>(@ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> =&gt; { <span class="ident">u8</span>, <span class="ident">u16</span>, <span class="ident">u32</span>, <span class="ident">u64</span>, <span class="ident">u128</span>, <span class="ident">usize</span> });
+        <span class="macro">impl_as_primitive!</span>(@ <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> =&gt; { <span class="ident">i8</span>, <span class="ident">i16</span>, <span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">i128</span>, <span class="ident">isize</span> });
     };
 }
 
@@ -1622,9 +1552,7 @@
 <span class="macro">impl_as_primitive!</span>(<span class="ident">i32</span> =&gt; { <span class="ident">f32</span>, <span class="ident">f64</span> });
 <span class="macro">impl_as_primitive!</span>(<span class="ident">u64</span> =&gt; { <span class="ident">f32</span>, <span class="ident">f64</span> });
 <span class="macro">impl_as_primitive!</span>(<span class="ident">i64</span> =&gt; { <span class="ident">f32</span>, <span class="ident">f64</span> });
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
 <span class="macro">impl_as_primitive!</span>(<span class="ident">u128</span> =&gt; { <span class="ident">f32</span>, <span class="ident">f64</span> });
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">has_i128</span>)]</span>
 <span class="macro">impl_as_primitive!</span>(<span class="ident">i128</span> =&gt; { <span class="ident">f32</span>, <span class="ident">f64</span> });
 <span class="macro">impl_as_primitive!</span>(<span class="ident">usize</span> =&gt; { <span class="ident">f32</span>, <span class="ident">f64</span> });
 <span class="macro">impl_as_primitive!</span>(<span class="ident">isize</span> =&gt; { <span class="ident">f32</span>, <span class="ident">f64</span> });
