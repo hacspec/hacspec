@@ -95,7 +95,7 @@ macro_rules! implement_public_signed_mi {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);
-                while ret.less_than(Self::ZERO()) {
+                while ret.less_than(<Self as Integer>::ZERO()) {
                     ret = ret + n;
                 }
                 ret
@@ -147,7 +147,7 @@ macro_rules! implement_public_mi {
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn get_bit(self, i: usize) -> Self {
-                (self >> i) & Self::ONE()
+                (self >> i) & <Self as Integer>::ONE()
             }
 
             /// Set bit `i` of this integer to `b` and return the result.
@@ -155,7 +155,10 @@ macro_rules! implement_public_mi {
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set_bit(self, b: Self, i: usize) -> Self {
-                debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
+                debug_assert!(
+                    b.clone().equal(<Self as Integer>::ONE())
+                        || b.clone().equal(<Self as Integer>::ZERO())
+                );
                 let tmp1 = Self::from_literal(!(1 << i));
                 let tmp2 = b << i;
                 (self & tmp1) | tmp2
@@ -397,7 +400,7 @@ macro_rules! implement_secret_signed_mi {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);
-                while ret.less_than(Self::ZERO()) {
+                while ret.less_than(<Self as Integer>::ZERO()) {
                     ret = ret + n;
                 }
                 ret
@@ -451,7 +454,7 @@ macro_rules! implement_secret_mi {
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn get_bit(self, i: usize) -> Self {
-                (self >> i) & Self::ONE()
+                (self >> i) & <Self as Integer>::ONE()
             }
 
             /// Set bit `i` of this integer to `b` and return the result.
@@ -459,7 +462,10 @@ macro_rules! implement_secret_mi {
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set_bit(self, b: Self, i: usize) -> Self {
-                debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
+                debug_assert!(
+                    b.clone().equal(<Self as Integer>::ONE())
+                        || b.clone().equal(<Self as Integer>::ZERO())
+                );
                 let tmp1 = Self::from_literal(!(1 << i));
                 let tmp2 = b << i;
                 (self & tmp1) | tmp2
