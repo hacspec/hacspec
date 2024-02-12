@@ -177,7 +177,7 @@ formatting the doc string literal outside of quote.</p>
 <p><br></p>
 <h4 id="indexing-into-a-tuple-struct"><a href="#indexing-into-a-tuple-struct">Indexing into a tuple struct</a></h4>
 <p>When interpolating indices of a tuple or tuple struct, we need them not to
-appears suffixed as integer literals by interpolating them as <a href="https://docs.rs/syn/1.0/syn/struct.Index.html"><code>syn::Index</code></a>
+appears suffixed as integer literals by interpolating them as <a href="https://docs.rs/syn/2.0/syn/struct.Index.html"><code>syn::Index</code></a>
 instead.</p>
 
 <div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail"><code><span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0usize</span>..<span class="self">self</span>.<span class="ident">fields</span>.<span class="ident">len</span>();

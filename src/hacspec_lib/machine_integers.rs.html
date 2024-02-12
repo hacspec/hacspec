@@ -1070,6 +1070,12 @@
 <span id="1064">1064</span>
 <span id="1065">1065</span>
 <span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
 </pre><pre class="rust"><code><span class="doccomment">//!</span>
 <span class="doccomment">//! This module implements the `Numeric` trait for machine integers.</span>
 <span class="doccomment">//!</span>
@@ -1167,7 +1173,7 @@
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">signed_modulo</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">modulo</span>(<span class="ident">n</span>);
-                <span class="kw">while</span> <span class="ident">ret</span>.<span class="ident">less_than</span>(<span class="ident"><span class="self">Self</span>::ZERO</span>()) {
+                <span class="kw">while</span> <span class="ident">ret</span>.<span class="ident">less_than</span>(<span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Integer</span><span class="op">&gt;</span><span class="ident">::ZERO</span>()) {
                     <span class="ident">ret</span> <span class="op">=</span> <span class="ident">ret</span> <span class="op">+</span> <span class="ident">n</span>;
                 }
                 <span class="ident">ret</span>
@@ -1219,7 +1225,7 @@
             <span class="attribute">#[<span class="ident">inline</span>]</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">get_bit</span>(<span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-                (<span class="self">self</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">i</span>) <span class="op">&amp;</span> <span class="ident"><span class="self">Self</span>::ONE</span>()
+                (<span class="self">self</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">i</span>) <span class="op">&amp;</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Integer</span><span class="op">&gt;</span><span class="ident">::ONE</span>()
             }
 
             <span class="doccomment">/// Set bit `i` of this integer to `b` and return the result.</span>
@@ -1227,7 +1233,10 @@
             <span class="attribute">#[<span class="ident">inline</span>]</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">set_bit</span>(<span class="self">self</span>, <span class="ident">b</span>: <span class="self">Self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-                <span class="macro">debug_assert!</span>(<span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="ident"><span class="self">Self</span>::ONE</span>()) <span class="op">|</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="ident"><span class="self">Self</span>::ZERO</span>()));
+                <span class="macro">debug_assert!</span>(
+                    <span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Integer</span><span class="op">&gt;</span><span class="ident">::ONE</span>())
+                        <span class="op">|</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Integer</span><span class="op">&gt;</span><span class="ident">::ZERO</span>())
+                );
                 <span class="kw">let</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::from_literal</span>(<span class="op">!</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">i</span>));
                 <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">i</span>;
                 (<span class="self">self</span> <span class="op">&amp;</span> <span class="ident">tmp1</span>) <span class="op">|</span> <span class="ident">tmp2</span>
@@ -1469,7 +1478,7 @@
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">signed_modulo</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">modulo</span>(<span class="ident">n</span>);
-                <span class="kw">while</span> <span class="ident">ret</span>.<span class="ident">less_than</span>(<span class="ident"><span class="self">Self</span>::ZERO</span>()) {
+                <span class="kw">while</span> <span class="ident">ret</span>.<span class="ident">less_than</span>(<span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Integer</span><span class="op">&gt;</span><span class="ident">::ZERO</span>()) {
                     <span class="ident">ret</span> <span class="op">=</span> <span class="ident">ret</span> <span class="op">+</span> <span class="ident">n</span>;
                 }
                 <span class="ident">ret</span>
@@ -1523,7 +1532,7 @@
             <span class="attribute">#[<span class="ident">inline</span>]</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">get_bit</span>(<span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-                (<span class="self">self</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">i</span>) <span class="op">&amp;</span> <span class="ident"><span class="self">Self</span>::ONE</span>()
+                (<span class="self">self</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">i</span>) <span class="op">&amp;</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Integer</span><span class="op">&gt;</span><span class="ident">::ONE</span>()
             }
 
             <span class="doccomment">/// Set bit `i` of this integer to `b` and return the result.</span>
@@ -1531,7 +1540,10 @@
             <span class="attribute">#[<span class="ident">inline</span>]</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">set_bit</span>(<span class="self">self</span>, <span class="ident">b</span>: <span class="self">Self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-                <span class="macro">debug_assert!</span>(<span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="ident"><span class="self">Self</span>::ONE</span>()) <span class="op">|</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="ident"><span class="self">Self</span>::ZERO</span>()));
+                <span class="macro">debug_assert!</span>(
+                    <span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Integer</span><span class="op">&gt;</span><span class="ident">::ONE</span>())
+                        <span class="op">|</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Integer</span><span class="op">&gt;</span><span class="ident">::ZERO</span>())
+                );
                 <span class="kw">let</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::from_literal</span>(<span class="op">!</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">i</span>));
                 <span class="kw">let</span> <span class="ident">tmp2</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">i</span>;
                 (<span class="self">self</span> <span class="op">&amp;</span> <span class="ident">tmp1</span>) <span class="op">|</span> <span class="ident">tmp2</span>

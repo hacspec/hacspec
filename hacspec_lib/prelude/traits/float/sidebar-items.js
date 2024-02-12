@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["Float","Generic trait for floating point numbers"],["FloatConst",""],["FloatCore","Generic trait for floating point numbers that works with `no_std`."]]};
+window.SIDEBAR_ITEMS = {"trait":[["Float","Generic trait for floating point numbers"],["FloatConst",""],["FloatCore","Generic trait for floating point numbers that works with `no_std`."],["TotalOrder","Trait for floating point numbers that provide an implementation of the `totalOrder` predicate as defined in the IEEE 754 (2008 revision) floating point standard."]]};
