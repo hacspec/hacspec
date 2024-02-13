@@ -11,6 +11,6 @@ proc-macro = true
 
 [dependencies]
 hacspec-lib = { path = "../../lib" }
-syn = "1.0"
+syn = "2.0"
 quote = "1.0"
 proc-macro2= "1.0.17"
