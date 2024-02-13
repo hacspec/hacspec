@@ -171,6 +171,7 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 - [BIP-340](examples/bip-340/src/bip-340.rs) [text](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki) [blog](https://blog.blockstream.com/half-aggregation-of-bip-340-signatures/), including secp.
 - [merlin](examples/merlin)
 - [ristretto](examples/ristretto)
+- [halo2](../specs/blob/main/halo2/src/halo2.rs). [rust-doc](https://hacspec.org/specs/hacspec_halo2/index.html), which connects the [halo2 book](https://zcash.github.io/halo2) with it's implementation.
 
 ## Unsafe examples
 
