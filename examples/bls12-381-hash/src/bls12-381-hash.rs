@@ -21,7 +21,7 @@ const S_IN_BYTES: usize = 64;
 const L: usize = 64;
 
 // (p - 1) / 2
-const P_1_2: ArrFp = ArrFp(secret_array!(
+const P_1_2: ArrFp = Array(secret_array!(
     U64,
     [
         0x0d0088f51cbff34du64,
@@ -34,7 +34,7 @@ const P_1_2: ArrFp = ArrFp(secret_array!(
 ));
 
 // (p + 1) / 4
-const P_1_4: ArrFp = ArrFp(secret_array!(
+const P_1_4: ArrFp = Array(secret_array!(
     U64,
     [
         0x0680447a8e5ff9a6u64,
@@ -47,7 +47,7 @@ const P_1_4: ArrFp = ArrFp(secret_array!(
 ));
 
 // (p - 3) / 4
-const P_3_4: ArrFp = ArrFp(secret_array!(
+const P_3_4: ArrFp = Array(secret_array!(
     U64,
     [
         0x0680447a8e5ff9a6u64,
@@ -347,7 +347,7 @@ pub fn g2_encode_to_curve_svdw(msg: &ByteSeq, dst: &ByteSeq) -> G2 {
 // Hash to G1 - Constants
 
 #[rustfmt::skip]
-const G1_ISO_A: ArrFp = ArrFp(secret_array!(
+const G1_ISO_A: ArrFp = Array(secret_array!(
     U64,
     [
         0x00144698a3b8e943u64, 0x3d693a02c96d4982u64, 0xb0ea985383ee66a8u64,
@@ -355,7 +355,7 @@ const G1_ISO_A: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_ISO_B: ArrFp = ArrFp(secret_array!(
+const G1_ISO_B: ArrFp = Array(secret_array!(
     U64,
     [
         0x12e2908d11688030u64, 0x018b12e8753eee3bu64, 0x2016c1f0f24f4070u64,
@@ -363,7 +363,7 @@ const G1_ISO_B: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_0: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_0: ArrFp = Array(secret_array!(
     U64,
     [
         0x11a05f2b1e833340u64, 0xb809101dd9981585u64, 0x6b303e88a2d7005fu64,
@@ -371,7 +371,7 @@ const G1_XNUM_K_0: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_1: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_1: ArrFp = Array(secret_array!(
     U64,
     [
         0x17294ed3e943ab2fu64, 0x0588bab22147a81cu64, 0x7c17e75b2f6a8417u64,
@@ -379,7 +379,7 @@ const G1_XNUM_K_1: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_2: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_2: ArrFp = Array(secret_array!(
     U64,
     [
         0x0d54005db97678ecu64, 0x1d1048c5d10a9a1bu64, 0xce032473295983e5u64,
@@ -387,7 +387,7 @@ const G1_XNUM_K_2: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_3: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_3: ArrFp = Array(secret_array!(
     U64,
     [
         0x1778e7166fcc6db7u64, 0x4e0609d307e55412u64, 0xd7f5e4656a8dbf25u64,
@@ -395,7 +395,7 @@ const G1_XNUM_K_3: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_4: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_4: ArrFp = Array(secret_array!(
     U64,
     [
         0x0e99726a3199f443u64, 0x6642b4b3e4118e54u64, 0x99db995a1257fb3fu64,
@@ -403,7 +403,7 @@ const G1_XNUM_K_4: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_5: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_5: ArrFp = Array(secret_array!(
     U64,
     [
         0x1630c3250d7313ffu64, 0x01d1201bf7a74ab5u64, 0xdb3cb17dd952799bu64,
@@ -411,7 +411,7 @@ const G1_XNUM_K_5: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_6: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_6: ArrFp = Array(secret_array!(
     U64,
     [
         0x0d6ed6553fe44d29u64, 0x6a3726c38ae652bfu64, 0xb11586264f0f8ce1u64,
@@ -419,7 +419,7 @@ const G1_XNUM_K_6: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_7: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_7: ArrFp = Array(secret_array!(
     U64,
     [
         0x17b81e7701abdbe2u64, 0xe8743884d1117e53u64, 0x356de5ab275b4db1u64,
@@ -427,7 +427,7 @@ const G1_XNUM_K_7: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_8: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_8: ArrFp = Array(secret_array!(
     U64,
     [
         0x080d3cf1f9a78fc4u64, 0x7b90b33563be990du64, 0xc43b756ce79f5574u64,
@@ -435,7 +435,7 @@ const G1_XNUM_K_8: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_9: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_9: ArrFp = Array(secret_array!(
     U64,
     [
         0x169b1f8e1bcfa7c4u64, 0x2e0c37515d138f22u64, 0xdd2ecb803a0c5c99u64,
@@ -443,7 +443,7 @@ const G1_XNUM_K_9: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_10: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_10: ArrFp = Array(secret_array!(
     U64,
     [
         0x10321da079ce07e2u64, 0x72d8ec09d2565b0du64, 0xfa7dccdde6787f96u64,
@@ -451,7 +451,7 @@ const G1_XNUM_K_10: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XNUM_K_11: ArrFp = ArrFp(secret_array!(
+const G1_XNUM_K_11: ArrFp = Array(secret_array!(
     U64,
     [
         0x06e08c248e260e70u64, 0xbd1e962381edee3du64, 0x31d79d7e22c837bcu64,
@@ -459,7 +459,7 @@ const G1_XNUM_K_11: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_0: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_0: ArrFp = Array(secret_array!(
     U64,
     [
         0x08ca8d548cff19aeu64, 0x18b2e62f4bd3fa6fu64, 0x01d5ef4ba35b48bau64,
@@ -467,7 +467,7 @@ const G1_XDEN_K_0: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_1: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_1: ArrFp = Array(secret_array!(
     U64,
     [
         0x12561a5deb559c43u64, 0x48b4711298e53636u64, 0x7041e8ca0cf0800cu64,
@@ -475,7 +475,7 @@ const G1_XDEN_K_1: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_2: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_2: ArrFp = Array(secret_array!(
     U64,
     [
         0x0b2962fe57a3225eu64, 0x8137e629bff2991fu64, 0x6f89416f5a718cd1u64,
@@ -483,7 +483,7 @@ const G1_XDEN_K_2: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_3: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_3: ArrFp = Array(secret_array!(
     U64,
     [
         0x03425581a58ae2feu64, 0xc83aafef7c40eb54u64, 0x5b08243f16b16551u64,
@@ -491,7 +491,7 @@ const G1_XDEN_K_3: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_4: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_4: ArrFp = Array(secret_array!(
     U64,
     [
         0x13a8e162022914a8u64, 0x0a6f1d5f43e7a07du64, 0xffdfc759a12062bbu64,
@@ -499,7 +499,7 @@ const G1_XDEN_K_4: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_5: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_5: ArrFp = Array(secret_array!(
     U64,
     [
         0x0e7355f8e4e667b9u64, 0x55390f7f0506c6e9u64, 0x395735e9ce9cad4du64,
@@ -507,7 +507,7 @@ const G1_XDEN_K_5: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_6: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_6: ArrFp = Array(secret_array!(
     U64,
     [
         0x0772caacf1693619u64, 0x0f3e0c63e0596721u64, 0x570f5799af53a189u64,
@@ -515,7 +515,7 @@ const G1_XDEN_K_6: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_7: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_7: ArrFp = Array(secret_array!(
     U64,
     [
         0x14a7ac2a9d64a8b2u64, 0x30b3f5b074cf0199u64, 0x6e7f63c21bca68a8u64,
@@ -523,7 +523,7 @@ const G1_XDEN_K_7: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_8: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_8: ArrFp = Array(secret_array!(
     U64,
     [
         0x0a10ecf6ada54f82u64, 0x5e920b3dafc7a3ccu64, 0xe07f8d1d7161366bu64,
@@ -531,7 +531,7 @@ const G1_XDEN_K_8: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_XDEN_K_9: ArrFp = ArrFp(secret_array!(
+const G1_XDEN_K_9: ArrFp = Array(secret_array!(
     U64,
     [
         0x095fc13ab9e92ad4u64, 0x476d6e3eb3a56680u64, 0xf682b4ee96f7d037u64,
@@ -539,7 +539,7 @@ const G1_XDEN_K_9: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_0: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_0: ArrFp = Array(secret_array!(
     U64,
     [
         0x090d97c81ba24ee0u64, 0x259d1f094980dcfau64, 0x11ad138e48a86952u64,
@@ -547,7 +547,7 @@ const G1_YNUM_K_0: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_1: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_1: ArrFp = Array(secret_array!(
     U64,
     [
         0x134996a104ee5811u64, 0xd51036d776fb4683u64, 0x1223e96c254f383du64,
@@ -555,7 +555,7 @@ const G1_YNUM_K_1: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_2: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_2: ArrFp = Array(secret_array!(
     U64,
     [
         0x00cc786baa966e66u64, 0xf4a384c86a3b4994u64, 0x2552e2d658a31ce2u64,
@@ -563,7 +563,7 @@ const G1_YNUM_K_2: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_3: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_3: ArrFp = Array(secret_array!(
     U64,
     [
         0x01f86376e8981c21u64, 0x7898751ad8746757u64, 0xd42aa7b90eeb791cu64,
@@ -571,7 +571,7 @@ const G1_YNUM_K_3: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_4: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_4: ArrFp = Array(secret_array!(
     U64,
     [
         0x08cc03fdefe0ff13u64, 0x5caf4fe2a21529c4u64, 0x195536fbe3ce50b8u64,
@@ -579,7 +579,7 @@ const G1_YNUM_K_4: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_5: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_5: ArrFp = Array(secret_array!(
     U64,
     [
         0x16603fca40634b6au64, 0x2211e11db8f0a6a0u64, 0x74a7d0d4afadb7bdu64,
@@ -587,7 +587,7 @@ const G1_YNUM_K_5: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_6: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_6: ArrFp = Array(secret_array!(
     U64,
     [
         0x04ab0b9bcfac1bbcu64, 0xb2c977d027796b3cu64, 0xe75bb8ca2be184cbu64,
@@ -595,7 +595,7 @@ const G1_YNUM_K_6: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_7: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_7: ArrFp = Array(secret_array!(
     U64,
     [
         0x0987c8d5333ab86fu64, 0xde9926bd2ca6c674u64, 0x170a05bfe3bdd81fu64,
@@ -603,7 +603,7 @@ const G1_YNUM_K_7: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_8: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_8: ArrFp = Array(secret_array!(
     U64,
     [
         0x09fc4018bd96684bu64, 0xe88c9e221e4da1bbu64, 0x8f3abd16679dc26cu64,
@@ -611,7 +611,7 @@ const G1_YNUM_K_8: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_9: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_9: ArrFp = Array(secret_array!(
     U64,
     [
         0x0e1bba7a1186bdb5u64, 0x223abde7ada14a23u64, 0xc42a0ca7915af6feu64,
@@ -619,7 +619,7 @@ const G1_YNUM_K_9: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_10: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_10: ArrFp = Array(secret_array!(
     U64,
     [
         0x19713e47937cd1beu64, 0x0dfd0b8f1d43fb93u64, 0xcd2fcbcb6caf493fu64,
@@ -627,7 +627,7 @@ const G1_YNUM_K_10: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_11: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_11: ArrFp = Array(secret_array!(
     U64,
     [
         0x18b46a908f36f6deu64, 0xb918c143fed2edccu64, 0x523559b8aaf0c246u64,
@@ -635,7 +635,7 @@ const G1_YNUM_K_11: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_12: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_12: ArrFp = Array(secret_array!(
     U64,
     [
         0x0b182cac101b9399u64, 0xd155096004f53f44u64, 0x7aa7b12a3426b08eu64,
@@ -643,7 +643,7 @@ const G1_YNUM_K_12: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_13: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_13: ArrFp = Array(secret_array!(
     U64,
     [
         0x0245a394ad1eca9bu64, 0x72fc00ae7be315dcu64, 0x757b3b080d4c1580u64,
@@ -651,7 +651,7 @@ const G1_YNUM_K_13: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_14: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_14: ArrFp = Array(secret_array!(
     U64,
     [
         0x05c129645e44cf11u64, 0x02a159f748c4a3fcu64, 0x5e673d81d7e86568u64,
@@ -659,7 +659,7 @@ const G1_YNUM_K_14: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YNUM_K_15: ArrFp = ArrFp(secret_array!(
+const G1_YNUM_K_15: ArrFp = Array(secret_array!(
     U64,
     [
         0x15e6be4e990f03ceu64, 0x4ea50b3b42df2eb5u64, 0xcb181d8f84965a39u64,
@@ -667,7 +667,7 @@ const G1_YNUM_K_15: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_0: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_0: ArrFp = Array(secret_array!(
     U64,
     [
         0x16112c4c3a9c98b2u64, 0x52181140fad0eae9u64, 0x601a6de578980be6u64,
@@ -675,7 +675,7 @@ const G1_YDEN_K_0: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_1: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_1: ArrFp = Array(secret_array!(
     U64,
     [
         0x1962d75c2381201eu64, 0x1a0cbd6c43c348b8u64, 0x85c84ff731c4d59cu64,
@@ -683,7 +683,7 @@ const G1_YDEN_K_1: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_2: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_2: ArrFp = Array(secret_array!(
     U64,
     [
         0x058df3306640da27u64, 0x6faaae7d6e8eb157u64, 0x78c4855551ae7f31u64,
@@ -691,7 +691,7 @@ const G1_YDEN_K_2: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_3: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_3: ArrFp = Array(secret_array!(
     U64,
     [
         0x16b7d288798e5395u64, 0xf20d23bf89edb4d1u64, 0xd115c5dbddbcd30eu64,
@@ -699,7 +699,7 @@ const G1_YDEN_K_3: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_4: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_4: ArrFp = Array(secret_array!(
     U64,
     [
         0x0be0e079545f43e4u64, 0xb00cc912f8228ddcu64, 0xc6d19c9f0f69bbb0u64,
@@ -707,7 +707,7 @@ const G1_YDEN_K_4: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_5: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_5: ArrFp = Array(secret_array!(
     U64,
     [
         0x08d9e5297186db2du64, 0x9fb266eaac783182u64, 0xb70152c65550d881u64,
@@ -715,7 +715,7 @@ const G1_YDEN_K_5: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_6: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_6: ArrFp = Array(secret_array!(
     U64,
     [
         0x166007c08a99db2fu64, 0xc3ba8734ace9824bu64, 0x5eecfdfa8d0cf8efu64,
@@ -723,7 +723,7 @@ const G1_YDEN_K_6: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_7: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_7: ArrFp = Array(secret_array!(
     U64,
     [
         0x16a3ef08be3ea7eau64, 0x03bcddfabba6ff6eu64, 0xe5a4375efa1f4fd7u64,
@@ -731,7 +731,7 @@ const G1_YDEN_K_7: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_8: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_8: ArrFp = Array(secret_array!(
     U64,
     [
         0x1866c8ed336c6123u64, 0x1a1be54fd1d74cc4u64, 0xf9fb0ce4c6af5920u64,
@@ -739,7 +739,7 @@ const G1_YDEN_K_8: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_9: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_9: ArrFp = Array(secret_array!(
     U64,
     [
         0x167a55cda70a6e1cu64, 0xea820597d94a8490u64, 0x3216f763e13d87bbu64,
@@ -747,7 +747,7 @@ const G1_YDEN_K_9: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_10: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_10: ArrFp = Array(secret_array!(
     U64,
     [
         0x04d2f259eea405bdu64, 0x48f010a01ad2911du64, 0x9c6dd039bb61a629u64,
@@ -755,7 +755,7 @@ const G1_YDEN_K_10: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_11: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_11: ArrFp = Array(secret_array!(
     U64,
     [
         0x0accbb67481d033fu64, 0xf5852c1e48c50c47u64, 0x7f94ff8aefce42d2u64,
@@ -763,7 +763,7 @@ const G1_YDEN_K_11: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_12: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_12: ArrFp = Array(secret_array!(
     U64,
     [
         0x0ad6b9514c767fe3u64, 0xc3613144b45f1496u64, 0x543346d98adf0226u64,
@@ -771,7 +771,7 @@ const G1_YDEN_K_12: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_13: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_13: ArrFp = Array(secret_array!(
     U64,
     [
         0x02660400eb2e4f3bu64, 0x628bdd0d53cd76f2u64, 0xbf565b94e72927c1u64,
@@ -779,7 +779,7 @@ const G1_YDEN_K_13: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G1_YDEN_K_14: ArrFp = ArrFp(secret_array!(
+const G1_YDEN_K_14: ArrFp = Array(secret_array!(
     U64,
     [
         0x0e0fa1d816ddc03eu64, 0x6b24255e0d7819c1u64, 0x71c40f65e273b853u64,
@@ -956,7 +956,7 @@ pub fn g1_encode_to_curve_sswu(msg: &ByteSeq, dst: &ByteSeq) -> G1 {
 // Hash to G2 - Constants
 
 #[rustfmt::skip]
-const G2_XNUM_K_0: ArrFp = ArrFp(secret_array!(
+const G2_XNUM_K_0: ArrFp = Array(secret_array!(
     U64,
     [
         0x05c759507e8e333eu64, 0xbb5b7a9a47d7ed85u64, 0x32c52d39fd3a042au64,
@@ -964,7 +964,7 @@ const G2_XNUM_K_0: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_XNUM_K_1_I: ArrFp = ArrFp(secret_array!(
+const G2_XNUM_K_1_I: ArrFp = Array(secret_array!(
     U64,
     [
         0x11560bf17baa99bcu64, 0x32126fced787c88fu64, 0x984f87adf7ae0c7fu64,
@@ -972,7 +972,7 @@ const G2_XNUM_K_1_I: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_XNUM_K_2_R: ArrFp = ArrFp(secret_array!(
+const G2_XNUM_K_2_R: ArrFp = Array(secret_array!(
     U64,
     [
         0x11560bf17baa99bcu64, 0x32126fced787c88fu64, 0x984f87adf7ae0c7fu64,
@@ -980,7 +980,7 @@ const G2_XNUM_K_2_R: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_XNUM_K_2_I: ArrFp = ArrFp(secret_array!(
+const G2_XNUM_K_2_I: ArrFp = Array(secret_array!(
     U64,
     [
         0x08ab05f8bdd54cdeu64, 0x190937e76bc3e447u64, 0xcc27c3d6fbd7063fu64,
@@ -988,7 +988,7 @@ const G2_XNUM_K_2_I: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_XNUM_K_3_R: ArrFp = ArrFp(secret_array!(
+const G2_XNUM_K_3_R: ArrFp = Array(secret_array!(
     U64,
     [
         0x171d6541fa38ccfau64, 0xed6dea691f5fb614u64, 0xcb14b4e7f4e810aau64,
@@ -997,7 +997,7 @@ const G2_XNUM_K_3_R: ArrFp = ArrFp(secret_array!(
 ));
 
 #[rustfmt::skip]
-const G2_XDEN_K_0_I: ArrFp = ArrFp(secret_array!(
+const G2_XDEN_K_0_I: ArrFp = Array(secret_array!(
     U64,
     [
         0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
@@ -1005,7 +1005,7 @@ const G2_XDEN_K_0_I: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_XDEN_K_1_I: ArrFp = ArrFp(secret_array!(
+const G2_XDEN_K_1_I: ArrFp = Array(secret_array!(
     U64,
     [
         0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
@@ -1014,7 +1014,7 @@ const G2_XDEN_K_1_I: ArrFp = ArrFp(secret_array!(
 ));
 
 #[rustfmt::skip]
-const G2_YNUM_K_0: ArrFp = ArrFp(secret_array!(
+const G2_YNUM_K_0: ArrFp = Array(secret_array!(
     U64,
     [
         0x1530477c7ab4113bu64, 0x59a4c18b076d1193u64, 0x0f7da5d4a07f649bu64,
@@ -1022,7 +1022,7 @@ const G2_YNUM_K_0: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_YNUM_K_1_I: ArrFp = ArrFp(secret_array!(
+const G2_YNUM_K_1_I: ArrFp = Array(secret_array!(
     U64,
     [
         0x05c759507e8e333eu64, 0xbb5b7a9a47d7ed85u64, 0x32c52d39fd3a042au64,
@@ -1030,7 +1030,7 @@ const G2_YNUM_K_1_I: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_YNUM_K_2_R: ArrFp = ArrFp(secret_array!(
+const G2_YNUM_K_2_R: ArrFp = Array(secret_array!(
     U64,
     [
         0x11560bf17baa99bcu64, 0x32126fced787c88fu64, 0x984f87adf7ae0c7fu64,
@@ -1038,7 +1038,7 @@ const G2_YNUM_K_2_R: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_YNUM_K_2_I: ArrFp = ArrFp(secret_array!(
+const G2_YNUM_K_2_I: ArrFp = Array(secret_array!(
     U64,
     [
         0x08ab05f8bdd54cdeu64, 0x190937e76bc3e447u64, 0xcc27c3d6fbd7063fu64,
@@ -1046,7 +1046,7 @@ const G2_YNUM_K_2_I: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_YNUM_K_3_R: ArrFp = ArrFp(secret_array!(
+const G2_YNUM_K_3_R: ArrFp = Array(secret_array!(
     U64,
     [
         0x124c9ad43b6cf79bu64, 0xfbf7043de3811ad0u64, 0x761b0f37a1e26286u64,
@@ -1055,7 +1055,7 @@ const G2_YNUM_K_3_R: ArrFp = ArrFp(secret_array!(
 ));
 
 #[rustfmt::skip]
-const G2_YDEN_K_0: ArrFp = ArrFp(secret_array!(
+const G2_YDEN_K_0: ArrFp = Array(secret_array!(
     U64,
     [
         0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
@@ -1063,7 +1063,7 @@ const G2_YDEN_K_0: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_YDEN_K_1_I: ArrFp = ArrFp(secret_array!(
+const G2_YDEN_K_1_I: ArrFp = Array(secret_array!(
     U64,
     [
         0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
@@ -1071,7 +1071,7 @@ const G2_YDEN_K_1_I: ArrFp = ArrFp(secret_array!(
     ]
 ));
 #[rustfmt::skip]
-const G2_YDEN_K_2_I: ArrFp = ArrFp(secret_array!(
+const G2_YDEN_K_2_I: ArrFp = Array(secret_array!(
     U64,
     [
         0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,

@@ -24,7 +24,7 @@ type ByteSeqResult = Result<ByteSeq, u8>;
 type BlockResult = Result<Block, u8>;
 type WordResult = Result<Word, u8>;
 
-const SBOX: SBox = SBox(secret_bytes!([
+const SBOX: SBox = Array(secret_bytes!([
     0x63u8, 0x7Cu8, 0x77u8, 0x7Bu8, 0xF2u8, 0x6Bu8, 0x6Fu8, 0xC5u8, 0x30u8, 0x01u8, 0x67u8, 0x2Bu8,
     0xFEu8, 0xD7u8, 0xABu8, 0x76u8, 0xCAu8, 0x82u8, 0xC9u8, 0x7Du8, 0xFAu8, 0x59u8, 0x47u8, 0xF0u8,
     0xADu8, 0xD4u8, 0xA2u8, 0xAFu8, 0x9Cu8, 0xA4u8, 0x72u8, 0xC0u8, 0xB7u8, 0xFDu8, 0x93u8, 0x26u8,
@@ -49,7 +49,7 @@ const SBOX: SBox = SBox(secret_bytes!([
     0xB0u8, 0x54u8, 0xBBu8, 0x16u8
 ]));
 
-const RCON: RCon = RCon(secret_bytes!([
+const RCON: RCon = Array(secret_bytes!([
     0x8du8, 0x01u8, 0x02u8, 0x04u8, 0x08u8, 0x10u8, 0x20u8, 0x40u8, 0x80u8, 0x1bu8, 0x36u8, 0x6cu8,
     0xd8u8, 0xabu8, 0x4du8
 ]));
@@ -147,11 +147,11 @@ fn block_cipher_aes(input: Block, key: ByteSeq, nr: usize) -> Block {
 }
 
 fn rotate_word(w: Word) -> Word {
-    Word([w[1], w[2], w[3], w[0]])
+    Array([w[1], w[2], w[3], w[0]])
 }
 
 fn slice_word(w: Word) -> Word {
-    Word([
+    Array([
         SBOX[declassify_usize_from_U8(w[0])],
         SBOX[declassify_usize_from_U8(w[1])],
         SBOX[declassify_usize_from_U8(w[2])],

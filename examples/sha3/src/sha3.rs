@@ -19,7 +19,7 @@ array!(RoundConstants, ROUNDS, u64);
 array!(RotationConstants, 25, usize);
 
 #[rustfmt::skip]
-const ROUNDCONSTANTS: RoundConstants = RoundConstants([
+const ROUNDCONSTANTS: RoundConstants = Array([
     0x0000_0000_0000_0001u64,  0x0000_0000_0000_8082u64,  0x8000_0000_0000_808au64,
     0x8000_0000_8000_8000u64,  0x0000_0000_0000_808bu64,  0x0000_0000_8000_0001u64,
     0x8000_0000_8000_8081u64,  0x8000_0000_0000_8009u64,  0x0000_0000_0000_008au64,
@@ -30,11 +30,11 @@ const ROUNDCONSTANTS: RoundConstants = RoundConstants([
     0x8000_0000_0000_8080u64,  0x0000_0000_8000_0001u64,  0x8000_0000_8000_8008u64,
 ]);
 
-const ROTC: RotationConstants = RotationConstants([
+const ROTC: RotationConstants = Array([
     0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43, 25, 39, 41, 45, 15, 21, 8, 18, 2, 61, 56, 14,
 ]);
 
-const PI: RotationConstants = RotationConstants([
+const PI: RotationConstants = Array([
     0, 6, 12, 18, 24, 3, 9, 10, 16, 22, 1, 7, 13, 19, 20, 4, 5, 11, 17, 23, 2, 8, 14, 15, 21,
 ]);
 

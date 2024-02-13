@@ -10,6 +10,9 @@ keywords = ["secret", "constant-time"]
 readme = "README.md"
 
 
+[dependencies]
+num = { version = "0.4" }
+
 [[example]]
 name = "dalek"
 crate-type = ["staticlib"]

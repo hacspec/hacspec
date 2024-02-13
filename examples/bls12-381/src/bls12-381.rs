@@ -418,7 +418,7 @@ fn frobenius(f: Fp12) -> Fp12 {
     /* Funky way of storing gamma11 */
 
     //1904D3BF02BB0667 C231BEB4202C0D1F 0FD603FD3CBD5F4F 7B2443D784BAB9C4 F67EA53D63E7813D 8D0775ED92235FB8
-    let c1 = ArrayFp(secret_array!(
+    let c1 = Array(secret_array!(
         U64,
         [
             0x8D0775ED92235FB8u64,
@@ -433,7 +433,7 @@ fn frobenius(f: Fp12) -> Fp12 {
     let c1 = Fp::from_byte_seq_le(c1);
 
     //00FC3E2B36C4E032 88E9E902231F9FB8 54A14787B6C7B36F EC0C8EC971F63C5F 282D5AC14D6C7EC2 2CF78A126DDC4AF3
-    let c2 = ArrayFp(secret_array!(
+    let c2 = Array(secret_array!(
         U64,
         [
             0x2CF78A126DDC4AF3u64,
@@ -673,8 +673,7 @@ fn test_g1_arithmetic() {
 
 #[cfg(test)]
 #[test]
-fn test_g1_mul_standard()
-{
+fn test_g1_mul_standard() {
     let g = g1();
     let m = Scalar::ONE();
     assert_eq!(g, g1mul(m, g));
@@ -688,13 +687,12 @@ fn test_g1_mul_standard()
 
 #[cfg(test)]
 #[test]
-fn test_g1_mul_zero()
-{
+fn test_g1_mul_zero() {
     let g = g1();
     let m = Scalar::ZERO();
     let h = g1mul(m, g);
     assert!(h.2);
-} 
+}
 
 #[cfg(test)]
 #[test]
@@ -747,8 +745,7 @@ fn test_g2_arithmetic() {
 
 #[cfg(test)]
 #[test]
-fn test_g2_mul_standard()
-{
+fn test_g2_mul_standard() {
     let g = g2();
     let m = Scalar::ONE();
     assert_eq!(g, g2mul(m, g));
@@ -762,13 +759,12 @@ fn test_g2_mul_standard()
 
 #[cfg(test)]
 #[test]
-fn test_g2_mul_zero()
-{
+fn test_g2_mul_zero() {
     let g = g2();
     let m = Scalar::ZERO();
     let h = g2mul(m, g);
     assert!(h.2);
-} 
+}
 
 #[cfg(test)]
 #[test]

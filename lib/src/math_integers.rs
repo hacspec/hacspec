@@ -62,6 +62,7 @@ macro_rules! unsigned_public_integer {
         impl UnsignedIntegerCopy for $name {}
         impl Integer for $name {
             const NUM_BITS: usize = $n;
+            type Secrecy = Public;
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -603,6 +604,7 @@ macro_rules! signed_integer {
         impl NumericCopy for $name {}
         impl Integer for $name {
             const NUM_BITS: usize = $n;
+            type Secrecy = Public;
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -847,6 +849,7 @@ macro_rules! nat_mod {
         impl NumericCopy for $name {}
         impl Integer for $name {
             const NUM_BITS: usize = $bits;
+            type Secrecy = Public;
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -1167,6 +1170,7 @@ macro_rules! public_nat_mod {
         impl UnsignedIntegerCopy for $name {}
         impl Integer for $name {
             const NUM_BITS: usize = $bits;
+            type Secrecy = Public;
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]

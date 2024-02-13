@@ -53,7 +53,7 @@ pub enum Error {
 pub type VerifyResult = Result<(), Error>;
 
 #[rustfmt::skip]
-pub const BASE: CompressedEdPoint = CompressedEdPoint(secret_array!(
+pub const BASE: CompressedEdPoint = Array(secret_array!(
     U8, 
     [
         0x58u8, 0x66u8, 0x66u8, 0x66u8, 0x66u8, 0x66u8, 0x66u8, 0x66u8,
@@ -64,7 +64,7 @@ pub const BASE: CompressedEdPoint = CompressedEdPoint(secret_array!(
 ));
 
 #[rustfmt::skip]
-const CONSTANT_P: SerializedScalar = SerializedScalar(secret_array!(
+const CONSTANT_P: SerializedScalar = Array(secret_array!(
     U8, 
     [
         0xedu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 
@@ -75,7 +75,7 @@ const CONSTANT_P: SerializedScalar = SerializedScalar(secret_array!(
 ));
 
 #[rustfmt::skip]
-const CONSTANT_L: SerializedScalar = SerializedScalar(secret_array!(
+const CONSTANT_L: SerializedScalar = Array(secret_array!(
     U8, 
     [
         0xedu8, 0xd3u8, 0xf5u8, 0x5cu8, 0x1au8, 0x63u8, 0x12u8, 0x58u8,
@@ -86,7 +86,7 @@ const CONSTANT_L: SerializedScalar = SerializedScalar(secret_array!(
 ));
 
 #[rustfmt::skip]
-const CONSTANT_P3_8: SerializedScalar = SerializedScalar(secret_array!(
+const CONSTANT_P3_8: SerializedScalar = Array(secret_array!(
     U8, 
     [
         0xfeu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 
@@ -97,7 +97,7 @@ const CONSTANT_P3_8: SerializedScalar = SerializedScalar(secret_array!(
 ));
 
 #[rustfmt::skip]
-const CONSTANT_P1_4: SerializedScalar = SerializedScalar(secret_array!(
+const CONSTANT_P1_4: SerializedScalar = Array(secret_array!(
     U8, 
     [
         0xfbu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 
@@ -108,7 +108,7 @@ const CONSTANT_P1_4: SerializedScalar = SerializedScalar(secret_array!(
 ));
 
 #[rustfmt::skip]
-const CONSTANT_D: SerializedScalar = SerializedScalar(secret_array!(
+const CONSTANT_D: SerializedScalar = Array(secret_array!(
     U8, 
     [
         0xa3u8, 0x78u8, 0x59u8, 0x13u8, 0xcau8, 0x4du8, 0xebu8, 0x75u8, 

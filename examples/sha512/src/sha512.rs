@@ -20,10 +20,10 @@ fn maj(x: U64, y: U64, z: U64) -> U64 {
     (x & y) ^ ((x & z) ^ (y & z))
 }
 
-const OP_TABLE: OpTableType = OpTableType([28, 34, 39, 14, 18, 41, 1, 8, 7, 19, 61, 6]);
+const OP_TABLE: OpTableType = Array([28, 34, 39, 14, 18, 41, 1, 8, 7, 19, 61, 6]);
 
 #[rustfmt::skip]
-const K_TABLE: RoundConstantsTable = RoundConstantsTable(secret_array!(
+const K_TABLE: RoundConstantsTable = Array(secret_array!(
     U64,
     [
         0x428a2f98d728ae22u64, 0x7137449123ef65cdu64, 0xb5c0fbcfec4d3b2fu64, 0xe9b5dba58189dbbcu64, 
@@ -49,7 +49,7 @@ const K_TABLE: RoundConstantsTable = RoundConstantsTable(secret_array!(
     ]
 ));
 
-const HASH_INIT: Hash = Hash(secret_array!(
+const HASH_INIT: Hash = Array(secret_array!(
     U64,
     [
         0x6a09e667f3bcc908u64,
