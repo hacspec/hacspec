@@ -1,0 +1,53 @@
+name: Generate Examples - FStar
+
+on: [push, pull_request, release]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Build release
+        run: cargo install --path language
+      - name: Build release - Examples
+        run: |
+          cargo clean
+          cargo build --verbose
+        working-directory: ./examples
+      - name: Extract examples to FStar
+        run: |
+          # the F* backend suffixes every single identifier with a
+          # unique identifier. It seems that this counter is global
+          # Hacspec-wise; thus, extracting an example to F* can result
+          # in two different files if Hacspec extracts more that one
+          # crate...
+          # Hence the allowlist below.
+          for example in chacha20 poly1305; do
+            cargo hacspec -e fst --dir ../fstar --vc-update "hacspec-$example"
+          done
+        working-directory: ./examples
+      - name: Setup Python 2.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 2.7
+      - name: Use OCaml 4.12.x
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 4.12.x
+      - name: Install FStar
+        run: |
+          opam pin add fstar --dev-repo
+          opam install fstar
+      - name: Clone Hacl*
+        uses: actions/checkout@v3
+        with:
+          repository: hacl-star/hacl-star
+          path: hacl-star
+      - name: Verify files with FStar
+        run: |
+          export FSTAR=fstar.exe
+          export HACL_HOME=$GITHUB_WORKSPACE/hacl-star/
+          make verify-all
+        working-directory: ./fstar
