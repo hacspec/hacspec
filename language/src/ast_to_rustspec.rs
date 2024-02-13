@@ -21,6 +21,10 @@ use crate::pearlite::*;
 use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 
+/// `CARRIER_CONS_NAMES` is a whitelist of all the constructors of
+/// carriers type (see `rustspec::CarrierTyp`).
+static CARRIER_CONS_NAMES: [&str; 4] = ["Ok", "Err", "Some", "None"];
+
 #[derive(Clone, Debug)]
 pub struct SpecialNames {
     pub arrays: HashSet<String>,
@@ -199,12 +203,27 @@ fn translate_expr_name(
             Err(())
         }
         Some(segment) => match &segment.args {
-            None => Ok((
-                ExprTranslationResult::TransExpr(Expression::Named(
-                    translate_ident(&segment.ident).0,
-                )),
-                span.clone().into(),
-            )),
+            None => {
+                let name = segment.ident.name.to_ident_string();
+                Ok((
+                    ExprTranslationResult::TransExpr(if CARRIER_CONS_NAMES.contains(&&*name) {
+                        Expression::EnumInject(
+                            BaseTyp::Placeholder,
+                            (
+                                TopLevelIdent {
+                                    string: name.clone(),
+                                    kind: TopLevelIdentKind::EnumConstructor,
+                                },
+                                span.clone().into(),
+                            ),
+                            None,
+                        )
+                    } else {
+                        Expression::Named(translate_ident(&segment.ident).0)
+                    }),
+                    span.clone().into(),
+                ))
+            }
             Some(_) => {
                 sess.span_rustspec_err(
                     path.span,
@@ -241,12 +260,15 @@ pub fn translate_constructor_name(
                     let ty = (ty_name, path.span.into());
                     Ok((BaseTyp::Named(ty, None), cons))
                 // Hacspec does not allow single-segments variant constructors.
-                // `Result` is an exception to that rule.
+                // `Result` and `Option` are exceptions to that rule.
                 // `Placeholder` is replaced during typechecking.
-                } else if name == "Ok".to_string() || name == "Err".to_string() {
+                } else if CARRIER_CONS_NAMES.contains(&&*name) {
                     Ok((BaseTyp::Placeholder, cons))
                 } else {
-                    sess.span_rustspec_err(path.span, "missing type annotation");
+                    sess.span_rustspec_err(
+                        path.span,
+                        "missing type information on this enum constructor",
+                    );
                     Err(())
                 }
             }
@@ -688,8 +710,9 @@ fn translate_expr(
                     );
 
                     // if we're facing a un-annotated constructor (that is, `func_prefix` is `None`)
-                    // in the whitelist [Ok, Err], then, we return an `EnumInject` with a type `Placeholder`
-                    if func_prefix.is_none() && ["Ok", "Err"].contains(&&*func_name_string) {
+                    // in the whitelist `CARRIER_CONS_NAMES`, then we return an `EnumInject` with a
+                    // type `Placeholder`
+                    if func_prefix.is_none() && CARRIER_CONS_NAMES.contains(&&*func_name_string) {
                         let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
                             .iter()
                             .map(|arg| translate_expr_expects_exp(sess, specials, &arg))
